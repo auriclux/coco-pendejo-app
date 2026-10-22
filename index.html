@@ -13,6 +13,7 @@
       --accent: #00e676;
       --warn: #ff9100;
       --danger: #ff1744;
+      --subtext: #aaaaaa;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -35,13 +36,41 @@
       letter-spacing: 1px;
     }
     header {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       border-bottom: 1px solid #333;
       padding-bottom: 10px;
     }
     h1 { margin: 0; font-size: 1.5rem; }
-    p.sub { margin: 4px 0 0; color: #888; font-size: 0.85rem; }
-    
+    p.sub { margin: 4px 0 0; color: var(--subtext); font-size: 0.85rem; }
+
+    /* New Car Input Bar */
+    .add-car-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .add-car-input {
+      flex: 1;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 12px;
+      color: white;
+      font-size: 1rem;
+    }
+    .add-car-input:focus { outline: none; border-color: var(--accent); }
+    .btn-add {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 0 16px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    /* Project Cards */
     .project-card {
       background: var(--card-bg);
       border-radius: 12px;
@@ -49,16 +78,32 @@
       margin-bottom: 16px;
       border: 1px solid #2a2a2a;
     }
-    .project-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 8px; }
-    .status-group { display: flex; gap: 8px; margin-top: 12px; }
-    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .project-title { font-size: 1.25rem; font-weight: bold; }
+    .btn-delete-card {
+      background: transparent;
+      border: none;
+      color: #666;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .btn-delete-card:hover { color: var(--danger); }
+
+    /* Status Selector Buttons */
+    .status-group { display: flex; gap: 8px; margin-bottom: 16px; }
     .btn-status {
       flex: 1;
-      padding: 14px 8px;
+      padding: 12px 6px;
       border: none;
       border-radius: 8px;
       font-weight: bold;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #888;
       background: #2a2a2a;
       cursor: pointer;
@@ -66,6 +111,50 @@
     .btn-status.active-active { background: var(--accent); color: #000; }
     .btn-status.active-parts { background: var(--warn); color: #000; }
     .btn-status.active-done { background: #444; color: #fff; }
+
+    /* Task Sub-Section */
+    .task-section {
+      border-top: 1px dashed #333;
+      padding-top: 12px;
+    }
+    .task-title { font-size: 0.9rem; color: var(--subtext); margin-bottom: 8px; font-weight: bold; }
+    .task-list { list-style: none; padding: 0; margin: 0 0 10px 0; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 0.95rem;
+    }
+    .task-item.completed { text-decoration: line-through; color: #666; }
+    .task-checkbox { width: 18px; height: 18px; accent-color: var(--accent); }
+    .btn-delete-task {
+      margin-left: auto;
+      background: transparent;
+      border: none;
+      color: #555;
+      cursor: pointer;
+    }
+    
+    .add-task-container { display: flex; gap: 6px; }
+    .add-task-input {
+      flex: 1;
+      background: #121212;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: white;
+      font-size: 0.85rem;
+    }
+    .btn-add-task {
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -74,64 +163,158 @@
 
   <header>
     <h1>Double-O Shop Board</h1>
-    <p class="sub">Tap status to update • Phone Prototype v0.1</p>
+    <p class="sub">Tap status to update • Phone Prototype v0.2</p>
   </header>
 
-  <main id="app">
-    <!-- Card 1 -->
-    <div class="project-card" data-id="1">
-      <div class="project-title">'51 Chevy Pickup</div>
-      <div class="status-group">
-        <button class="btn-status active-active" onclick="setStatus(this, 'Active')">In Progress</button>
-        <button class="btn-status" onclick="setStatus(this, 'Parts')">Waiting Parts</button>
-        <button class="btn-status" onclick="setStatus(this, 'Done')">Done</button>
-      </div>
-    </div>
+  <!-- Add New Car Form -->
+  <div class="add-car-container">
+    <input type="text" id="new-car-name" class="add-car-input" placeholder="Add car (e.g. '51 Chevy Pickup)...">
+    <button class="btn-add" onclick="addCar()">+ Add</button>
+  </div>
 
-    <!-- Card 2 -->
-    <div class="project-card" data-id="2">
-      <div class="project-title">'57 Bel Air</div>
-      <div class="status-group">
-        <button class="btn-status" onclick="setStatus(this, 'Active')">In Progress</button>
-        <button class="btn-status active-parts" onclick="setStatus(this, 'Parts')">Waiting Parts</button>
-        <button class="btn-status" onclick="setStatus(this, 'Done')">Done</button>
-      </div>
-    </div>
-  </main>
+  <main id="app-container"></main>
 
   <script>
     // Hybrid Offline Banner Handling
     function updateOnlineStatus() {
       const banner = document.getElementById('sync-banner');
-      if (navigator.onLine) {
-        banner.style.display = 'none';
-      } else {
-        banner.style.display = 'block';
+      banner.style.display = navigator.onLine ? 'none' : 'block';
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // Default seed data if local memory is empty
+    const defaultData = [
+      {
+        id: 1,
+        title: "'51 Chevy Pickup",
+        status: "Active",
+        tasks: [
+          { text: "Airbag bracket fabrication", done: false },
+          { text: "Route airline system", done: true }
+        ]
+      },
+      {
+        id: 2,
+        title: "'57 Bel Air",
+        status: "Parts",
+        tasks: [
+          { text: "Waiting on front disc conversion kit", done: false }
+        ]
+      }
+    ];
+
+    // Load initial data from localStorage or fallback to seed
+    let projects = JSON.parse(localStorage.getItem('cp_projects')) || defaultData;
+
+    function saveAndRender() {
+      localStorage.setItem('cp_projects', JSON.stringify(projects));
+      renderProjects();
+    }
+
+    function addCar() {
+      const input = document.getElementById('new-car-name');
+      const name = input.value.trim();
+      if (!name) return;
+
+      projects.unshift({
+        id: Date.now(),
+        title: name,
+        status: 'Active',
+        tasks: []
+      });
+
+      input.value = '';
+      saveAndRender();
+    }
+
+    function deleteCar(id) {
+      projects = projects.filter(p => p.id !== id);
+      saveAndRender();
+    }
+
+    function updateStatus(id, status) {
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        project.status = status;
+        saveAndRender();
       }
     }
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+    function addTask(id) {
+      const input = document.getElementById(`task-input-${id}`);
+      const text = input.value.trim();
+      if (!text) return;
 
-    updateOnlineStatus();
-
-    // Toggle Status Buttons
-    function setStatus(btn, state) {
-      const group = btn.parentElement;
-      const buttons = group.querySelectorAll('.btn-status');
-      
-      buttons.forEach(b => {
-        b.className = 'btn-status';
-      });
-
-      if (state === 'Active') btn.classList.add('active-active');
-      if (state === 'Parts') btn.classList.add('active-parts');
-      if (state === 'Done') btn.classList.add('active-done');
-
-      const card = btn.closest('.project-card');
-      const id = card.getAttribute('data-id');
-      localStorage.setItem(`project_status_${id}`, state);
+      const project = projects.find(p => p.id === id);
+      if (project) {
+        project.tasks.push({ text, done: false });
+        input.value = '';
+        saveAndRender();
+      }
     }
+
+    function toggleTask(projId, taskIdx) {
+      const project = projects.find(p => p.id === projId);
+      if (project && project.tasks[taskIdx]) {
+        project.tasks[taskIdx].done = !project.tasks[taskIdx].done;
+        saveAndRender();
+      }
+    }
+
+    function deleteTask(projId, taskIdx) {
+      const project = projects.find(p => p.id === projId);
+      if (project) {
+        project.tasks.splice(taskIdx, 1);
+        saveAndRender();
+      }
+    }
+
+    function renderProjects() {
+      const container = document.getElementById('app-container');
+      container.innerHTML = '';
+
+      projects.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="project-title">${p.title}</div>
+            <button class="btn-delete-card" onclick="deleteCar(${p.id})">✕</button>
+          </div>
+
+          <div class="status-group">
+            <button class="btn-status ${p.status === 'Active' ? 'active-active' : ''}" onclick="updateStatus(${p.id}, 'Active')">In Progress</button>
+            <button class="btn-status ${p.status === 'Parts' ? 'active-parts' : ''}" onclick="updateStatus(${p.id}, 'Parts')">Waiting Parts</button>
+            <button class="btn-status ${p.status === 'Done' ? 'active-done' : ''}" onclick="updateStatus(${p.id}, 'Done')">Done</button>
+          </div>
+
+          <div class="task-section">
+            <div class="task-title">Tasks (${p.tasks.filter(t => t.done).length}/${p.tasks.length})</div>
+            <ul class="task-list">
+              ${p.tasks.map((t, idx) => `
+                <li class="task-item ${t.done ? 'completed' : ''}">
+                  <input type="checkbox" class="task-checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${p.id}, ${idx})">
+                  <span>${t.text}</span>
+                  <button class="btn-delete-task" onclick="deleteTask(${p.id}, ${idx})">✕</button>
+                </li>
+              `).join('')}
+            </ul>
+            <div class="add-task-container">
+              <input type="text" id="task-input-${p.id}" class="add-task-input" placeholder="Add task...">
+              <button class="btn-add-task" onclick="addTask(${p.id})">+ Task</button>
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // Initial Render
+    renderProjects();
   </script>
 </body>
 </html>
