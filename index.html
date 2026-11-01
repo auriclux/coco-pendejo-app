@@ -233,7 +233,7 @@
         <div class="modal-card">
             <div class="modal-title">Tell Scot What You Think</div>
             <div id="speech-status" class="modal-status">
-                Tap the text box below, press the 🎙️ <b>microphone icon on your keyboard</b>, and speak into your phone.
+                Tap the box, press the 🎙️ <b>mic icon on your keyboard</b>, speak your note, then press <b>Done</b>.
             </div>
             <textarea id="feedback-text" class="feedback-textarea" placeholder="Tap here, then hit keyboard mic..." inputmode="text"></textarea>
             <div class="modal-actions">
@@ -373,10 +373,10 @@
             modal.style.display = 'flex';
             textInput.value = '';
 
-            // 1. Speak instructions out loud via Text-to-Speech
+            // 1. Speak updated instructions out loud via Text-to-Speech
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Clear any previous speech queue
-                const utterance = new SpeechSynthesisUtterance("Press the microphone icon on your keyboard, then speak your note into your phone.");
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance("Press the microphone icon on your keyboard, speak your note, then press Done to complete and follow instructions from your phone.");
                 utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
