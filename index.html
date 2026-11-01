@@ -21,6 +21,8 @@
       color: var(--text);
       margin: 0;
       padding: 16px;
+      /* Extra bottom padding so content doesn't get hidden behind the fixed feedback bar */
+      padding-bottom: 90px;
       -webkit-tap-highlight-color: transparent;
     }
     #sync-banner {
@@ -174,6 +176,33 @@
 
   <main id="app-container"></main>
 
+  <!-- Voice Feedback Bar -->
+  <div id="feedback-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; padding: 12px; border-top: 2px solid #e74c3c; text-align: center; z-index: 1000;">
+    <button id="btn-tell-scot" onclick="openFeedbackModal()" style="background: #e74c3c; color: #fff; border: none; padding: 14px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer;">
+      🎤 TELL SCOT WHAT YOU THINK
+    </button>
+  </div>
+
+  <!-- Voice Feedback Modal Overlay -->
+  <div id="feedback-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 1001; padding: 20px; box-sizing: border-box; justify-content: center; align-items: center;">
+    <div style="background: #2b2b2b; color: #fff; padding: 20px; border-radius: 12px; max-width: 450px; width: 100%; text-align: center; border: 1px solid #444;">
+      <h3 style="margin-top: 0; color: #f39c12;">Coco is Listening...</h3>
+      <p id="feedback-status" style="font-size: 0.9rem; color: #aaa;">"Press then speak to tell me what you think."</p>
+
+      <!-- Transcribed Text Container -->
+      <textarea id="feedback-transcript" rows="5" style="width: 100%; background: #111; color: #2ecc71; border: 1px solid #444; border-radius: 6px; padding: 10px; font-size: 1rem; box-sizing: border-box; margin-bottom: 15px;" placeholder="Spoken feedback will appear here..."></textarea>
+
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="saveFeedback()" style="background: #2ecc71; color: #000; border: none; padding: 12px 20px; font-weight: bold; font-size: 1rem; border-radius: 6px; flex: 1; cursor: pointer;">
+          ✅ DONE / SEND
+        </button>
+        <button onclick="closeFeedbackModal()" style="background: #7f8c8d; color: #fff; border: none; padding: 12px 15px; font-size: 1rem; border-radius: 6px; cursor: pointer;">
+          CANCEL
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Hybrid Offline Banner Handling
     function updateOnlineStatus() {
@@ -315,113 +344,82 @@
 
     // Initial Render
     renderProjects();
-  </script>
-<!-- Voice Feedback Bar (Place at the bottom of index.html body) -->
-<div id="feedback-bar" style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; padding: 12px; border-top: 2px solid #e74c3c; text-align: center; z-index: 1000;">
-  <button id="btn-tell-scot" onclick="openFeedbackModal()" style="background: #e74c3c; color: #fff; border: none; padding: 14px 20px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-    🎤 TELL SCOT WHAT YOU THINK
-  </button>
-</div>
 
-<!-- Voice Feedback Modal Overlay -->
-<div id="feedback-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 1001; padding: 20px; box-sizing: border-box; justify-content: center; align-items: center;">
-  <div style="background: #2b2b2b; color: #fff; padding: 20px; border-radius: 12px; max-width: 450px; width: 100%; text-align: center; border: 1px solid #444;">
-    <h3 style="margin-top: 0; color: #f39c12;">Coco is Listening...</h3>
-    <p id="feedback-status" style="font-size: 0.9rem; color: #aaa;">"Press then speak to tell me what you think."</p>
+    // Voice Feedback Logic & Speech Synthesis
+    let recognition = null;
 
-    <!-- Transcribed Text Container -->
-    <textarea id="feedback-transcript" rows="5" style="width: 100%; background: #111; color: #2ecc71; border: 1px solid #444; border-radius: 6px; padding: 10px; font-size: 1rem; box-sizing: border-box; margin-bottom: 15px;" placeholder="Spoken feedback will appear here..."></textarea>
-
-    <div style="display: flex; gap: 10px; justify-content: center;">
-      <button onclick="saveFeedback()" style="background: #2ecc71; color: #000; border: none; padding: 12px 20px; font-weight: bold; font-size: 1rem; border-radius: 6px; flex: 1;">
-        ✅ DONE / SEND
-      </button>
-      <button onclick="closeFeedbackModal()" style="background: #7f8c8d; color: #fff; border: none; padding: 12px 15px; font-size: 1rem; border-radius: 6px;">
-        CANCEL
-      </button>
-    </div>
-  </div>
-</div>
-
-<script>
-let recognition = null;
-
-// Speech Synthesis: Audio Prompt ("Press then speak to tell me what you think")
-function speakPrompt(text) {
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    window.speechSynthesis.speak(utterance);
-  }
-}
-
-function openFeedbackModal() {
-  document.getElementById('feedback-modal').style.display = 'flex';
-  document.getElementById('feedback-transcript').value = '';
-  
-  // Play the audio invitation
-  speakPrompt("Press then speak to tell me what you think.");
-  
-  startSpeechRecognition();
-}
-
-function closeFeedbackModal() {
-  if (recognition) recognition.stop();
-  document.getElementById('feedback-modal').style.display = 'none';
-}
-
-function startSpeechRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    document.getElementById('feedback-status').innerText = "Web Speech API not supported on this browser.";
-    return;
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-  recognition.lang = 'en-US';
-
-  recognition.onstart = () => {
-    document.getElementById('feedback-status').innerText = "🔴 Listening... Speak clearly.";
-  };
-
-  recognition.onresult = (event) => {
-    let transcript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
+    function speakPrompt(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+      }
     }
-    document.getElementById('feedback-transcript').value = transcript;
-  };
 
-  recognition.onerror = (event) => {
-    console.error("Speech Error:", event.error);
-    document.getElementById('feedback-status').innerText = "Speech recognition error: " + event.error;
-  };
+    function openFeedbackModal() {
+      document.getElementById('feedback-modal').style.display = 'flex';
+      document.getElementById('feedback-transcript').value = '';
+      
+      speakPrompt("Press then speak to tell me what you think.");
+      startSpeechRecognition();
+    }
 
-  recognition.start();
-}
+    function closeFeedbackModal() {
+      if (recognition) recognition.stop();
+      document.getElementById('feedback-modal').style.display = 'none';
+    }
 
-function saveFeedback() {
-  const text = document.getElementById('feedback-transcript').value.trim();
-  if (!text) {
-    closeFeedbackModal();
-    return;
-  }
+    function startSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        document.getElementById('feedback-status').innerText = "Web Speech API not supported on this browser.";
+        return;
+      }
 
-  // Store in LocalStorage under 'coco_feedback_log'
-  const existingLog = JSON.parse(localStorage.getItem('coco_feedback_log') || '[]');
-  existingLog.push({
-    timestamp: new Date().toISOString(),
-    feedback: text
-  });
-  localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-  if (recognition) recognition.stop();
-  document.getElementById('feedback-modal').style.display = 'none';
-  alert("Feedback saved! Scot will see this on the next update check.");
-}
-</script>
+      recognition.onstart = () => {
+        document.getElementById('feedback-status').innerText = "🔴 Listening... Speak clearly.";
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        document.getElementById('feedback-transcript').value = transcript;
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech Error:", event.error);
+        document.getElementById('feedback-status').innerText = "Speech recognition error: " + event.error;
+      };
+
+      recognition.start();
+    }
+
+    function saveFeedback() {
+      const text = document.getElementById('feedback-transcript').value.trim();
+      if (!text) {
+        closeFeedbackModal();
+        return;
+      }
+
+      const existingLog = JSON.parse(localStorage.getItem('coco_feedback_log') || '[]');
+      existingLog.push({
+        timestamp: new Date().toISOString(),
+        feedback: text
+      });
+      localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
+
+      if (recognition) recognition.stop();
+      document.getElementById('feedback-modal').style.display = 'none';
+      alert("Feedback saved! Scot will see this on the next update check.");
+    }
+  </script>
 </body>
 </html>
