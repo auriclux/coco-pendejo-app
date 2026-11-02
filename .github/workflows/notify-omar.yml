@@ -16,4 +16,4 @@ jobs:
           auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
           from: ${{ secrets.TWILIO_FROM_NUMBER }}
           to: ${{ secrets.OMAR_PHONE_NUMBER }}
-          body: "🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!"
+          body: "🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!  https://auriclux.github.io/coco-pendejo-app/"
