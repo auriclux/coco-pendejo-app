@@ -76,10 +76,19 @@
             font-weight: bold;
         }
         .btn-delete {
-            background: transparent;
-            color: #555;
-            padding: 4px 8px;
-            font-size: 0.9rem;
+            background: rgba(255, 23, 68, 0.12);
+            color: var(--danger);
+            border: 1px solid rgba(255, 23, 68, 0.3);
+            padding: 5px 8px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-delete:active {
+            background: var(--danger);
+            color: #fff;
         }
         .status-selector {
             display: grid;
@@ -110,7 +119,7 @@
         }
         .task-item input[type="checkbox"] { width: 18px; height: 18px; }
         .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
-        .task-item .remove-task { margin-left: auto; color: #444; background: none; padding: 2px 6px; }
+        .task-item .remove-task { margin-left: auto; color: #666; background: none; padding: 2px 6px; }
         
         .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
@@ -283,15 +292,15 @@
                 let tasksHtml = car.tasks.map((task, index) => `
                     <div class="task-item ${task.done ? 'completed' : ''}">
                         <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
-                        <span>${task.text}</span>
+                        <span>${escapeHtml(task.text)}</span>
                         <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
                     </div>
                 `).join('');
 
                 card.innerHTML = `
                     <div class="car-header">
-                        <span class="car-title">${car.title}</span>
-                        <button class="btn-delete" onclick="deleteCar(${car.id})">✕</button>
+                        <span class="car-title">${escapeHtml(car.title)}</span>
+                        <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️ Delete</button>
                     </div>
                     <div class="status-selector">
                         <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setStatus(${car.id}, 'In Progress')">In Progress</div>
@@ -324,8 +333,13 @@
         }
 
         function deleteCar(id) {
-            projects = projects.filter(p => p.id !== id);
-            saveState();
+            const car = projects.find(p => p.id === id);
+            const name = car ? car.title : "this car";
+            
+            if (confirm(`Remove "${name}" from the shop board?`)) {
+                projects = projects.filter(p => p.id !== id);
+                saveState();
+            }
         }
 
         function setStatus(id, newStatus) {
@@ -362,6 +376,18 @@
                 project.tasks.splice(taskIndex, 1);
                 saveState();
             }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
         }
 
         // --- Voice Feedback & Email Dispatch Logic ---
