@@ -16,4 +16,4 @@ jobs:
           auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
           from: ${{ secrets.TWILIO_FROM_NUMBER }}
           to: ${{ secrets.OMAR_PHONE_NUMBER }}
-          body: "🚨 Double-O Garage Shop Board updated! Check out the latest build updates at https://coco-pendejo-app.vercel.app"
+          body: "🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!"
