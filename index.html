@@ -14,6 +14,7 @@
             --warn: #ff9100;
             --danger: #ff1744;
             --subtext: #aaaaaa;
+            --archive-color: #29b6f6;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -23,22 +24,35 @@
             padding: 12px;
             padding-bottom: 90px;
         }
-        h1 {
-            font-size: 1.2rem;
-            margin-bottom: 4px;
+        .header-top {
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text);
+        }
+        .view-toggle-btn {
+            background: #2a2a2a;
+            color: var(--archive-color);
+            border: 1px solid var(--archive-color);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
         }
         .subtitle {
             font-size: 0.8rem;
             color: var(--subtext);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
         .add-car-container {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
         input[type="text"] {
             flex: 1;
@@ -58,12 +72,35 @@
             font-size: 0.95rem;
         }
         .btn-add { background: var(--accent); color: #000; }
+        
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: #181818;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #282828;
+        }
+        .btn-tool {
+            flex: 1;
+            background: #282828;
+            color: #ddd;
+            font-size: 0.75rem;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
         .car-card {
             background: var(--card-bg);
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 16px;
             border: 1px solid #2a2a2a;
+        }
+        .car-card.is-archived {
+            opacity: 0.85;
+            border-color: #0288d1;
         }
         .car-header {
             display: flex;
@@ -75,20 +112,25 @@
             font-size: 1.1rem;
             font-weight: bold;
         }
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-archive {
+            background: rgba(41, 182, 246, 0.15);
+            color: var(--archive-color);
+            border: 1px solid rgba(41, 182, 246, 0.4);
+            padding: 5px 8px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
         .btn-delete {
             background: rgba(255, 23, 68, 0.12);
             color: var(--danger);
             border: 1px solid rgba(255, 23, 68, 0.3);
             padding: 5px 8px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .btn-delete:active {
-            background: var(--danger);
-            color: #fff;
         }
         .status-selector {
             display: grid;
@@ -220,12 +262,22 @@
 </head>
 <body>
 
-    <h1>Coco la Chaneque del Double-O Garage</h1>
-    <div class="subtitle">Tap status to update • Phone Prototype v0.3</div>
+    <div class="header-top">
+        <h1>Coco la Chaneque</h1>
+        <button id="view-toggle-btn" class="view-toggle-btn" onclick="toggleArchiveView()">📁 View Archive</button>
+    </div>
+    <div class="subtitle" id="board-subtitle">Active Shop Builds • Tap status to update</div>
 
     <div class="add-car-container">
         <input type="text" id="new-car-name" placeholder="Add car (e.g. '51 Chevy Pickup)...">
         <button class="btn-add" onclick="addCar()">+ Add</button>
+    </div>
+
+    <!-- Data Repatriation / Export Toolbar -->
+    <div class="toolbar">
+        <button class="btn-tool" onclick="exportData()">💾 Backup Export (.json)</button>
+        <button class="btn-tool" onclick="document.getElementById('import-file').click()">📂 Import Backup</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
     </div>
 
     <div id="board-container"></div>
@@ -253,12 +305,12 @@
     </div>
 
     <script>
-        // Seed default shop projects if empty
         const defaultProjects = [
             {
                 id: 1,
                 title: "'51 Chevy Pickup",
                 status: "In Progress",
+                archived: false,
                 tasks: [
                     { text: "Airbag bracket fabrication", done: true },
                     { text: "Route airline system", done: true }
@@ -268,6 +320,7 @@
                 id: 2,
                 title: "'57 Bel Air",
                 status: "Waiting Parts",
+                archived: false,
                 tasks: [
                     { text: "Waiting on front disc conversion kit", done: false }
                 ]
@@ -275,9 +328,25 @@
         ];
 
         let projects = JSON.parse(localStorage.getItem('oo_projects')) || defaultProjects;
+        let showingArchive = false;
 
         function saveState() {
             localStorage.setItem('oo_projects', JSON.stringify(projects));
+            renderBoard();
+        }
+
+        function toggleArchiveView() {
+            showingArchive = !showingArchive;
+            const btn = document.getElementById('view-toggle-btn');
+            const sub = document.getElementById('board-subtitle');
+
+            if (showingArchive) {
+                btn.innerText = "🛠️ View Active Builds";
+                sub.innerText = "Archived Builds Repository";
+            } else {
+                btn.innerText = "📁 View Archive";
+                sub.innerText = "Active Shop Builds • Tap status to update";
+            }
             renderBoard();
         }
 
@@ -285,9 +354,20 @@
             const container = document.getElementById('board-container');
             container.innerHTML = '';
 
-            projects.forEach((car) => {
+            const filteredProjects = projects.filter(p => !!p.archived === showingArchive);
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:30px; color:#666; font-size:0.9rem;">
+                        ${showingArchive ? 'No archived builds stored.' : 'No active builds on the shop board.'}
+                    </div>
+                `;
+                return;
+            }
+
+            filteredProjects.forEach((car) => {
                 const card = document.createElement('div');
-                card.className = 'car-card';
+                card.className = `car-card ${car.archived ? 'is-archived' : ''}`;
 
                 let tasksHtml = car.tasks.map((task, index) => `
                     <div class="task-item ${task.done ? 'completed' : ''}">
@@ -300,7 +380,12 @@
                 card.innerHTML = `
                     <div class="car-header">
                         <span class="car-title">${escapeHtml(car.title)}</span>
-                        <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️ Delete</button>
+                        <div class="header-actions">
+                            <button class="btn-archive" onclick="toggleArchiveCar(${car.id})">
+                                ${car.archived ? 'Unarchive' : '📦 Archive'}
+                            </button>
+                            <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️</button>
+                        </div>
                     </div>
                     <div class="status-selector">
                         <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setStatus(${car.id}, 'In Progress')">In Progress</div>
@@ -326,17 +411,26 @@
                 id: Date.now(),
                 title: title,
                 status: "In Progress",
+                archived: false,
                 tasks: []
             });
             input.value = '';
             saveState();
         }
 
+        function toggleArchiveCar(id) {
+            const car = projects.find(p => p.id === id);
+            if (car) {
+                car.archived = !car.archived;
+                saveState();
+            }
+        }
+
         function deleteCar(id) {
             const car = projects.find(p => p.id === id);
             const name = car ? car.title : "this car";
             
-            if (confirm(`Remove "${name}" from the shop board?`)) {
+            if (confirm(`Permanently delete "${name}" and all associated task history?`)) {
                 projects = projects.filter(p => p.id !== id);
                 saveState();
             }
@@ -378,6 +472,39 @@
             }
         }
 
+        /* --- Local Backup Export / Import (Data Repatriation) --- */
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projects, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `coco_shop_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedProjects = JSON.parse(e.target.result);
+                    if (Array.isArray(importedProjects)) {
+                        if (confirm(`Import ${importedProjects.length} builds into your board?`)) {
+                            projects = importedProjects;
+                            saveState();
+                            alert("Shop board updated successfully!");
+                        }
+                    } else {
+                        alert("Invalid backup file format.");
+                    }
+                } catch (err) {
+                    alert("Error reading file: " + err.message);
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, function(m) {
                 return {
@@ -390,7 +517,7 @@
             });
         }
 
-        // --- Voice Feedback & Email Dispatch Logic ---
+        /* --- Voice Feedback & Email Dispatch Logic --- */
 
         function openFeedbackModal() {
             const modal = document.getElementById('feedback-modal');
@@ -399,15 +526,13 @@
             modal.style.display = 'flex';
             textInput.value = '';
 
-            // 1. Speak instructions out loud via Text-to-Speech
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Clear any previous speech queue
+                window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance("Press the microphone icon on your keyboard, then speak your note into your phone.");
                 utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
 
-            // 2. Focus the text box so keyboard pops up automatically
             setTimeout(() => {
                 textInput.focus();
             }, 300);
@@ -427,7 +552,6 @@
                 return;
             }
 
-            // 1. Local backup to localStorage
             const existingLog = JSON.parse(localStorage.getItem('coco_feedback_log') || '[]');
             existingLog.push({
                 timestamp: new Date().toISOString(),
@@ -435,7 +559,6 @@
             });
             localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
 
-            // 2. Dispatch Email via Web3Forms API
             statusEl.innerHTML = "Sending email to Scot...";
             
             try {
@@ -468,7 +591,6 @@
             textInput.value = '';
         }
 
-        // Initial rendering on page load
         renderBoard();
     </script>
 </body>
