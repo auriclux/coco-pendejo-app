@@ -1,231 +1,449 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coco la Chaneque - Double-O Garage Shop Board</title>
-  <style>
-    :root {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --text-color: #e0e0e0;
-      --accent-color: #00e676;
-      --danger-color: #ff5252;
-      --border-color: #333;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Coco la Chaneque del Double-O Garage</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1c1c1c;
+            --text: #ffffff;
+            --accent: #00e676;
+            --warn: #ff9100;
+            --danger: #ff1744;
+            --subtext: #aaaaaa;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            padding-bottom: 90px;
+        }
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--subtext);
+            margin-bottom: 16px;
+        }
+        .add-car-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #222;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+        button {
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-add { background: var(--accent); color: #000; }
+        .car-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #2a2a2a;
+        }
+        .car-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .car-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background: transparent;
+            color: #555;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+        }
+        .status-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .status-btn {
+            background: #2a2a2a;
+            color: var(--subtext);
+            padding: 8px 4px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-btn.active-In-Progress { background: var(--accent); color: #000; }
+        .status-btn.active-Waiting-Parts { background: var(--warn); color: #000; }
+        .status-btn.active-Done { background: #444; color: #fff; }
+        
+        .task-list { margin-bottom: 10px; }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid #262626;
+            font-size: 0.9rem;
+        }
+        .task-item input[type="checkbox"] { width: 18px; height: 18px; }
+        .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
+        .task-item .remove-task { margin-left: auto; color: #444; background: none; padding: 2px 6px; }
+        
+        .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
+        .add-task-container input { font-size: 0.85rem; padding: 6px; }
+        .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: #333; color: #fff; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 16px;
-    }
+        /* Floating Feedback Bar at Bottom */
+        .feedback-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #181818;
+            padding: 12px;
+            border-top: 1px solid #333;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+        }
+        .btn-feedback {
+            width: 100%;
+            max-width: 400px;
+            background: #e53935;
+            color: #fff;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(229, 57, 53, 0.4);
+        }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 12px;
-    }
-
-    h1 {
-      font-size: 1.25rem;
-      margin: 0;
-      color: var(--accent-color);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .btn {
-      background-color: #2a2a2a;
-      color: var(--text-color);
-      border: 1px solid var(--border-color);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .btn:active {
-      transform: scale(0.98);
-    }
-
-    .btn-danger {
-      background-color: rgba(255, 82, 82, 0.15);
-      color: var(--danger-color);
-      border-color: var(--danger-color);
-    }
-
-    .btn-danger:hover {
-      background-color: var(--danger-color);
-      color: #fff;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 12px;
-    }
-
-    .card-title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin: 0;
-    }
-
-    .status-badge {
-      font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 4px;
-      background-color: #333;
-      color: var(--accent-color);
-      text-transform: uppercase;
-    }
-
-    .card-body {
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-      color: #aaa;
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      border-top: 1px solid #2a2a2a;
-      padding-top: 12px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px;
-      color: #777;
-    }
-  </style>
+        /* Voice Feedback Modal Overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-card {
+            background: #222;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            border: 1px solid #444;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--warn);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .modal-status {
+            font-size: 0.85rem;
+            color: var(--subtext);
+            text-align: center;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        .feedback-textarea {
+            width: 100%;
+            height: 110px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #fff;
+            padding: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            resize: none;
+            margin-bottom: 16px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-modal-send {
+            flex: 2;
+            background: var(--accent);
+            color: #000;
+            padding: 12px;
+        }
+        .btn-modal-cancel {
+            flex: 1;
+            background: #444;
+            color: #fff;
+            padding: 12px;
+        }
+    </style>
 </head>
 <body>
 
-  <header>
-    <h1>Double-O Shop Board</h1>
-    <button class="btn" onclick="resetDefaultProjects()">Reset Defaults</button>
-  </header>
+    <h1>Coco la Chaneque del Double-O Garage</h1>
+    <div class="subtitle">Tap status to update • Phone Prototype v0.3</div>
 
-  <main id="projectGrid" class="grid">
-    <!-- Project cards render dynamically here -->
-  </main>
+    <div class="add-car-container">
+        <input type="text" id="new-car-name" placeholder="Add car (e.g. '51 Chevy Pickup)...">
+        <button class="btn-add" onclick="addCar()">+ Add</button>
+    </div>
 
-  <script>
-    const defaultProjects = [
-      { id: "p1", name: "ScapeGoat", description: "1968 Pontiac GTO Street/Strip", status: "Active" },
-      { id: "p2", name: "Not for Higher", description: "1952 GMC COE Crew Cab on RAM 5500", status: "In Progress" },
-      { id: "p3", name: "Reiver, The Corner Thief", description: "1962 Mini 850 AWD LS-VTEC", status: "Staging" },
-      { id: "p4", name: "Midnight Caprice", description: "1974 Caprice Classic Twin-Turbo LS3", status: "Planning" },
-      { id: "p5", name: "VôôDôô Chīle", description: "1948 Studebaker Supercharged Voodoo", status: "Bodywork" },
-      { id: "p6", name: "BIG MACK", description: "Miniature Mack F700 on Acty HA6 TDI", status: "Chassis" }
-    ];
+    <div id="board-container"></div>
 
-    function getProjects() {
-      const stored = localStorage.getItem("coco_projects");
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch (e) {
-          console.error("Failed to parse stored projects", e);
-        }
-      }
-      return defaultProjects;
-    }
+    <!-- Floating Feedback Trigger -->
+    <div class="feedback-bar">
+        <button class="btn-feedback" onclick="openFeedbackModal()">
+            🎤 TELL SCOT WHAT YOU THINK
+        </button>
+    </div>
 
-    function saveProjects(projects) {
-      localStorage.setItem("coco_projects", JSON.stringify(projects));
-    }
-
-    function renderProjects() {
-      const grid = document.getElementById("projectGrid");
-      const projects = getProjects();
-
-      if (projects.length === 0) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column: 1 / -1;">
-            <p>No active project builds on the board.</p>
-            <button class="btn" onclick="resetDefaultProjects()">Reload Default Builds</button>
-          </div>
-        `;
-        return;
-      }
-
-      grid.innerHTML = projects.map(p => `
-        <div class="card" id="card-${p.id}">
-          <div>
-            <div class="card-header">
-              <h2 class="card-title">${escapeHtml(p.name)}</h2>
-              <span class="status-badge">${escapeHtml(p.status || 'Active')}</span>
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">Tell Scot What You Think</div>
+            <div id="speech-status" class="modal-status">
+                Tap the text box below, press the 🎙️ <b>microphone icon on your keyboard</b>, and speak into your phone.
             </div>
-            <div class="card-body">
-              <p>${escapeHtml(p.description || '')}</p>
+            <textarea id="feedback-text" class="feedback-textarea" placeholder="Tap here, then hit keyboard mic..." inputmode="text"></textarea>
+            <div class="modal-actions">
+                <button class="btn-modal-send" onclick="sendFeedback()">✅ DONE / SEND</button>
+                <button class="btn-modal-cancel" onclick="closeFeedbackModal()">CANCEL</button>
             </div>
-          </div>
-          <div class="card-footer">
-            <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑️ Delete</button>
-          </div>
         </div>
-      `).join('');
-    }
+    </div>
 
-    function deleteProject(id) {
-      let projects = getProjects();
-      const target = projects.find(p => p.id === id);
-      const name = target ? target.name : "this project";
+    <script>
+        // Seed default shop projects if empty
+        const defaultProjects = [
+            {
+                id: 1,
+                title: "'51 Chevy Pickup",
+                status: "In Progress",
+                tasks: [
+                    { text: "Airbag bracket fabrication", done: true },
+                    { text: "Route airline system", done: true }
+                ]
+            },
+            {
+                id: 2,
+                title: "'57 Bel Air",
+                status: "Waiting Parts",
+                tasks: [
+                    { text: "Waiting on front disc conversion kit", done: false }
+                ]
+            }
+        ];
 
-      if (confirm(`Remove "${name}" from the shop board?`)) {
-        projects = projects.filter(p => p.id !== id);
-        saveProjects(projects);
-        renderProjects();
-      }
-    }
+        let projects = JSON.parse(localStorage.getItem('oo_projects')) || defaultProjects;
 
-    function resetDefaultProjects() {
-      if (confirm("Reset the shop board back to default builds?")) {
-        saveProjects(defaultProjects);
-        renderProjects();
-      }
-    }
+        function saveState() {
+            localStorage.setItem('oo_projects', JSON.stringify(projects));
+            renderBoard();
+        }
 
-    function escapeHtml(str) {
-      return str.replace(/[&<>"']/g, function(m) {
-        return {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#039;'
-        }[m];
-      });
-    }
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
 
-    document.addEventListener("DOMContentLoaded", renderProjects);
-  </script>
+            projects.forEach((car) => {
+                const card = document.createElement('div');
+                card.className = 'car-card';
+
+                let tasksHtml = car.tasks.map((task, index) => `
+                    <div class="task-item ${task.done ? 'completed' : ''}">
+                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
+                        <span>${task.text}</span>
+                        <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="car-header">
+                        <span class="car-title">${car.title}</span>
+                        <button class="btn-delete" onclick="deleteCar(${car.id})">✕</button>
+                    </div>
+                    <div class="status-selector">
+                        <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setStatus(${car.id}, 'In Progress')">In Progress</div>
+                        <div class="status-btn ${car.status === 'Waiting Parts' ? 'active-Waiting-Parts' : ''}" onclick="setStatus(${car.id}, 'Waiting Parts')">Waiting Parts</div>
+                        <div class="status-btn ${car.status === 'Done' ? 'active-Done' : ''}" onclick="setStatus(${car.id}, 'Done')">Done</div>
+                    </div>
+                    <div class="task-list">${tasksHtml}</div>
+                    <div class="add-task-container">
+                        <input type="text" id="input-task-${car.id}" placeholder="Add task...">
+                        <button onclick="addTask(${car.id})">+ Task</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addCar() {
+            const input = document.getElementById('new-car-name');
+            const title = input.value.trim();
+            if (!title) return;
+
+            projects.push({
+                id: Date.now(),
+                title: title,
+                status: "In Progress",
+                tasks: []
+            });
+            input.value = '';
+            saveState();
+        }
+
+        function deleteCar(id) {
+            projects = projects.filter(p => p.id !== id);
+            saveState();
+        }
+
+        function setStatus(id, newStatus) {
+            const project = projects.find(p => p.id === id);
+            if (project) {
+                project.status = newStatus;
+                saveState();
+            }
+        }
+
+        function addTask(carId) {
+            const input = document.getElementById(`input-task-${carId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const project = projects.find(p => p.id === carId);
+            if (project) {
+                project.tasks.push({ text: text, done: false });
+                saveState();
+            }
+        }
+
+        function toggleTask(carId, taskIndex) {
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                project.tasks[taskIndex].done = !project.tasks[taskIndex].done;
+                saveState();
+            }
+        }
+
+        function removeTask(carId, taskIndex) {
+            const project = projects.find(p => p.id === carId);
+            if (project) {
+                project.tasks.splice(taskIndex, 1);
+                saveState();
+            }
+        }
+
+        // --- Voice Feedback & Email Dispatch Logic ---
+
+        function openFeedbackModal() {
+            const modal = document.getElementById('feedback-modal');
+            const textInput = document.getElementById('feedback-text');
+            
+            modal.style.display = 'flex';
+            textInput.value = '';
+
+            // 1. Speak instructions out loud via Text-to-Speech
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Clear any previous speech queue
+                const utterance = new SpeechSynthesisUtterance("Press the microphone icon on your keyboard, then speak your note into your phone.");
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // 2. Focus the text box so keyboard pops up automatically
+            setTimeout(() => {
+                textInput.focus();
+            }, 300);
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        async function sendFeedback() {
+            const textInput = document.getElementById('feedback-text');
+            const feedback = textInput.value.trim();
+            const statusEl = document.getElementById('speech-status');
+            
+            if (!feedback) {
+                alert("Please speak or type a note first!");
+                return;
+            }
+
+            // 1. Local backup to localStorage
+            const existingLog = JSON.parse(localStorage.getItem('coco_feedback_log') || '[]');
+            existingLog.push({
+                timestamp: new Date().toISOString(),
+                feedback: feedback
+            });
+            localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
+
+            // 2. Dispatch Email via Web3Forms API
+            statusEl.innerHTML = "Sending email to Scot...";
+            
+            try {
+                const response = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+                    body: JSON.stringify({
+                        access_key: "e6949144-9b5f-4c9f-9fb2-4091301d309b",
+                        subject: "🚨 Coco Shop App Feedback from Omar",
+                        from_name: "Coco la Chaneque",
+                        message: feedback,
+                        timestamp: new Date().toLocaleString()
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Feedback sent directly to Scot's email!");
+                } else {
+                    alert("Saved locally! (Email dispatch failed)");
+                }
+            } catch (error) {
+                console.error("Email dispatch error:", error);
+                alert("Saved locally! (Offline or network error)");
+            }
+
+            document.getElementById('feedback-modal').style.display = 'none';
+            textInput.value = '';
+        }
+
+        // Initial rendering on page load
+        renderBoard();
+    </script>
 </body>
 </html>
