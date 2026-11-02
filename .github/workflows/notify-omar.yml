@@ -1,0 +1,19 @@
+name: Notify Omar on Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  send-sms:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send SMS alert to Omar via Twilio
+        uses: twilio/actions-sms@v1
+        with:
+          account_sid: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          from: ${{ secrets.TWILIO_FROM_NUMBER }}
+          to: ${{ secrets.OMAR_PHONE_NUMBER }}
+          body: "🚨 Double-O Garage Shop Board updated! Check out the latest build updates at https://coco-pendejo-app.vercel.app"
