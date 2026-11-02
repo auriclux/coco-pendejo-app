@@ -568,3 +568,40 @@
                 feedback: feedback
             });
             localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
+
+            statusEl.innerHTML = "Sending email to Scot...";
+            
+            try {
+                const response = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json"
+                    },
+                    body: JSON.stringify({
+                        access_key: "e6949144-9b5f-4c9f-9fb2-4091301d309b",
+                        subject: "🚨 Double-O Garage App Feedback from Omar",
+                        from_name: "Coco",
+                        message: feedback,
+                        timestamp: new Date().toLocaleString()
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Feedback sent directly to Scot's email!");
+                } else {
+                    alert("Saved locally! (Email dispatch failed)");
+                }
+            } catch (error) {
+                console.error("Email dispatch error:", error);
+                alert("Saved locally! (Offline or network error)");
+            }
+
+            document.getElementById('feedback-modal').style.display = 'none';
+            textInput.value = '';
+        }
+
+        renderBoard();
+    </script>
+</body>
+</html>
