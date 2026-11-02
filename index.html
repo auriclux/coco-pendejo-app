@@ -133,11 +133,10 @@
   </header>
 
   <main id="projectGrid" class="grid">
-    <!-- Project cards will render dynamically here -->
+    <!-- Project cards render dynamically here -->
   </main>
 
   <script>
-    // Initial Default Vehicles
     const defaultProjects = [
       { id: "p1", name: "ScapeGoat", description: "1968 Pontiac GTO Street/Strip", status: "Active" },
       { id: "p2", name: "Not for Higher", description: "1952 GMC COE Crew Cab on RAM 5500", status: "In Progress" },
@@ -147,7 +146,6 @@
       { id: "p6", name: "BIG MACK", description: "Miniature Mack F700 on Acty HA6 TDI", status: "Chassis" }
     ];
 
-    // Load projects from localStorage or set default
     function getProjects() {
       const stored = localStorage.getItem("coco_projects");
       if (stored) {
@@ -160,12 +158,10 @@
       return defaultProjects;
     }
 
-    // Save current project state to localStorage
     function saveProjects(projects) {
       localStorage.setItem("coco_projects", JSON.stringify(projects));
     }
 
-    // Render cards to UI
     function renderProjects() {
       const grid = document.getElementById("projectGrid");
       const projects = getProjects();
@@ -192,26 +188,24 @@
             </div>
           </div>
           <div class="card-footer">
-            <button class="btn btn-danger" onclick="deleteProject('${p.id}')">Delete</button>
+            <button class="btn btn-danger" onclick="deleteProject('${p.id}')">🗑️ Delete</button>
           </div>
         </div>
       `).join('');
     }
 
-    // Delete a project card by ID
     function deleteProject(id) {
       let projects = getProjects();
       const target = projects.find(p => p.id === id);
       const name = target ? target.name : "this project";
 
-      if (confirm(`Are you sure you want to remove "${name}" from the shop board?`)) {
+      if (confirm(`Remove "${name}" from the shop board?`)) {
         projects = projects.filter(p => p.id !== id);
         saveProjects(projects);
         renderProjects();
       }
     }
 
-    // Reset back to initial default vehicle list
     function resetDefaultProjects() {
       if (confirm("Reset the shop board back to default builds?")) {
         saveProjects(defaultProjects);
@@ -219,7 +213,6 @@
       }
     }
 
-    // Helper to sanitize HTML input
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, function(m) {
         return {
@@ -232,7 +225,6 @@
       });
     }
 
-    // Initial load
     document.addEventListener("DOMContentLoaded", renderProjects);
   </script>
 </body>
