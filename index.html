@@ -34,6 +34,16 @@
             font-size: 1.1rem;
             margin: 0;
             color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .coco-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--accent);
+            object-fit: cover;
         }
         .view-toggle-btn {
             background: #2a2a2a;
@@ -47,8 +57,37 @@
         .subtitle {
             font-size: 0.8rem;
             color: var(--subtext);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
+
+        /* Task #1: Vehicle Filter Bar */
+        .vehicle-filter-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .vehicle-filter-bar::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            background: #222;
+            color: #aaa;
+            border: 1px solid #333;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-chip.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            font-weight: bold;
+        }
+
         .add-car-container {
             display: flex;
             gap: 8px;
@@ -167,7 +206,7 @@
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
         .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: #333; color: #fff; }
 
-        /* Floating Feedback Bar at Bottom */
+        /* Floating Feedback Bar */
         .feedback-bar {
             position: fixed;
             bottom: 0;
@@ -185,17 +224,22 @@
             max-width: 400px;
             background: #e53935;
             color: #fff;
-            padding: 12px;
-            font-size: 1rem;
+            padding: 10px;
+            font-size: 0.95rem;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             box-shadow: 0 2px 8px rgba(229, 57, 53, 0.4);
         }
+        .btn-feedback img {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+        }
 
-        /* Voice Feedback Modal Overlay */
+        /* Modal Overlay */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -213,19 +257,24 @@
             max-width: 420px;
             padding: 20px;
             border: 1px solid #444;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .modal-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--warn);
+            margin-bottom: 8px;
         }
         .modal-title {
             font-size: 1.1rem;
             font-weight: bold;
             color: var(--warn);
             margin-bottom: 8px;
-            text-align: center;
         }
         .modal-status {
             font-size: 0.85rem;
             color: var(--subtext);
-            text-align: center;
             margin-bottom: 12px;
             line-height: 1.3;
         }
@@ -246,34 +295,31 @@
             display: flex;
             gap: 10px;
         }
-        .btn-modal-send {
-            flex: 2;
-            background: var(--accent);
-            color: #000;
-            padding: 12px;
-        }
-        .btn-modal-cancel {
-            flex: 1;
-            background: #444;
-            color: #fff;
-            padding: 12px;
-        }
+        .btn-modal-send { flex: 2; background: var(--accent); color: #000; }
+        .btn-modal-cancel { flex: 1; background: #444; color: #fff; }
     </style>
 </head>
 <body>
 
     <div class="header-top">
-        <h1>Coco la Chaneque del Double-O Garage</h1>
+        <h1>
+            <!-- Code Replacement: Fixed filename and full title -->
+            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge">
+            Coco la Chaneque del Double-O Garage
+        </h1>
         <button id="view-toggle-btn" class="view-toggle-btn" onclick="toggleArchiveView()">📁 View Archive</button>
     </div>
-    <div class="subtitle" id="board-subtitle">Active Shop Builds • Tap status to update</div>
+    <!-- Subtitle: Kept separate for dynamic JS toggling -->
+    <div class="subtitle" id="board-subtitle">Active Builds</div>
+
+    <!-- Task #1: Multi-Vehicle Filter Bar -->
+    <div id="filter-bar" class="vehicle-filter-bar"></div>
 
     <div class="add-car-container">
-        <input type="text" id="new-car-name" placeholder="Add car (e.g. '51 Chevy Pickup)...">
+        <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
         <button class="btn-add" onclick="addCar()">+ Add</button>
     </div>
 
-    <!-- Data Repatriation / Export Toolbar -->
     <div class="toolbar">
         <button class="btn-tool" onclick="exportData()">💾 Backup Export (.json)</button>
         <button class="btn-tool" onclick="document.getElementById('import-file').click()">📂 Import Backup</button>
@@ -285,16 +331,18 @@
     <!-- Floating Feedback Trigger -->
     <div class="feedback-bar">
         <button class="btn-feedback" onclick="openFeedbackModal()">
-            🎤 TELL SCOT WHAT YOU THINK
+            <img src="image_8.png" alt="Coco">
+            TELL SCOT WHAT YOU THINK
         </button>
     </div>
 
     <!-- Feedback Modal -->
     <div id="feedback-modal" class="modal-overlay">
         <div class="modal-card">
+            <img src="image_8.png" alt="Coco" class="modal-avatar">
             <div class="modal-title">Tell Scot What You Think</div>
             <div id="speech-status" class="modal-status">
-                Tap the text box below, press the 🎙️ <b>microphone icon on your keyboard</b>, and speak into your phone.
+                Tap the box below, press the 🎙️ <b>keyboard mic</b>, and speak.
             </div>
             <textarea id="feedback-text" class="feedback-textarea" placeholder="Tap here, then hit keyboard mic..." inputmode="text"></textarea>
             <div class="modal-actions">
@@ -308,25 +356,37 @@
         const defaultProjects = [
             {
                 id: 1,
-                title: "'51 Chevy Pickup",
+                title: "ScapeGoat (1968 GTO)",
                 status: "In Progress",
                 archived: false,
                 tasks: [
-                    { text: "Airbag bracket fabrication", done: true },
-                    { text: "Route airline system", done: true }
+                    { text: "Box chassis frame rails & weld X-member", done: true },
+                    { text: "Fit Weld ProStar 15x14 rear wheels & tires", done: true },
+                    { text: "Wire Holley Terminator X MAX ECU", done: false }
                 ]
             },
             {
                 id: 2,
-                title: "'57 Bel Air",
-                status: "Waiting Parts",
+                title: "Not for Higher (1952 GMC COE)",
+                status: "In Progress",
                 archived: false,
                 tasks: [
-                    { text: "Waiting on front disc conversion kit", done: false }
+                    { text: "Mount 1952 COE cab on RAM 5500 frame", done: true },
+                    { text: "Hook up Edge Insight CTS3 monitor", done: false }
                 ]
             },
             {
                 id: 3,
+                title: "Midnight Caprice (1974 Caprice)",
+                status: "Waiting Parts",
+                archived: false,
+                tasks: [
+                    { text: "Twin-turbo piping clearance check", done: false },
+                    { text: "Install bagged air suspension lines", done: false }
+                ]
+            },
+            {
+                id: 4,
                 title: "Torky-T (1923 Ford T-Bucket)",
                 status: "In Progress",
                 archived: false,
@@ -338,11 +398,38 @@
         ];
 
         let projects = JSON.parse(localStorage.getItem('oo_projects')) || defaultProjects;
+        let selectedVehicleFilter = localStorage.getItem('oo_selected_filter') || 'ALL';
         let showingArchive = false;
 
         function saveState() {
             localStorage.setItem('oo_projects', JSON.stringify(projects));
+            localStorage.setItem('oo_selected_filter', selectedVehicleFilter);
+            renderFilterBar();
             renderBoard();
+        }
+
+        /* Task #1: Filter Bar Component */
+        function renderFilterBar() {
+            const filterBar = document.getElementById('filter-bar');
+            filterBar.innerHTML = '';
+
+            const availableProjects = projects.filter(p => !!p.archived === showingArchive);
+            const options = ['ALL', ...availableProjects.map(p => p.title)];
+
+            if (!options.includes(selectedVehicleFilter)) {
+                selectedVehicleFilter = 'ALL';
+            }
+
+            options.forEach(opt => {
+                const chip = document.createElement('div');
+                chip.className = `filter-chip ${selectedVehicleFilter === opt ? 'active' : ''}`;
+                chip.innerText = opt;
+                chip.onclick = () => {
+                    selectedVehicleFilter = opt;
+                    saveState();
+                };
+                filterBar.appendChild(chip);
+            });
         }
 
         function toggleArchiveView() {
@@ -355,21 +442,25 @@
                 sub.innerText = "Archived Builds Repository";
             } else {
                 btn.innerText = "📁 View Archive";
-                sub.innerText = "Active Shop Builds • Tap status to update";
+                sub.innerText = "Double-O Garage • Active Builds";
             }
-            renderBoard();
+            saveState();
         }
 
         function renderBoard() {
             const container = document.getElementById('board-container');
             container.innerHTML = '';
 
-            const filteredProjects = projects.filter(p => !!p.archived === showingArchive);
+            let filteredProjects = projects.filter(p => !!p.archived === showingArchive);
+
+            if (selectedVehicleFilter !== 'ALL') {
+                filteredProjects = filteredProjects.filter(p => p.title === selectedVehicleFilter);
+            }
 
             if (filteredProjects.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding:30px; color:#666; font-size:0.9rem;">
-                        ${showingArchive ? 'No archived builds stored.' : 'No active builds on the shop board.'}
+                        ${showingArchive ? 'No archived builds stored.' : 'No active builds matching filter.'}
                     </div>
                 `;
                 return;
@@ -440,7 +531,7 @@
             const car = projects.find(p => p.id === id);
             const name = car ? car.title : "this car";
             
-            if (confirm(`Permanently delete "${name}" and all associated task history?`)) {
+            if (confirm(`Permanently delete "${name}" and all associated tasks?`)) {
                 projects = projects.filter(p => p.id !== id);
                 saveState();
             }
@@ -482,8 +573,6 @@
             }
         }
 
-        /* --- Local Backup Export / Import (Data Repatriation) --- */
-
         function exportData() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projects, null, 2));
             const downloadAnchor = document.createElement('a');
@@ -518,34 +607,33 @@
         function escapeHtml(str) {
             return String(str).replace(/[&<>"']/g, function(m) {
                 return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#039;'
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
                 }[m];
             });
         }
 
-        /* --- Voice Feedback & Email Dispatch Logic --- */
+        /* Voice Matcher for Coco */
+        function speakAsCoco(textPrompt) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textPrompt);
+            utterance.pitch = 1.35;
+            utterance.rate = 1.1;
+            const voices = window.speechSynthesis.getVoices();
+            const cocoVoice = voices.find(v => 
+                v.lang.includes('es-MX') || v.name.includes('Paulina') || v.name.includes('Monica') || v.name.includes('Sofia')
+            ) || voices.find(v => v.lang.includes('es'));
+            if (cocoVoice) utterance.voice = cocoVoice;
+            window.speechSynthesis.speak(utterance);
+        }
 
         function openFeedbackModal() {
             const modal = document.getElementById('feedback-modal');
             const textInput = document.getElementById('feedback-text');
-            
             modal.style.display = 'flex';
             textInput.value = '';
-
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance("Press the microphone icon on your keyboard, then speak your note into your phone.");
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-
-            setTimeout(() => {
-                textInput.focus();
-            }, 300);
+            speakAsCoco("Press the microphone icon on your keyboard, then speak your note into your phone.");
+            setTimeout(() => { textInput.focus(); }, 300);
         }
 
         function closeFeedbackModal() {
@@ -562,22 +650,11 @@
                 return;
             }
 
-            const existingLog = JSON.parse(localStorage.getItem('coco_feedback_log') || '[]');
-            existingLog.push({
-                timestamp: new Date().toISOString(),
-                feedback: feedback
-            });
-            localStorage.setItem('coco_feedback_log', JSON.stringify(existingLog));
-
             statusEl.innerHTML = "Sending email to Scot...";
-            
             try {
                 const response = await fetch("https://api.web3forms.com/submit", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Accept: "application/json"
-                    },
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
                     body: JSON.stringify({
                         access_key: "e6949144-9b5f-4c9f-9fb2-4091301d309b",
                         subject: "🚨 Double-O Garage App Feedback from Omar",
@@ -586,22 +663,19 @@
                         timestamp: new Date().toLocaleString()
                     })
                 });
-
                 if (response.ok) {
                     alert("Feedback sent directly to Scot's email!");
                 } else {
                     alert("Saved locally! (Email dispatch failed)");
                 }
             } catch (error) {
-                console.error("Email dispatch error:", error);
                 alert("Saved locally! (Offline or network error)");
             }
-
             document.getElementById('feedback-modal').style.display = 'none';
             textInput.value = '';
         }
 
-        renderBoard();
+        saveState();
     </script>
 </body>
 </html>

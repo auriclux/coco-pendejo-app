@@ -2,18 +2,21 @@ name: Notify Omar on Production Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   send-sms:
     runs-on: ubuntu-latest
     steps:
-      - name: Send SMS alert to Omar via Twilio
-        uses: twilio/actions-sms@v1
-        with:
-          account_sid: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          auth_token: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          from: ${{ secrets.TWILIO_FROM_NUMBER }}
-          to: ${{ secrets.OMAR_PHONE_NUMBER }}
-          body: "🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!  https://auriclux.github.io/coco-pendejo-app/"
+      - name: Send Twilio SMS to Omar
+        env:
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+          OMAR_PHONE_NUMBER: ${{ secrets.OMAR_PHONE_NUMBER }}
+        run: |
+          curl -X POST "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
+          --data-urlencode "To=$OMAR_PHONE_NUMBER" \
+          --data-urlencode "From=$TWILIO_FROM_NUMBER" \
+          --data-urlencode "Body=🚨 Double-O Garage: Main branch updated successfully!" \
+          -u "$TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN"
