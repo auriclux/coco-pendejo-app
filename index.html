@@ -93,7 +93,7 @@
             gap: 8px;
             margin-bottom: 12px;
         }
-        input[type="text"] {
+        input[type="text"], input[type="date"] {
             flex: 1;
             padding: 10px;
             border-radius: 6px;
@@ -197,6 +197,7 @@
             padding: 6px 0;
             border-bottom: 1px solid #262626;
             font-size: 0.9rem;
+            flex-wrap: wrap;
         }
         .task-item input[type="checkbox"] { width: 18px; height: 18px; }
         .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
@@ -239,7 +240,7 @@
             border-radius: 50%;
         }
 
-        /* Modal Overlay */
+        /* Modal Overlay & Card Styling */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -251,14 +252,19 @@
             padding: 16px;
         }
         .modal-card {
-            background: #222;
+            background: #1e1e1e;
             border-radius: 12px;
             width: 100%;
             max-width: 420px;
             padding: 20px;
             border: 1px solid #444;
-            text-align: center;
         }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;
+        }
+        .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+        
         .modal-avatar {
             width: 48px;
             height: 48px;
@@ -291,60 +297,37 @@
             resize: none;
             margin-bottom: 16px;
         }
+        .form-group { margin-bottom: 1rem; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 0.25rem; }
+        .form-group input {
+            width: 100%; padding: 0.6rem; border-radius: 4px;
+            border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box;
+        }
         .modal-actions {
             display: flex;
             gap: 10px;
         }
         .btn-modal-send { flex: 2; background: var(--accent); color: #000; }
         .btn-modal-cancel { flex: 1; background: #444; color: #fff; }
-    /* Part Order Modal Styling */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.75);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
-}
-.modal-card {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    width: 100%; max-width: 480px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    color: #e0e0e0;
-}
-.modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;
-}
-.close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
-.form-group { margin-bottom: 1rem; }
-.form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 0.25rem; }
-.form-group input {
-    width: 100%; padding: 0.6rem; border-radius: 4px;
-    border: 1px solid #444; background: #2a2a2a; color: #fff;
-}
-.part-tag {
-    display: inline-block; font-size: 0.75rem; background: #2d3748; color: #63b3ed;
-    padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer;
-}</style>
+        
+        .part-tag {
+            display: block; width: 100%; font-size: 0.75rem; background: #2d3748; color: #63b3ed;
+            padding: 4px 8px; border-radius: 4px; margin-top: 4px; cursor: pointer; text-decoration: none;
+        }
+    </style>
 </head>
 <body>
 
     <div class="header-top">
         <h1>
-            <!-- Code Replacement: Fixed filename and full title -->
             <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge">
             Coco la Chaneque del Double-O Garage
         </h1>
         <button id="view-toggle-btn" class="view-toggle-btn" onclick="toggleArchiveView()">📁 View Archive</button>
     </div>
-    <!-- Subtitle: Kept separate for dynamic JS toggling -->
     <div class="subtitle" id="board-subtitle">Active Builds</div>
 
-    <!-- Task #1: Multi-Vehicle Filter Bar -->
+    <!-- Vehicle Filter Bar -->
     <div id="filter-bar" class="vehicle-filter-bar"></div>
 
     <div class="add-car-container">
@@ -363,15 +346,15 @@
     <!-- Floating Feedback Trigger -->
     <div class="feedback-bar">
         <button class="btn-feedback" onclick="openFeedbackModal()">
-            <img src="image_8.png" alt="Coco">
+            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco">
             TELL SCOT WHAT YOU THINK
         </button>
     </div>
 
     <!-- Feedback Modal -->
     <div id="feedback-modal" class="modal-overlay">
-        <div class="modal-card">
-            <img src="image_8.png" alt="Coco" class="modal-avatar">
+        <div class="modal-card" style="text-align: center;">
+            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="modal-avatar">
             <div class="modal-title">Tell Scot What You Think</div>
             <div id="speech-status" class="modal-status">
                 Tap the box below, press the 🎙️ <b>keyboard mic</b>, and speak.
@@ -381,6 +364,40 @@
                 <button class="btn-modal-send" onclick="sendFeedback()">✅ DONE / SEND</button>
                 <button class="btn-modal-cancel" onclick="closeFeedbackModal()">CANCEL</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Part Order & Vendor Tracking Modal -->
+    <div id="part-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>📦 Track Part Order</h3>
+                <button class="close-btn" onclick="closePartModal()">&times;</button>
+            </div>
+            <form id="part-form" onsubmit="savePartDetails(event)">
+                <input type="hidden" id="modal-car-id">
+                <input type="hidden" id="modal-task-index">
+                <div class="form-group">
+                    <label for="vendor-name">Vendor / Supplier</label>
+                    <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend" required>
+                </div>
+                <div class="form-group">
+                    <label for="part-desc">Part Name / Number</label>
+                    <input type="text" id="part-desc" placeholder="e.g. Holley Terminator X MAX" required>
+                </div>
+                <div class="form-group">
+                    <label for="tracking-num">Tracking / PO Number</label>
+                    <input type="text" id="tracking-num" placeholder="e.g. 1Z9999999999999999">
+                </div>
+                <div class="form-group">
+                    <label for="eta-date">Expected Delivery</label>
+                    <input type="date" id="eta-date">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" onclick="closePartModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-send">Save Part Details</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -413,7 +430,7 @@
                 status: "Waiting Parts",
                 archived: false,
                 tasks: [
-                    { text: "Twin-turbo piping clearance check", done: false },
+                    { text: "Twin-turbo piping clearance check", done: false, partInfo: { vendor: "Summit Racing", desc: "V-Band Clamps", tracking: "1Z88888", eta: "2026-11-10" } },
                     { text: "Install bagged air suspension lines", done: false }
                 ]
             },
@@ -440,7 +457,6 @@
             renderBoard();
         }
 
-        /* Task #1: Filter Bar Component */
         function renderFilterBar() {
             const filterBar = document.getElementById('filter-bar');
             filterBar.innerHTML = '';
@@ -502,13 +518,25 @@
                 const card = document.createElement('div');
                 card.className = `car-card ${car.archived ? 'is-archived' : ''}`;
 
-                let tasksHtml = car.tasks.map((task, index) => `
-                    <div class="task-item ${task.done ? 'completed' : ''}">
-                        <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
-                        <span>${escapeHtml(task.text)}</span>
-                        <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
-                    </div>
-                `).join('');
+                let tasksHtml = car.tasks.map((task, index) => {
+                    let partTagHtml = '';
+                    if (car.status === 'Waiting Parts') {
+                        if (task.partInfo && task.partInfo.vendor) {
+                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})">📦 <b>${escapeHtml(task.partInfo.vendor)}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})</span>`;
+                        } else {
+                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})" style="color: #f6ad55;">+ Add Part / Vendor Tracking</span>`;
+                        }
+                    }
+
+                    return `
+                        <div class="task-item ${task.done ? 'completed' : ''}">
+                            <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
+                            <span>${escapeHtml(task.text)}</span>
+                            <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
+                            ${partTagHtml}
+                        </div>
+                    `;
+                }).join('');
 
                 card.innerHTML = `
                     <div class="car-header">
@@ -603,6 +631,51 @@
                 project.tasks.splice(taskIndex, 1);
                 saveState();
             }
+        }
+
+        /* Part Order Modal Logic */
+        function openPartModal(carId, taskIndex) {
+            document.getElementById('modal-car-id').value = carId;
+            document.getElementById('modal-task-index').value = taskIndex;
+            
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                const task = project.tasks[taskIndex];
+                if (task.partInfo) {
+                    document.getElementById('vendor-name').value = task.partInfo.vendor || '';
+                    document.getElementById('part-desc').value = task.partInfo.desc || '';
+                    document.getElementById('tracking-num').value = task.partInfo.tracking || '';
+                    document.getElementById('eta-date').value = task.partInfo.eta || '';
+                } else {
+                    document.getElementById('part-form').reset();
+                    document.getElementById('part-desc').value = task.text;
+                }
+            }
+            document.getElementById('part-modal').style.display = 'flex';
+        }
+
+        function closePartModal() {
+            document.getElementById('part-modal').style.display = 'none';
+        }
+
+        function savePartDetails(e) {
+            e.preventDefault();
+            const carId = parseInt(document.getElementById('modal-car-id').value);
+            const taskIndex = parseInt(document.getElementById('modal-task-index').value);
+            
+            const partInfo = {
+                vendor: document.getElementById('vendor-name').value,
+                desc: document.getElementById('part-desc').value,
+                tracking: document.getElementById('tracking-num').value,
+                eta: document.getElementById('eta-date').value
+            };
+            
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                project.tasks[taskIndex].partInfo = partInfo;
+                saveState();
+            }
+            closePartModal();
         }
 
         function exportData() {
@@ -709,68 +782,5 @@
 
         saveState();
     </script>
-<!-- Part Order & Vendor Tracking Modal -->
-<div id="part-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3>📦 Track Part Order</h3>
-            <button class="close-btn" onclick="closePartModal()">&times;</button>
-        </div>
-        <form id="part-form" onsubmit="savePartDetails(event)">
-            <input type="hidden" id="modal-task-id">
-            <div class="form-group">
-                <label for="vendor-name">Vendor / Supplier</label>
-                <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend, Jegs" required>
-            </div>
-            <div class="form-group">
-                <label for="part-desc">Part Name / Number</label>
-                <input type="text" id="part-desc" placeholder="e.g. Holley Terminator X MAX ECU" required>
-            </div>
-            <div class="form-group">
-                <label for="tracking-num">Tracking / PO Number</label>
-                <input type="text" id="tracking-num" placeholder="e.g. 1Z9999999999999999">
-            </div>
-            <div class="form-group">
-                <label for="eta-date">Expected Delivery</label>
-                <input type="date" id="eta-date">
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" onclick="closePartModal()">Cancel</button>
-                <button type="submit" class="btn-primary">Save Part Details</button>
-            </div>
-        </form>
-    </div>
-</div>
-function openPartModal(taskId) {
-    document.getElementById('modal-task-id').value = taskId;
-    const task = findTaskById(taskId);
-    if (task && task.partInfo) {
-        document.getElementById('vendor-name').value = task.partInfo.vendor || '';
-        document.getElementById('part-desc').value = task.partInfo.desc || '';
-        document.getElementById('tracking-num').value = task.partInfo.tracking || '';
-        document.getElementById('eta-date').value = task.partInfo.eta || '';
-    } else {
-        document.getElementById('part-form').reset();
-    }
-    document.getElementById('part-modal').style.display = 'flex';
-}
-
-function closePartModal() {
-    document.getElementById('part-modal').style.display = 'none';
-}
-
-function savePartDetails(e) {
-    e.preventDefault();
-    const taskId = document.getElementById('modal-task-id').value;
-    const partInfo = {
-        vendor: document.getElementById('vendor-name').value,
-        desc: document.getElementById('part-desc').value,
-        tracking: document.getElementById('tracking-num').value,
-        eta: document.getElementById('eta-date').value
-    };
-    
-    attachPartToTask(taskId, partInfo);
-    closePartModal();
-    renderTasks();
-}</body>
+</body>
 </html>
