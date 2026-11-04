@@ -297,7 +297,39 @@
         }
         .btn-modal-send { flex: 2; background: var(--accent); color: #000; }
         .btn-modal-cancel { flex: 1; background: #444; color: #fff; }
-    </style>
+    /* Part Order Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+.modal-card {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    width: 100%; max-width: 480px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    color: #e0e0e0;
+}
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;
+}
+.close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 0.25rem; }
+.form-group input {
+    width: 100%; padding: 0.6rem; border-radius: 4px;
+    border: 1px solid #444; background: #2a2a2a; color: #fff;
+}
+.part-tag {
+    display: inline-block; font-size: 0.75rem; background: #2d3748; color: #63b3ed;
+    padding: 2px 6px; border-radius: 4px; margin-top: 4px; cursor: pointer;
+}</style>
 </head>
 <body>
 
@@ -709,5 +741,36 @@
         </form>
     </div>
 </div>
-</body>
+function openPartModal(taskId) {
+    document.getElementById('modal-task-id').value = taskId;
+    const task = findTaskById(taskId);
+    if (task && task.partInfo) {
+        document.getElementById('vendor-name').value = task.partInfo.vendor || '';
+        document.getElementById('part-desc').value = task.partInfo.desc || '';
+        document.getElementById('tracking-num').value = task.partInfo.tracking || '';
+        document.getElementById('eta-date').value = task.partInfo.eta || '';
+    } else {
+        document.getElementById('part-form').reset();
+    }
+    document.getElementById('part-modal').style.display = 'flex';
+}
+
+function closePartModal() {
+    document.getElementById('part-modal').style.display = 'none';
+}
+
+function savePartDetails(e) {
+    e.preventDefault();
+    const taskId = document.getElementById('modal-task-id').value;
+    const partInfo = {
+        vendor: document.getElementById('vendor-name').value,
+        desc: document.getElementById('part-desc').value,
+        tracking: document.getElementById('tracking-num').value,
+        eta: document.getElementById('eta-date').value
+    };
+    
+    attachPartToTask(taskId, partInfo);
+    closePartModal();
+    renderTasks();
+}</body>
 </html>
