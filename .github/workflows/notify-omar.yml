@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Direct SMS via Textbelt
+        env:
+          TEXTBELT_KEY: ${{ secrets.TEXTBELT_KEY }}
         run: |
           RECIPIENTS=("+13108978019" "+13109469899")
           MESSAGE="🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!"
@@ -18,5 +20,5 @@ jobs:
             curl -X POST https://textbelt.com/text \
               --data-urlencode "phone=$PHONE" \
               --data-urlencode "message=$MESSAGE" \
-              --data-urlencode "key=${{ secrets.TEXTBELT_KEY }}"
+              --data-urlencode "key=$TEXTBELT_KEY"
           done
