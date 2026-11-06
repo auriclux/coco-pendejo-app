@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Send Direct SMS via Textbelt
         env:
-          TEXTBELT_KEY: ${{ secrets.TEXTBELT_KEY }}
+          TEXTBELT_KEY: ${{ secrets.TEXTBELT_KEY}}
         run: |
           RECIPIENTS=("+13108978019" "+13109469899")
           MESSAGE="🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!"
