@@ -41,3 +41,5 @@ Tap Share (iPhone) or the menu icon (Android) and select "Add to Home Screen".
 Test Offline Behavior:
 
 Toggle the mobile device into Airplane Mode to simulate shop dead zones and observe the hybrid offline sync warning banner.
+
+
