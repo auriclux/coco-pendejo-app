@@ -9,19 +9,14 @@ jobs:
   send-sms:
     runs-on: ubuntu-latest
     steps:
-      - name: Send SMS to Verified Recipients
-        env:
-          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
-          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
+      - name: Send Direct SMS via Textbelt
         run: |
           RECIPIENTS=("+13108978019" "+13109469899")
-          MESSAGE="Double-O Garage: Production deploy complete."
+          MESSAGE="🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!"
           
           for PHONE in "${RECIPIENTS[@]}"; do
-            curl -X POST "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
-              --data-urlencode "To=$PHONE" \
-              --data-urlencode "From=$TWILIO_FROM_NUMBER" \
-              --data-urlencode "Body=$MESSAGE" \
-              -u "$TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN"
+            curl -X POST https://textbelt.com/text \
+              --data-urlencode "phone=$PHONE" \
+              --data-urlencode "message=$MESSAGE" \
+              --data-urlencode "key=${{ secrets.TEXTBELT_KEY }}"
           done
