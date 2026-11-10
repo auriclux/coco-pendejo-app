@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coco Slice 0 Door Test (staging)</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 16px; line-height: 1.45; color: #1c1c1c; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 17px; margin: 18px 0 4px; }
+  h3 { font-size: 15px; margin: 12px 0 2px; }
+  label { display: block; font-size: 13px; margin-bottom: 4px; color: #555; }
+  input { width: 100%; box-sizing: border-box; font-size: 16px; padding: 10px; border: 1px solid #999; border-radius: 6px; }
+  button { margin-top: 10px; font-size: 16px; padding: 10px 16px; border: 0; border-radius: 6px; background: #1f7a3d; color: #fff; cursor: pointer; }
+  button:disabled { background: #888; }
+  .meta { color: #555; font-size: 13px; }
+  .headline { font-size: 16px; font-weight: 600; margin: 4px 0; }
+  ul { margin: 4px 0 8px; padding-left: 20px; }
+  .card { border: 1px solid #ccc; border-radius: 8px; padding: 12px 14px; margin-top: 14px; }
+  .error { color: #a40000; font-weight: 600; white-space: pre-wrap; }
+  pre { background: #f4f4f4; border: 1px solid #ddd; border-radius: 6px; padding: 10px; overflow-x: auto; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>Coco Slice 0 Door Test (staging)</h1>
+<p class="meta">Calls the substrate door function <b>customer_snapshots</b> with the token below and renders what comes back. Staging test data only.</p>
+
+<label for="token">Customer token</label>
+<input id="token" type="text" value="coco-test-token-ana-001" autocomplete="off" autocapitalize="off" spellcheck="false">
+<button id="go">Fetch my snapshots</button>
+
+<div id="out"></div>
+
+<script>
+"use strict";
+
+// Staging project coordinates. The publishable key is designed to
+// live in browser apps; it grants nothing by itself because every
+// table is default-deny and the only doors are the token functions.
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+var out = document.getElementById("out");
+var btn = document.getElementById("go");
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function listInto(parent, title, items) {
+  if (!items || items.length === 0) return;
+  parent.appendChild(el("h3", title));
+  var ul = el("ul");
+  items.forEach(function (item) { ul.appendChild(el("li", String(item))); });
+  parent.appendChild(ul);
+}
+
+function render(data) {
+  out.innerHTML = "";
+  if (!data || data.customer == null) {
+    out.appendChild(el("p", "No customer for that token.", "error"));
+    return;
+  }
+  out.appendChild(el("h2", data.customer));
+  (data.snapshots || []).forEach(function (entry) {
+    var s = entry.snapshot || {};
+    var cs = s.currentStatus || {};
+    var card = el("div", null, "card");
+    card.appendChild(el("h3", (s.carName || "Car") + " — " + (s.episodeTitle || "")));
+    card.appendChild(el("p", "State: " + (s.state || "?") + " · as of " + (s.asOf || "?") + " · snapshot v" + entry.version, "meta"));
+    card.appendChild(el("p", cs.headline || "", "headline"));
+    listInto(card, "Signed off", cs.signedOff);
+    listInto(card, "In progress", cs.inProgress);
+    listInto(card, "Waiting on", cs.waitingOn);
+    card.appendChild(el("p", "Blessed done date: " + (s.blessedDoneDate ? s.blessedDoneDate : "no date yet"), "meta"));
+    if (s.story && s.story.length) {
+      card.appendChild(el("h3", "Story"));
+      var ul = el("ul");
+      s.story.forEach(function (ev) { ul.appendChild(el("li", (ev.date || "") + " — " + (ev.text || ""))); });
+      card.appendChild(ul);
+    }
+    out.appendChild(card);
+  });
+  out.appendChild(el("h3", "Raw JSON"));
+  var pre = el("pre", JSON.stringify(data, null, 2));
+  out.appendChild(pre);
+}
+
+function fail(msg) {
+  out.innerHTML = "";
+  out.appendChild(el("p", msg, "error"));
+}
+
+btn.addEventListener("click", function () {
+  var token = document.getElementById("token").value.trim();
+  btn.disabled = true;
+  out.innerHTML = "";
+  out.appendChild(el("p", "Loading..."));
+  fetch(SUPABASE_URL + "/rest/v1/rpc/customer_snapshots", {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ p_token: token })
+  }).then(function (resp) {
+    return resp.text().then(function (text) {
+      if (!resp.ok) {
+        fail("HTTP " + resp.status + "\n" + text);
+        return;
+      }
+      var data;
+      try { data = JSON.parse(text); }
+      catch (e) { fail("Response was not JSON:\n" + text); return; }
+      render(data);
+    });
+  }).catch(function (err) {
+    fail("Request failed: " + err.message);
+  }).finally(function () {
+    btn.disabled = false;
+  });
+});
+</script>
+</body>
+</html>
