@@ -6,24 +6,25 @@
 <title>Your car — current status</title>
 <style>
   body { font-family: system-ui, -apple-system, sans-serif; margin: 0; line-height: 1.5; color: #1c1c1c; background: #fafafa; }
-  main { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
-  h1 { font-size: 20px; margin: 0 0 2px; }
-  .sub { color: #666; font-size: 14px; margin: 0 0 16px; }
-  .switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-  .switcher button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
-  .switcher button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
-  .card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 16px 18px; }
-  .car { font-size: 18px; font-weight: 700; margin: 0 0 2px; }
-  .job { color: #444; margin: 0 0 4px; }
-  .asof { color: #c1121f; font-size: 14px; font-weight: 700; margin: 0 0 12px; }
-  .headline { font-size: 17px; font-weight: 600; margin: 0 0 14px; }
-  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 16px 0 4px; }
-  ul { margin: 0; padding-left: 20px; }
-  li { margin: 2px 0; }
-  .date { margin: 16px 0 0; font-size: 15px; }
-  .date b { font-weight: 700; }
-  .note { color: #666; font-size: 14px; }
-  .message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+main { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
+h1 { font-size: 20px; margin: 0 0 2px; }
+.sub { color: #666; font-size: 14px; margin: 0 0 16px; }
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.switcher button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
+.switcher button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
+.card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 16px 18px; }
+.car { font-size: 18px; font-weight: 700; margin: 0 0 2px; }
+.job { color: #444; margin: 0 0 4px; }
+.asof { color: #c1121f; font-size: 14px; font-weight: 700; margin: 0 0 12px; }
+.headline { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+.eta { font-size: 15px; margin: 0 0 2px; }
+.eta b { font-weight: 700; }
+h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 16px 0 4px; }
+ul { margin: 0; padding-left: 20px; }
+li { margin: 2px 0; }
+.nextlast { font-size: 15px; margin: 0; }
+.note { color: #666; font-size: 14px; }
+.message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
 </style>
 </head>
 <body>
@@ -77,32 +78,44 @@ function listSection(parent, title, items) {
   items.forEach(function (item) { ul.appendChild(el("li", String(item))); });
   parent.appendChild(ul);
 }
-
+  
 function carCard(entry) {
   var s = entry.snapshot || {};
   var cs = s.currentStatus || {};
   var card = el("section", null, "card");
   card.appendChild(el("p", s.carName || "Your car", "car"));
   card.appendChild(el("p", s.episodeTitle || "", "job"));
-  var asof = prettyDate(s.asOf);
-  card.appendChild(el("p", "Status as of " + (asof || "the last sign-off"), "asof"));
   card.appendChild(el("p", cs.headline || "", "headline"));
-  listSection(card, "Signed off", cs.signedOff);
-  listSection(card, "In progress", cs.inProgress);
-  listSection(card, "Waiting on", cs.waitingOn);
   var date = prettyDate(s.blessedDoneDate);
-  var p = el("p", null, "date");
   if (date) {
+    var p = el("p", null, "eta");
     p.appendChild(document.createTextNode("Target completion: "));
     p.appendChild(el("b", date));
-  } else {
-    p.textContent = "No completion date set yet.";
-    p.className = "date note";
+    card.appendChild(p);
   }
-  card.appendChild(p);
+  var asof = prettyDate(s.asOf);
+  card.appendChild(el("p", "Status as of " + (asof || "the last sign-off"), "asof"));
+
+  var open = cs.inProgress || [];
+  if (open.length > 0) {
+    listSection(card, "In Progress", open.slice(0, 1));
+    card.appendChild(el("h2", "Next Task"));
+    if (open.length > 1) {
+      var ul = el("ul");
+      ul.appendChild(el("li", String(open[1])));
+      card.appendChild(ul);
+    } else {
+      card.appendChild(el("p",
+        "The car will be ready for you on completion of the task in progress and Omar signs off.",
+        "nextlast"));
+    }
+  }
+  listSection(card, "Waiting on", cs.waitingOn);
+  var signed = (cs.signedOff || []).slice().reverse();
+  listSection(card, "Signed off", signed);
   return card;
 }
-
+  
 function render(data) {
   app.innerHTML = "";
   app.appendChild(el("h1", "Your car's current status"));
