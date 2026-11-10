@@ -148,7 +148,10 @@ function cocoLinkFlow(project) {
     lastDoc: null
   };
   cocoSaveLinks(links);
+  document.querySelectorAll(".coco-pub").forEach(function (b) { b.remove(); });
   cocoDecorate();
+}
+
 }
 
 function cocoPublish(project, link, headlineInput, statusEl) {
