@@ -152,8 +152,6 @@ function cocoLinkFlow(project) {
   cocoDecorate();
 }
 
-}
-
 function cocoPublish(project, link, headlineInput, statusEl) {
   var actor = cocoActorId();
   if (!actor) {
