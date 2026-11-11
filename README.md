@@ -34,10 +34,12 @@ Under Build and deployment, set the Source branch to main (root) and save.
 
 Launch on Mobile:
 
-Open the generated GitHub Pages URL on a mobile device (Safari on iOS or Chrome on Android).
+Open the generated GitHub Pages URL on a mobile device (Safari on iOS or Chrome on Android)..
 
 Tap Share (iPhone) or the menu icon (Android) and select "Add to Home Screen".
 
 Test Offline Behavior:
 
 Toggle the mobile device into Airplane Mode to simulate shop dead zones and observe the hybrid offline sync warning banner.
+
+
