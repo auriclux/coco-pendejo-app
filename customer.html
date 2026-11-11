@@ -23,6 +23,8 @@ h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: 
 ul { margin: 0; padding-left: 20px; }
 li { margin: 2px 0; }
 .nextlast { font-size: 15px; margin: 0; }
+.storydate { color: #666; font-size: 13px; margin: 10px 0 0; }
+.storytext { font-size: 15px; margin: 0 0 2px; }
 .note { color: #666; font-size: 14px; }
 .message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
 </style>
@@ -79,6 +81,15 @@ function listSection(parent, title, items) {
   parent.appendChild(ul);
 }
   
+function storySection(parent, story) {
+  if (!story || story.length === 0) return;
+  parent.appendChild(el("h2", "Story"));
+  story.slice().reverse().forEach(function (e) {
+    parent.appendChild(el("p", prettyDate(e.date) || e.date || "", "storydate"));
+    parent.appendChild(el("p", e.text || "", "storytext"));
+  });
+}
+  
 function carCard(entry) {
   var s = entry.snapshot || {};
   var cs = s.currentStatus || {};
@@ -113,6 +124,7 @@ function carCard(entry) {
   listSection(card, "Waiting on", cs.waitingOn);
   var signed = (cs.signedOff || []).slice().reverse();
   listSection(card, "Signed off", signed);
+  storySection(card, s.story);
   return card;
 }
   
