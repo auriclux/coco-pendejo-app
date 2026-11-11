@@ -25,6 +25,11 @@ li { margin: 2px 0; }
 .nextlast { font-size: 15px; margin: 0; }
 .storydate { color: #666; font-size: 13px; margin: 10px 0 0; }
 .storytext { font-size: 15px; margin: 0 0 2px; }
+.ask textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; }
+.ask button { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+.ask button:disabled { opacity: 0.5; }
+.ask button.speak { background: #fff; color: #1f7a3d; margin-right: 8px; }
+.asknote { color: #666; font-size: 14px; margin: 8px 0 0; }
 .note { color: #666; font-size: 14px; }
 .message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
 </style>
@@ -80,7 +85,96 @@ function listSection(parent, title, items) {
   items.forEach(function (item) { ul.appendChild(el("li", String(item))); });
   parent.appendChild(ul);
 }
-  
+
+function askSection(parent, entry) {
+  parent.appendChild(el("h2", "Tell Omar"));
+  var box = el("div", null, "ask");
+  var ta = el("textarea");
+  ta.rows = 3;
+  ta.placeholder = "Ask a question about this car...";
+  var btn = el("button", "Send");
+  var note = el("p", "", "asknote");
+  btn.addEventListener("click", function () {
+    var text = ta.value.trim();
+    if (!text) {
+      note.textContent = "Write a message first.";
+      return;
+    }
+    btn.disabled = true;
+    note.textContent = "Sending...";
+    fetch(SUPABASE_URL + "/rest/v1/rpc/customer_submit", {
+      method: "POST",
+      headers: {
+        "apikey": PUBLISHABLE_KEY,
+        "Authorization": "Bearer " + PUBLISHABLE_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        p_token: token,
+        p_episode_id: entry.episodeId,
+        p_kind: "question",
+        p_payload: { text: text }
+      })
+    }).then(function (resp) {
+      return resp.ok ? resp.json() : null;
+    }).then(function (id) {
+      if (id) {
+        box.innerHTML = "";
+        box.appendChild(el("p",
+          "Sent. Your message is on its way to the shop.", "asknote"));
+      } else {
+        btn.disabled = false;
+        note.textContent = "That did not go through. Please try again.";
+      }
+    }).catch(function () {
+      btn.disabled = false;
+      note.textContent = "That did not go through. Please try again.";
+    });
+  });
+  box.appendChild(ta);
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    var mic = el("button", "🎤 Speak", "speak");
+    var recog = new SR();
+    recog.lang = navigator.language || "en-US";
+    recog.interimResults = true;
+    var listening = false;
+    var baseText = "";
+    mic.addEventListener("click", function () {
+      if (listening) { recog.stop(); return; }
+      baseText = ta.value.trim();
+      if (baseText) baseText += " ";
+      recog.start();
+    });
+    recog.addEventListener("start", function () {
+      listening = true;
+      mic.textContent = "⏹ Stop";
+      note.textContent = "Listening... speak now.";
+    });
+    recog.addEventListener("result", function (ev) {
+      var txt = "";
+      for (var i = 0; i < ev.results.length; i++) {
+        txt += ev.results[i][0].transcript;
+      }
+      ta.value = baseText + txt;
+    });
+    recog.addEventListener("end", function () {
+      listening = false;
+      mic.textContent = "🎤 Speak";
+      if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+    });
+    recog.addEventListener("error", function () {
+      listening = false;
+      mic.textContent = "🎤 Speak";
+      note.textContent = "The microphone did not work here. You can type instead.";
+    });
+    box.appendChild(mic);
+  }
+  box.appendChild(btn);
+  box.appendChild(note);
+  parent.appendChild(box);
+}
+
 function storySection(parent, story) {
   if (!story || story.length === 0) return;
   parent.appendChild(el("h2", "Story"));
@@ -121,6 +215,7 @@ function carCard(entry) {
         "nextlast"));
     }
   }
+  askSection(card, entry);
   listSection(card, "Waiting on", cs.waitingOn);
   var signed = (cs.signedOff || []).slice().reverse();
   listSection(card, "Signed off", signed);
