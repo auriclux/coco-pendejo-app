@@ -118,12 +118,12 @@ function askSection(parent, entry) {
     }).then(function (resp) {
       return resp.ok ? resp.json() : null;
     }).then(function (id) {
-    if (id) {
-     ta.value = "";
-     btn.disabled = false;
-     note.textContent =
+  if (id) {
+    ta.value = "";
+    btn.disabled = false;
+    note.textContent =
       "Sent. Your message is on its way to the shop.";
-     } else {
+  } else {
         btn.disabled = false;
         note.textContent = "That did not go through. Please try again.";
       }
