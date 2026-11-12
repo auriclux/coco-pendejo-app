@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask a Customer</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f6f6f4; color: #1a1a1a; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 22px 0 6px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
+  select, input[type="url"], textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; background: #fff; }
+  textarea { margin-top: 0; }
+  .kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .kinds button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
+  .kinds button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
+  button.send { margin-top: 14px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+  button.send:disabled { opacity: 0.5; }
+  button.speak { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; margin-right: 8px; }
+  .note { color: #666; font-size: 14px; margin: 8px 0 0; }
+  .banner { background: #e6f4ea; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
+  .who { font-size: 16px; font-weight: 700; margin: 0; }
+  .car { color: #444; font-size: 14px; margin: 2px 0 0; }
+  .wait { color: #c1121f; font-size: 13px; font-weight: 700; margin: 6px 0 0; }
+  .body { font-size: 15px; margin: 8px 0 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  .refresh { font-size: 14px; color: #1f7a3d; background: none; border: none; cursor: pointer; font-weight: 600; padding: 0; }
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="topbar">
+    <h1>Ask a Customer</h1>
+    <button class="refresh" id="refreshBtn" type="button">Refresh</button>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div id="form"><p class="note">Loading...</p></div>
+  <h2>Waiting for answers</h2>
+  <div id="open"><p class="note">Loading...</p></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+var DIRECTORY = null;
+var KIND = "buy";
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function waiting(created) {
+  var mins = Math.floor((Date.now() - new Date(created).getTime()) / 60000);
+  if (mins < 1) return "Just sent";
+  if (mins < 60) return "Waiting " + mins + (mins === 1 ? " minute" : " minutes");
+  var hrs = Math.floor(mins / 60);
+  if (hrs < 24) return "Waiting " + hrs + (hrs === 1 ? " hour" : " hours");
+  var days = Math.floor(hrs / 24);
+  return "Waiting " + days + (days === 1 ? " day" : " days");
+}
+
+function showBanner(text) {
+  var b = document.getElementById("banner");
+  b.textContent = text;
+  b.style.display = "block";
+}
+
+var KIND_LABEL = { buy: "Part purchase", visit: "Come in", note: "Message" };
+
+function buildForm() {
+  var host = document.getElementById("form");
+  host.innerHTML = "";
+  var card = el("div", null, "card");
+
+  var custSel = el("select");
+  DIRECTORY.customers.forEach(function (c) {
+    var o = el("option", c.name);
+    o.value = c.id;
+    custSel.appendChild(o);
+  });
+  var carSel = el("select");
+
+  function fillCars() {
+    carSel.innerHTML = "";
+    var cust = DIRECTORY.customers.filter(function (c) {
+      return c.id === custSel.value;
+    })[0];
+    (cust ? cust.episodes : []).forEach(function (e) {
+      var label = e.car_name + " · " + e.job_title +
+        (e.state === "staged" ? " (staged)" : "");
+      var o = el("option", label);
+      o.value = e.id;
+      carSel.appendChild(o);
+    });
+  }
+  custSel.addEventListener("change", fillCars);
+
+  card.appendChild(el("label", "Customer"));
+  card.appendChild(custSel);
+  card.appendChild(el("label", "Car and job"));
+  card.appendChild(carSel);
+
+  card.appendChild(el("label", "What are you asking?"));
+  var kinds = el("div", null, "kinds");
+  var kindBtns = {};
+  [["buy", "Ask to buy a part"], ["visit", "Ask to come in"],
+   ["note", "Send a message"]].forEach(function (pair) {
+    var b = el("button", pair[1]);
+    b.type = "button";
+    if (pair[0] === KIND) b.className = "active";
+    b.addEventListener("click", function () {
+      KIND = pair[0];
+      Object.keys(kindBtns).forEach(function (k) {
+        kindBtns[k].classList.toggle("active", k === KIND);
+      });
+      syncFields();
+    });
+    kindBtns[pair[0]] = b;
+    kinds.appendChild(b);
+  });
+  card.appendChild(kinds);
+
+  var linkWrap = el("div");
+  linkWrap.appendChild(el("label", "Part link (paste it here)"));
+  var linkIn = el("input");
+  linkIn.type = "url";
+  linkIn.placeholder = "https://...";
+  linkWrap.appendChild(linkIn);
+  var buyNote = el("p",
+    "The customer pays the seller directly and has it shipped to the shop.",
+    "note");
+  linkWrap.appendChild(buyNote);
+  card.appendChild(linkWrap);
+
+  var msgLabel = el("label", "Comment (optional)");
+  card.appendChild(msgLabel);
+  var ta = el("textarea");
+  ta.rows = 3;
+  card.appendChild(ta);
+  var note = el("p", "", "note");
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    var mic = el("button", "🎤 Speak", "speak");
+    var recog = new SR();
+    recog.lang = navigator.language || "en-US";
+    recog.interimResults = true;
+    var listening = false;
+    var baseText = "";
+    mic.addEventListener("click", function () {
+      if (listening) { recog.stop(); return; }
+      baseText = ta.value.trim();
+      if (baseText) baseText += " ";
+      recog.start();
+    });
+    recog.addEventListener("start", function () {
+      listening = true;
+      mic.textContent = "⏹ Stop";
+      note.textContent = "Listening... speak now.";
+    });
+    recog.addEventListener("result", function (ev) {
+      var txt = "";
+      for (var i = 0; i < ev.results.length; i++) {
+        txt += ev.results[i][0].transcript;
+      }
+      ta.value = baseText + txt;
+    });
+    recog.addEventListener("end", function () {
+      listening = false;
+      mic.textContent = "🎤 Speak";
+      if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+    });
+    recog.addEventListener("error", function () {
+      listening = false;
+      mic.textContent = "🎤 Speak";
+      note.textContent = "The microphone did not work here. You can type instead.";
+    });
+    card.appendChild(mic);
+  }
+
+  var send = el("button", "Send", "send");
+  send.addEventListener("click", function () {
+    var payload = {};
+    var text = ta.value.trim();
+    if (KIND === "buy") {
+      var link = linkIn.value.trim();
+      if (!link) {
+        note.textContent = "Paste the part link first.";
+        return;
+      }
+      payload.link = link;
+      if (text) payload.text = text;
+    } else {
+      if (!text) {
+        note.textContent = "Write or speak the message first.";
+        return;
+      }
+      payload.text = text;
+    }
+    if (!carSel.value) {
+      note.textContent = "Pick a car first.";
+      return;
+    }
+    send.disabled = true;
+    note.textContent = "Sending...";
+    rpc("shop_send_request", {
+      p_actor_id: ACTOR,
+      p_episode_id: carSel.value,
+      p_kind: KIND,
+      p_payload: payload
+    }).then(function (id) {
+      send.disabled = false;
+      if (id) {
+        var custName = custSel.options[custSel.selectedIndex].textContent;
+        showBanner("Request sent to " + custName + ".");
+        linkIn.value = "";
+        ta.value = "";
+        note.textContent = "";
+        loadOpen();
+      } else {
+        note.textContent = "That did not go through. Please try again.";
+      }
+    });
+  });
+  card.appendChild(send);
+  card.appendChild(note);
+  host.appendChild(card);
+  fillCars();
+
+  function syncFields() {
+    linkWrap.style.display = KIND === "buy" ? "" : "none";
+    msgLabel.textContent = KIND === "buy" ? "Comment (optional)" : "Message";
+    if (KIND === "visit" && !ta.value.trim()) {
+      ta.value = "Can you come in to look at ";
+    }
+  }
+  syncFields();
+}
+
+function renderOpen() {
+  var host = document.getElementById("open");
+  host.innerHTML = "";
+  host.appendChild(el("p", "Loading...", "note"));
+  rpc("shop_outbound_open", { p_actor_id: ACTOR }).then(function (data) {
+    host.innerHTML = "";
+    if (!data || !data.requests) {
+      host.appendChild(el("p",
+        "That shop key was not accepted. Open this page from the shop link.", "note"));
+      return;
+    }
+    if (data.requests.length === 0) {
+      host.appendChild(el("p", "Nothing waiting. Every request has its answer.", "note"));
+      return;
+    }
+    data.requests.forEach(function (r) {
+      var card = el("div", null, "card");
+      card.appendChild(el("p", r.customer_name || "Customer", "who"));
+      var carLine = r.car_name
+        ? (r.job_title ? r.car_name + " · " + r.job_title : r.car_name)
+        : "";
+      card.appendChild(el("p", carLine, "car"));
+      card.appendChild(el("p",
+        (KIND_LABEL[r.kind] || r.kind) + " · " + waiting(r.created_at), "wait"));
+      var p = r.payload || {};
+      if (p.text) card.appendChild(el("p", p.text, "body"));
+      if (p.link) {
+        var lp = el("p", null, "body");
+        var a = el("a", p.link);
+        if (/^https?:\/\//i.test(p.link)) a.href = p.link;
+        a.target = "_blank";
+        a.rel = "noopener";
+        lp.appendChild(a);
+        card.appendChild(lp);
+      }
+      host.appendChild(card);
+    });
+  });
+}
+
+function loadOpen() { renderOpen(); }
+
+function load() {
+  rpc("shop_directory", { p_actor_id: ACTOR }).then(function (data) {
+    var host = document.getElementById("form");
+    if (!data || !data.customers) {
+      host.innerHTML = "";
+      host.appendChild(el("p",
+        "That shop key was not accepted. Open this page from the shop link.", "note"));
+      document.getElementById("open").innerHTML = "";
+      return;
+    }
+    DIRECTORY = data;
+    buildForm();
+    renderOpen();
+  });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", function () {
+  load();
+});
+
+if (!ACTOR) {
+  document.getElementById("form").innerHTML = "";
+  document.getElementById("form").appendChild(el("p",
+    "This page needs the shop link. Ask for the link with your key in it.", "note"));
+  document.getElementById("open").innerHTML = "";
+} else {
+  load();
+}
+</script>
+</body>
+</html>
