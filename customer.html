@@ -36,6 +36,12 @@ li { margin: 2px 0; }
 .cwait { color: #666; font-size: 14px; font-style: italic; margin: 2px 0 0; }
 .agree { display: inline-block; background: #e6f4ea; color: #1f7a3d; border: 1px solid #1f7a3d; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 1px 8px; margin-left: 6px; }
 .convobtn { margin-top: 10px; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+.rrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.rrow button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+.rrow button.primary { background: #1f7a3d; color: #fff; }
+.rrow button:disabled { opacity: 0.5; }
+.rlink { font-size: 15px; margin: 8px 0 0; }
+.rdone { font-size: 15px; font-weight: 600; margin: 10px 0 0; }
 .note { color: #666; font-size: 14px; }
 .message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
 </style>
@@ -275,6 +281,97 @@ function convoSection(parent, entry) {
   parent.appendChild(full);
   parent.appendChild(closeBtn);
 }
+var OUTBOUND = {};
+
+var RESPONSE_LABEL = {
+  bought: "Bought it",
+  not_now: "Not now",
+  call_me: "Call me",
+  yes: "Yes, I'll come in",
+  acknowledged: "Got it"
+};
+
+function refreshOutbound() {
+  rpc("customer_outbound", { p_token: TOKEN }).then(function (data) {
+    OUTBOUND = {};
+    if (data && data.requests) {
+      data.requests.forEach(function (r) {
+        if (!OUTBOUND[r.episode_id]) OUTBOUND[r.episode_id] = [];
+        OUTBOUND[r.episode_id].push(r);
+      });
+    }
+    if (LASTDATA) render(LASTDATA);
+  }).catch(function () {});
+}
+
+function outboundSection(card, entry) {
+  var list = OUTBOUND[entry.snapshot.episodeId] || [];
+  if (list.length === 0) return;
+  card.appendChild(el("h2", "From the shop"));
+  list.forEach(function (r) {
+    var box = el("div");
+    var p = r.payload || {};
+    if (r.kind === "buy") {
+      box.appendChild(el("p", "The shop asks you to buy this part:"));
+      if (p.text) box.appendChild(el("p", p.text));
+      if (p.link) {
+        var lp = el("p", null, "rlink");
+        if (/^https?:\/\//i.test(p.link)) {
+          var a = el("a", "See the part");
+          a.href = p.link;
+          a.target = "_blank";
+          a.rel = "noopener";
+          lp.appendChild(a);
+        } else {
+          lp.textContent = p.link;
+        }
+        box.appendChild(lp);
+      }
+    } else {
+      if (p.text) box.appendChild(el("p", p.text));
+    }
+    var row = el("div", null, "rrow");
+    var note = el("p", "", "note");
+    var defs = r.kind === "buy"
+      ? [["bought", true], ["not_now", false], ["call_me", false]]
+      : r.kind === "visit"
+        ? [["yes", true], ["call_me", false]]
+        : [["acknowledged", true]];
+    var btns = [];
+    defs.forEach(function (def) {
+      var b = el("button", RESPONSE_LABEL[def[0]],
+        def[1] ? "primary" : null);
+      b.type = "button";
+      b.addEventListener("click", function () {
+        btns.forEach(function (x) { x.disabled = true; });
+        note.textContent = "Sending...";
+        rpc("customer_respond", {
+          p_token: TOKEN,
+          p_outbound_id: r.id,
+          p_response: def[0]
+        }).then(function (ok) {
+          if (ok === true) {
+            box.innerHTML = "";
+            box.appendChild(el("p",
+              "You answered: " + RESPONSE_LABEL[def[0]], "rdone"));
+            OUTBOUND[entry.snapshot.episodeId] =
+              (OUTBOUND[entry.snapshot.episodeId] || [])
+                .filter(function (x) { return x.id !== r.id; });
+          } else {
+            btns.forEach(function (x) { x.disabled = false; });
+            note.textContent =
+              "That did not go through. Please try again.";
+          }
+        });
+      });
+      btns.push(b);
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+    box.appendChild(note);
+    card.appendChild(box);
+  });
+}
 
 function storySection(parent, story) {
   if (!story || story.length === 0) return;
@@ -316,6 +413,7 @@ function carCard(entry) {
         "nextlast"));
     }
   }
+  outboundSection(card, entry);
   askSection(card, entry);
   convoSection(card, entry);
   listSection(card, "Waiting on", cs.waitingOn);
@@ -385,6 +483,7 @@ if (!token) {
   }
   render(data);
   refreshThread();
+  refreshOutbound();
 }).catch(function () {
    messagePage("Something went wrong loading your status. Please try again in a little while.");
   });
