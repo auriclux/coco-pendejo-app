@@ -102,9 +102,37 @@ function questionCard(q) {
     : "General question";
   card.appendChild(el("p", carLine, "car"));
   card.appendChild(el("p", waiting(q.created_at), "wait"));
-  var text = (q.payload && (q.payload.text || q.payload.question)) || "";
+  var pl = q.payload || {};
+if (q.kind && q.kind.slice(-9) === "_response") {
+  var labels = {
+    bought: "Bought it", not_now: "Not now", call_me: "Call me",
+    yes: "Yes, I'll come in", acknowledged: "Got it"
+  };
+  var heads = {
+    buy_response: "Parts request answered",
+    visit_response: "Come-in request answered",
+    note_response: "Message acknowledged"
+  };
+  card.appendChild(el("p",
+    (heads[q.kind] || "Request answered") + ": " +
+    (labels[pl.response] || pl.response || ""),
+    "qtext"));
+  if (pl.text) {
+    card.appendChild(el("p", "You asked: " + pl.text, "car"));
+  }
+  if (pl.link) {
+    var lp2 = el("p", null, "car");
+    var a2 = el("a", pl.link);
+    if (/^https?:\/\//i.test(pl.link)) a2.href = pl.link;
+    a2.target = "_blank";
+    a2.rel = "noopener";
+    lp2.appendChild(a2);
+    card.appendChild(lp2);
+  }
+} else {
+  var text = pl.text || pl.question || "";
   card.appendChild(el("p", text || "(message with no text)", "qtext"));
-
+}
   var reply = el("div", null, "reply");
   var ta = el("textarea");
   ta.rows = 3;
