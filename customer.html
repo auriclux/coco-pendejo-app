@@ -42,6 +42,10 @@ li { margin: 2px 0; }
 .rrow button:disabled { opacity: 0.5; }
 .rlink { font-size: 15px; margin: 8px 0 0; }
 .rdone { font-size: 15px; font-weight: 600; margin: 10px 0 0; }
+.endbox { border-radius: 10px; padding: 10px 12px; margin: 12px 0 0; font-size: 15px; font-weight: 600; background: #e6f4ea; }
+.endbox.paused { background: #fdf3e0; }
+.endbox p { margin: 0; }
+.endbox .enddate { font-weight: 400; font-size: 14px; margin-top: 2px; }
 .note { color: #666; font-size: 14px; }
 .message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
 </style>
@@ -305,7 +309,7 @@ function refreshOutbound() {
 }
 
 function outboundSection(card, entry) {
-  var list = OUTBOUND[entry.snapshot.episodeId] || [];
+  var list = OUTBOUND[entry.episodeId] || [];
   if (list.length === 0) return;
   card.appendChild(el("h2", "From the shop"));
   list.forEach(function (r) {
@@ -354,8 +358,8 @@ function outboundSection(card, entry) {
             box.innerHTML = "";
             box.appendChild(el("p",
               "You answered: " + RESPONSE_LABEL[def[0]], "rdone"));
-            OUTBOUND[entry.snapshot.episodeId] =
-              (OUTBOUND[entry.snapshot.episodeId] || [])
+               OUTBOUND[entry.episodeId] =
+               (OUTBOUND[entry.episodeId] || [])
                 .filter(function (x) { return x.id !== r.id; });
           } else {
             btns.forEach(function (x) { x.disabled = false; });
@@ -382,6 +386,23 @@ function storySection(parent, story) {
   });
 }
   
+function endingSection(card, s) {
+  var e = s.ending || {};
+  var box = el("div", null,
+    "endbox" + (s.state === "paused" ? " paused" : ""));
+  box.appendChild(el("p",
+    s.state === "completed"
+      ? "This job is complete." : "This job is paused."));
+  var sub = "";
+  if (s.state === "completed" && e.date) {
+    sub = "Completed on " + (prettyDate(e.date) || e.date) + ".";
+  } else if (s.state === "paused" && e.pickupDate) {
+    sub = "Pickup date: " + (prettyDate(e.pickupDate) || e.pickupDate) + ".";
+  }
+  if (sub) box.appendChild(el("p", sub, "enddate"));
+  card.appendChild(box);
+}
+
 function carCard(entry) {
   var s = entry.snapshot || {};
   var cs = s.currentStatus || {};
@@ -399,8 +420,10 @@ function carCard(entry) {
   var asof = prettyDate(s.asOf);
   card.appendChild(el("p", "Status as of " + (asof || "the last sign-off"), "asof"));
 
-  var open = cs.inProgress || [];
-  if (open.length > 0) {
+var ended = (s.state === "completed" || s.state === "paused");
+if (ended) endingSection(card, s);
+var open = ended ? [] : (cs.inProgress || []);
+if (open.length > 0) {
     listSection(card, "In Progress", open.slice(0, 1));
     card.appendChild(el("h2", "Next Task"));
     if (open.length > 1) {
@@ -413,11 +436,12 @@ function carCard(entry) {
         "nextlast"));
     }
   }
+if (!ended) {
   outboundSection(card, entry);
   askSection(card, entry);
-  convoSection(card, entry);
-  listSection(card, "Waiting on", cs.waitingOn);
-
+}
+convoSection(card, entry);
+if (!ended) listSection(card, "Waiting on", cs.waitingOn);
   var signed = (cs.signedOff || []).slice().reverse();
   listSection(card, "Signed off", signed);
   storySection(card, s.story);
@@ -439,7 +463,11 @@ function render(data) {
   if (snaps.length > 1) {
     var bar = el("div", null, "switcher");
     snaps.forEach(function (entry) {
-      var b = el("button", (entry.snapshot && entry.snapshot.carName) || "Car");
+    var pillLabel = (entry.snapshot && entry.snapshot.carName) || "Car";
+    if (entry.snapshot && entry.snapshot.episodeTitle) {
+      pillLabel += " · " + entry.snapshot.episodeTitle; 
+    }
+    var b = el("button", pillLabel);
       if (entry.episodeId === ACTIVE_EP) b.className = "active";
       b.addEventListener("click", function () {
         ACTIVE_EP = entry.episodeId;
