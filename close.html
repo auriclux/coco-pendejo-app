@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>End a Job</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f6f6f4; color: #1a1a1a; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 22px 0 6px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
+  select, input[type="date"], input[type="text"], textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; background: #fff; }
+  .kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .kinds button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
+  .kinds button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
+  .kinds button.active.pause { background: #8a6d1a; border-color: #8a6d1a; }
+  button.send { margin-top: 14px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+  button.send:disabled { opacity: 0.5; }
+  button.speak { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; margin-right: 8px; }
+  button.start { margin-top: 10px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+  button.start:disabled { opacity: 0.5; }
+  .note { color: #666; font-size: 14px; margin: 8px 0 0; }
+  .banner { background: #e6f4ea; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
+  .who { font-size: 16px; font-weight: 700; margin: 0; }
+  .car { color: #444; font-size: 14px; margin: 2px 0 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  .refresh { font-size: 14px; color: #1f7a3d; background: none; border: none; cursor: pointer; font-weight: 600; padding: 0; }
+</style>
+</head>
+<body>
+<main id="app">
+  <div class="topbar">
+    <h1>End a Job</h1>
+    <button class="refresh" id="refreshBtn" type="button">Refresh</button>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div id="form"><p class="note">Loading...</p></div>
+  <h2>Staged cars, not started yet</h2>
+  <div id="staged"><p class="note">Loading...</p></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+var DIRECTORY = null;
+var OUTCOME = "completed";
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function showBanner(text) {
+  var b = document.getElementById("banner");
+  b.textContent = text;
+  b.style.display = "block";
+}
+
+function addSpeak(card, ta, note) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  var mic = el("button", "🎤 Speak", "speak");
+  var recog = new SR();
+  recog.lang = navigator.language || "en-US";
+  recog.interimResults = true;
+  var listening = false;
+  var baseText = "";
+  mic.addEventListener("click", function () {
+    if (listening) { recog.stop(); return; }
+    baseText = ta.value.trim();
+    if (baseText) baseText += " ";
+    recog.start();
+  });
+  recog.addEventListener("start", function () {
+    listening = true;
+    mic.textContent = "⏹ Stop";
+    note.textContent = "Listening... speak now.";
+  });
+  recog.addEventListener("result", function (ev) {
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) {
+      txt += ev.results[i][0].transcript;
+    }
+    ta.value = baseText + txt;
+  });
+  recog.addEventListener("end", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+  });
+  recog.addEventListener("error", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    note.textContent = "The microphone did not work here. You can type instead.";
+  });
+  card.appendChild(mic);
+}
+
+function buildForm() {
+  var host = document.getElementById("form");
+  host.innerHTML = "";
+  var card = el("div", null, "card");
+
+  var custSel = el("select");
+  DIRECTORY.customers.forEach(function (c) {
+    var o = el("option", c.name);
+    o.value = c.id;
+    custSel.appendChild(o);
+  });
+  var jobSel = el("select");
+  var emptyNote = el("p", "", "note");
+
+  function episodesOf(state) {
+    var cust = DIRECTORY.customers.filter(function (c) {
+      return c.id === custSel.value;
+    })[0];
+    if (!cust) return [];
+    return cust.episodes.filter(function (e) { return e.state === state; });
+  }
+
+  function fillJobs() {
+    jobSel.innerHTML = "";
+    var act = episodesOf("active");
+    act.forEach(function (e) {
+      var o = el("option", e.car_name + " · " + e.job_title);
+      o.value = e.id;
+      jobSel.appendChild(o);
+    });
+    emptyNote.textContent = act.length === 0
+      ? "No active jobs for this customer." : "";
+  }
+  custSel.addEventListener("change", fillJobs);
+
+  card.appendChild(el("label", "Customer"));
+  card.appendChild(custSel);
+  card.appendChild(el("label", "Job"));
+  card.appendChild(jobSel);
+  card.appendChild(emptyNote);
+
+  card.appendChild(el("label", "How does this job end?"));
+  var kinds = el("div", null, "kinds");
+  var doneBtn = el("button", "Complete the job");
+  doneBtn.type = "button";
+  var pauseBtn = el("button", "Pause the job");
+  pauseBtn.type = "button";
+  function syncOutcome() {
+    doneBtn.classList.toggle("active", OUTCOME === "completed");
+    pauseBtn.classList.toggle("active", OUTCOME === "paused");
+    pauseBtn.classList.toggle("pause", OUTCOME === "paused");
+    pauseWrap.style.display = OUTCOME === "paused" ? "" : "none";
+    headlineIn.placeholder = OUTCOME === "completed"
+      ? "Job complete." : "This job is paused.";
+    sendBtn.textContent = OUTCOME === "completed"
+      ? "Complete this job" : "Pause this job";
+  }
+  doneBtn.addEventListener("click", function () {
+    OUTCOME = "completed"; syncOutcome();
+  });
+  pauseBtn.addEventListener("click", function () {
+    OUTCOME = "paused"; syncOutcome();
+  });
+  kinds.appendChild(doneBtn);
+  kinds.appendChild(pauseBtn);
+  card.appendChild(kinds);
+
+  var pauseWrap = el("div");
+  pauseWrap.appendChild(el("label", "Reason (the shop only — the customer never sees this)"));
+  var reasonSel = el("select");
+  [["out_of_funds", "Out of funds"], ["stalled", "Stalled"],
+   ["abandoned", "Abandoned"], ["other", "Other"]].forEach(function (pair) {
+    var o = el("option", pair[1]);
+    o.value = pair[0];
+    reasonSel.appendChild(o);
+  });
+  pauseWrap.appendChild(reasonSel);
+  pauseWrap.appendChild(el("label", "Pickup date (optional)"));
+  var pickupIn = el("input");
+  pickupIn.type = "date";
+  pauseWrap.appendChild(pickupIn);
+  card.appendChild(pauseWrap);
+
+  card.appendChild(el("label", "Closing headline (optional — the customer sees this)"));
+  var headlineIn = el("input");
+  headlineIn.type = "text";
+  card.appendChild(headlineIn);
+  var note = el("p", "", "note");
+  addSpeak(card, headlineIn, note);
+
+  var sendBtn = el("button", "Complete this job", "send");
+  sendBtn.addEventListener("click", function () {
+    if (!jobSel.value) {
+      note.textContent = "Pick a job first.";
+      return;
+    }
+    var body = {
+      p_actor_id: ACTOR,
+      p_episode_id: jobSel.value,
+      p_outcome: OUTCOME,
+      p_reason: OUTCOME === "paused" ? reasonSel.value : null,
+      p_pickup_date: OUTCOME === "paused" && pickupIn.value
+        ? pickupIn.value : null,
+      p_headline: headlineIn.value.trim() || null
+    };
+    sendBtn.disabled = true;
+    note.textContent = "Ending the job...";
+    rpc("shop_end_episode", body).then(function (version) {
+      sendBtn.disabled = false;
+      if (version == null) {
+        note.textContent = "That did not go through. Please try again.";
+        return;
+      }
+      var custName = custSel.options[custSel.selectedIndex].textContent;
+      var jobName = jobSel.options[jobSel.selectedIndex].textContent;
+      var msg = (OUTCOME === "completed" ? "Completed: " : "Paused: ") +
+        jobName + " for " + custName + " (version " + version +
+        " published).";
+      var staged = episodesOf("staged");
+      if (OUTCOME === "completed" && staged.length > 0) {
+        msg += " " + custName + " also has a staged car waiting: " +
+          staged[0].car_name + " (" + staged[0].job_title +
+          "). Start it below.";
+      }
+      showBanner(msg);
+      headlineIn.value = "";
+      note.textContent = "";
+      load();
+    });
+  });
+  card.appendChild(sendBtn);
+  card.appendChild(note);
+  host.appendChild(card);
+  fillJobs();
+  syncOutcome();
+}
+
+function renderStaged() {
+  var host = document.getElementById("staged");
+  host.innerHTML = "";
+  var any = false;
+  DIRECTORY.customers.forEach(function (c) {
+    c.episodes.forEach(function (e) {
+      if (e.state !== "staged") return;
+      any = true;
+      var card = el("div", null, "card");
+      card.appendChild(el("p", c.name, "who"));
+      card.appendChild(el("p", e.car_name + " · " + e.job_title, "car"));
+      card.appendChild(el("label", "Opening headline (optional)"));
+      var hin = el("input");
+      hin.type = "text";
+      hin.placeholder = "Work has started.";
+      card.appendChild(hin);
+      var note = el("p", "", "note");
+      addSpeak(card, hin, note);
+      var b = el("button", "Start this car", "start");
+      b.addEventListener("click", function () {
+        b.disabled = true;
+        note.textContent = "Starting...";
+        rpc("shop_start_episode", {
+          p_actor_id: ACTOR,
+          p_episode_id: e.id,
+          p_headline: hin.value.trim() || null
+        }).then(function (version) {
+          if (version == null) {
+            b.disabled = false;
+            note.textContent = "That did not go through. Please try again.";
+            return;
+          }
+          showBanner("Started: " + e.car_name + " (" + e.job_title +
+            ") for " + c.name + ".");
+          load();
+        });
+      });
+      card.appendChild(b);
+      card.appendChild(note);
+      host.appendChild(card);
+    });
+  });
+  if (!any) {
+    host.appendChild(el("p", "No staged cars waiting.", "note"));
+  }
+}
+
+function load() {
+  rpc("shop_directory", { p_actor_id: ACTOR }).then(function (data) {
+    var host = document.getElementById("form");
+    if (!data || !data.customers) {
+      host.innerHTML = "";
+      host.appendChild(el("p",
+        "That shop key was not accepted. Open this page from the shop link.", "note"));
+      document.getElementById("staged").innerHTML = "";
+      return;
+    }
+    DIRECTORY = data;
+    buildForm();
+    renderStaged();
+  });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", function () {
+  load();
+});
+
+if (!ACTOR) {
+  document.getElementById("form").innerHTML = "";
+  document.getElementById("form").appendChild(el("p",
+    "This page needs the shop link. Ask for the link with your key in it.", "note"));
+  document.getElementById("staged").innerHTML = "";
+} else {
+  load();
+}
+</script>
+</body>
+</html>
