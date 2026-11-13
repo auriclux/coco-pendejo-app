@@ -5,18 +5,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Coco la Chaneque del Double-O Garage</title>
+    
+<script>
+(function () {
+    try {
+        var s = localStorage.getItem('oo_skin');
+        if (!s) {
+            var d = new Date();
+            if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+        }
+        if (s) document.documentElement.setAttribute('data-skin', s);
+    } catch (e) {}
+})();
+    
+</script>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root {
-            --bg: #121212;
-            --card-bg: #1c1c1c;
-            --text: #ffffff;
-            --accent: #00e676;
-            --warn: #ff9100;
-            --danger: #ff1744;
-            --subtext: #aaaaaa;
-            --archive-color: #29b6f6;
-        }
+:root {
+    --bg: #121212;
+    --card-bg: #1c1c1c;
+    --surface2: #262626;
+    --text: #ffffff;
+    --on-accent: #ffffff;
+    --accent: #00e676;
+    --brand: #1f7a3d;
+    --warn: #ff9100;
+    --danger: #ff1744;
+    --subtext: #aaaaaa;
+    --archive-color: #29b6f6;
+    --line: #333333;
+    --line2: #444444;
+    --track: #2a2a2a;
+}
+:root[data-skin="papel"] {
+    --bg: #f3ecd9;
+    --card-bg: #fffdf4;
+    --surface2: #efe6cf;
+    --text: #2a2118;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #6f6152;
+    --archive-color: #0277bd;
+    --line: #ddd0ae;
+    --line2: #cbbd97;
+    --track: #e7dcc0;
+}
+:root[data-skin="primer"] {
+    --bg: #d7dee4;
+    --card-bg: #eef2f5;
+    --surface2: #dde5eb;
+    --text: #1d2a33;
+    --on-accent: #ffffff;
+    --accent: #0e7a3d;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #54666f;
+    --archive-color: #0277bd;
+    --line: #b4c2cc;
+    --line2: #97a9b5;
+    --track: #c3d0d9;
+}
+:root[data-skin="navidad"] {
+    --bg: #12241a;
+    --card-bg: #1a3324;
+    --surface2: #234531;
+    --text: #f5eedd;
+    --on-accent: #ffffff;
+    --accent: #ffd54a;
+    --brand: #a31621;
+    --warn: #ffb74d;
+    --danger: #ff6f60;
+    --subtext: #b9c9a8;
+    --archive-color: #7fd4ff;
+    --line: #2c5238;
+    --line2: #3a6a49;
+    --track: #1f4230;
+}
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
@@ -322,6 +391,7 @@
         .menu-panel a:first-child { border-top: none; }
         .menu-flag { height: 18px; vertical-align: -3px; }
         .car-selector { width: 100%; box-sizing: border-box; background: #1a202c; color: #fff; border: 1px solid #2d3748; border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
+        .menu-label { padding: 10px 14px 4px; color: #aaa; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .coco-btn { background: none; border: none; padding: 0; cursor: pointer; position: relative; flex: none; }
         .coco-caret { position: absolute; right: -2px; bottom: -2px; background: #1f7a3d; color: #fff; font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
         .menu-btn-top { width: auto; padding: 10px 14px; }
@@ -368,6 +438,13 @@
         <a href="#" onclick="document.getElementById('import-file').click(); toggleMenu(); return false;">📂 Import Backup</a>
         <a href="#" onclick="toggleAddCar(); toggleMenu(); return false;">🚗 Add a board card</a>
         <a href="#" onclick="openFeedbackModal(); toggleMenu(); return false;">🎤 Tell Tío Clave What You Think</a>
+        <div class="menu-label">Look</div>
+        <a href="#" onclick="setSkin('taller'); toggleMenu(); return false;">🌑 Taller</a>
+        <a href="#" onclick="setSkin('papel'); toggleMenu(); return false;">📄 Papel</a>
+        <a href="#" onclick="setSkin('primer'); toggleMenu(); return false;">🩵 Primer</a>
+        <a href="#" onclick="setSkin(''); toggleMenu(); return false;">↩️ Shop default</a>
+        <div class="menu-label">Funions</div>
+        <a href="#" onclick="setSkin('navidad'); toggleMenu(); return false;">🎄 Navidad · Dec 23–26</a>
     </div>
 </div>
 
@@ -529,8 +606,18 @@ function toggleCocoMenu() {
     if (menu) menu.style.display = 'none';
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
+    function setSkin(name) {
+    try {
+        if (name) {
+            localStorage.setItem('oo_skin', name);
+            document.documentElement.setAttribute('data-skin', name);
+        } else {
+            localStorage.removeItem('oo_skin');
+            document.documentElement.removeAttribute('data-skin');
+        }
+    } catch (e) {}
+}
 
-        
         function toggleAddCar() {
         const row = document.getElementById('add-car-row');
         row.style.display = row.style.display === 'none' ? 'flex' : 'none';
