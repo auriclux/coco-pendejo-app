@@ -765,7 +765,7 @@
                 return;
             }
 
-            statusEl.innerHTML = "Sending email to Scot...";
+            statusEl.innerHTML = "Sending email to Tío Clave...";
             try {
                 const response = await fetch("https://api.web3forms.com/submit", {
                     method: "POST",
@@ -779,7 +779,7 @@
                     })
                 });
                 if (response.ok) {
-                    alert("Feedback sent directly to Scot's email!");
+                    alert("Feedback sent directly to Tío Clave's email!");
                 } else {
                     alert("Saved locally! (Email dispatch failed)");
                 }
