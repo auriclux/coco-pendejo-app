@@ -250,10 +250,10 @@ function buildForm() {
           staged[0].car_name + " (" + staged[0].job_title +
           "). Start it below.";
       }
+      note.textContent = "✓ " + msg;
       showBanner(msg);
       headlineIn.value = "";
-      note.textContent = "";
-      load();
+      setTimeout(load, 2500);
     });
   });
   card.appendChild(sendBtn);
@@ -295,9 +295,9 @@ function renderStaged() {
             note.textContent = "That did not go through. Please try again.";
             return;
           }
-          showBanner("Started: " + e.car_name + " (" + e.job_title +
-            ") for " + c.name + ".");
-          load();
+          note.textContent = "✓ Started: " + e.job_title + " is live now.";
+          showBanner("Started: " + e.car_name + " (" + e.job_title +  ") for " + c.name + ".");
+          setTimeout(load, 2500);
         });
       });
       card.appendChild(b);
