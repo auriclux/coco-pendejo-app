@@ -40,8 +40,8 @@
             gap: 8px;
         }
         .coco-badge {
-            width: 32px;
-            height: 32px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             border: 1.5px solid var(--accent);
             object-fit: cover;
@@ -322,19 +322,41 @@
         .menu-panel a:first-child { border-top: none; }
         .menu-flag { height: 18px; vertical-align: -3px; }
         .car-selector { width: 100%; box-sizing: border-box; background: #1a202c; color: #fff; border: 1px solid #2d3748; border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
+        .coco-btn { background: none; border: none; padding: 0; cursor: pointer; position: relative; flex: none; }
+        .coco-caret { position: absolute; right: -2px; bottom: -2px; background: #1f7a3d; color: #fff; font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
+        .menu-btn-top { width: auto; padding: 10px 14px; }
+        .coco-panel { padding: 14px; color: #e8e8e8; font-size: 0.95rem; line-height: 1.45; }
+        .coco-panel p { margin: 0 0 10px; }
+        .coco-panel .coco-sign { margin: 0; color: #fff; font-weight: 700; }
 </style>
 </head>
 <body>
 
-    <div class="header-top">
-        <h1>
-            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge">
-            Coco la Chaneque<br>del Double-O Garage
-        </h1>
-    </div>
+<div class="header-top">
+    <h1>
+        <button type="button" class="coco-btn" onclick="toggleCocoMenu()"><img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge"><span class="coco-caret">▾</span></button>
+        Coco la Chaneque<br>del Double-O Garage
+    </h1>
+    <button type="button" class="menu-btn menu-btn-top" onclick="toggleMenu()">🧰 Shop ▾</button>
+</div>
+<div id="coco-panel" class="menu-panel coco-panel" style="display:none">
+    <p>¿Quién's Coco? Ola! I'm Coco. I run the app here at Double-O Garage, which means this page you're looking at? That's me keeping it tidy, bien ordenadita.</p>
+    <p>I'm the local girl that keeps Omar's shop in my pocket so you never have to call and wonder, sin preocupaciones. When Omar signs off on work, I put it right here where you can see it: what's done, what's happening now, what we're waiting on. And if you ask something in this app you're asking me, so if I can answer from what's already signed off, I will, con confianza. I holler at Omar with it, too, that's a promise, se lo prometo.</p>
+    <p>Pero mira, what I don't do: I don't turn wrenches, I don't set prices, and I don't make promises Omar hasn't signed. He's the man, el jefe. I'm the one who never sleeps, jamás, and never loses a receipt.</p>
+    <p>Órale pues — do you happen to have any 9/16 or 10mm sockets? I can't find any more around the shop, and you know, a girl likes her regalitos.</p>
+    <p class="coco-sign">— Coco</p>
+</div>
+
+<div id="coco-panel" class="menu-panel coco-panel" style="display:none">
+    <p>¿Quién's Coco? Ola! I'm Coco. I run the app here at Double-O Garage, which means this page you're looking at? That's me keeping it tidy, bien ordenadita.</p>
+    <p>I'm the local girl that keeps Omar's shop in my pocket so you never have to call and wonder, sin preocupaciones. When Omar signs off on work, I put it right here where you can see it: what's done, what's happening now, what we're waiting on. And if you ask something in this app you're asking me, so if I can answer from what's already signed off, I will, con confianza. I holler at Omar with it, too, that's a promise, se lo prometo.</p>
+    <p>Pero mira, what I don't do: I don't turn wrenches, I don't set prices, and I don't make promises Omar hasn't signed. He's the man, el jefe. I'm the one who never sleeps, jamás, and never loses a receipt.</p>
+    <p>Órale pues — do you happen to have any 9/16 or 10mm sockets? I can't find any more around the shop, and you know, a girl likes her regalitos.</p>
+    <p class="coco-sign">— Coco</p>
+</div>
+
     <div class="subtitle" id="board-subtitle">Active Builds</div>
 <div class="menu-wrap">
-    <button type="button" class="menu-btn" onclick="toggleMenu()">🧰 Shop ▾</button>
     <div id="menu-panel" class="menu-panel" style="display:none">
         <a href="commit.html">➕ New Job</a>
         <a href="inbox.html">💬 Questions</a>
@@ -494,10 +516,20 @@ function pickVehicle(value) {
     saveState();
 }
 
-        function toggleMenu() {
-            const panel = document.getElementById('menu-panel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
+function toggleMenu() {
+    const panel = document.getElementById('menu-panel');
+    const coco = document.getElementById('coco-panel');
+    if (coco) coco.style.display = 'none';
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleCocoMenu() {
+    const panel = document.getElementById('coco-panel');
+    const menu = document.getElementById('menu-panel');
+    if (menu) menu.style.display = 'none';
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
         
         function toggleAddCar() {
         const row = document.getElementById('add-car-row');
