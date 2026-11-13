@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commit a Job</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f6f6f4; color: #1a1a1a; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 22px 0 6px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
+  select, input[type="text"], input[type="tel"], input[type="email"], textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; background: #fff; }
+  .kinds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .kinds button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
+  .kinds button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
+  button.send { margin-top: 14px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+  button.send:disabled { opacity: 0.5; }
+  button.speak { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; margin-right: 8px; }
+  button.plain { margin-top: 10px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+  button.plain:disabled { opacity: 0.5; }
+  .note { color: #666; font-size: 14px; margin: 8px 0 0; }
+  .banner { background: #e6f4ea; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
+  .who { font-size: 16px; font-weight: 700; margin: 0; }
+  .car { color: #444; font-size: 14px; margin: 2px 0 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  .refresh { font-size: 14px; color: #1f7a3d; background: none; border: none; cursor: pointer; font-weight: 600; padding: 0; }
+  .backline a { color: #1f7a3d; font-weight: 600; text-decoration: none; font-size: 15px; }
+  .linkbox { margin-top: 8px; }
+</style>
+</head>
+<body>
+<main id="app">  
+<p class="backline"><a href="index.html">← Back to the board</a></p>
+<div class="topbar">
+    <h1>Commit</h1>
+    <button class="refresh" id="refreshBtn" type="button">Refresh</button>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div class="card" id="result" style="display:none"></div>
+  <div id="form"><p class="note">Loading...</p></div>
+  <h2>Lost links: send a fresh invitation</h2>
+  <div id="resend"><p class="note">Loading...</p></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+var DIRECTORY = null;
+var CUST_MODE = "new";
+var CAR_MODE = "new";
+var START_MODE = "active";
+var CARS = [];
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function showBanner(text) {
+  var b = document.getElementById("banner");
+  b.textContent = text;
+  b.style.display = "block";
+}
+
+function customerLink(token) {
+  var base = window.location.href.split("?")[0];
+  base = base.substring(0, base.lastIndexOf("/") + 1);
+  return base + "customer.html?t=" + token;
+}
+
+function showLink(token, custName) {
+  var host = document.getElementById("result");
+  host.innerHTML = "";
+  host.style.display = "";
+  host.appendChild(el("p", "Invitation for " + custName, "who"));
+  host.appendChild(el("p",
+    "Send this link to the customer in a text or an email. " +
+    "It is the only copy. If they lose it, send a fresh one below.",
+    "note"));
+  var inp = el("input", null, "linkbox");
+  inp.type = "text";
+  inp.readOnly = true;
+  inp.value = customerLink(token);
+  inp.addEventListener("click", function () { inp.select(); });
+  host.appendChild(inp);
+}
+
+function addSpeak(card, input, note) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  var mic = el("button", "🎤 Speak", "speak");
+  var recog = new SR();
+  recog.lang = navigator.language || "en-US";
+  recog.interimResults = true;
+  var listening = false;
+  var baseText = "";
+  mic.addEventListener("click", function () {
+    if (listening) { recog.stop(); return; }
+    baseText = input.value.trim();
+    if (baseText) baseText += " ";
+    recog.start();
+  });
+  recog.addEventListener("start", function () {
+    listening = true;
+    mic.textContent = "⏹ Stop";
+    note.textContent = "Listening... speak now.";
+  });
+  recog.addEventListener("result", function (ev) {
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) {
+      txt += ev.results[i][0].transcript;
+    }
+    input.value = baseText + txt;
+  });
+  recog.addEventListener("end", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+  });
+  recog.addEventListener("error", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    note.textContent = "The microphone did not work here. You can type instead.";
+  });
+  card.appendChild(mic);
+}
+
+function toggleRow(card, labelText, options, current, onPick) {
+  card.appendChild(el("label", labelText));
+  var row = el("div", null, "kinds");
+  var btns = [];
+  options.forEach(function (opt) {
+    var b = el("button", opt[1]);
+    b.type = "button";
+    if (opt[0] === current) b.classList.add("active");
+    b.addEventListener("click", function () {
+      btns.forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      onPick(opt[0]);
+    });
+    btns.push(b);
+    row.appendChild(b);
+  });
+  card.appendChild(row);
+  return row;
+}
+
+function buildForm() {
+  var host = document.getElementById("form");
+  host.innerHTML = "";
+  var card = el("div", null, "card");
+  var note = el("p", "", "note");
+
+  toggleRow(card, "Customer",
+    [["new", "New customer"], ["existing", "Existing customer"]],
+    CUST_MODE, function (v) { CUST_MODE = v; buildForm(); });
+
+  var newCustWrap = el("div");
+  newCustWrap.appendChild(el("label", "Customer name"));
+  var nameIn = el("input"); nameIn.type = "text";
+  newCustWrap.appendChild(nameIn);
+  newCustWrap.appendChild(el("label", "Phone (where the invitation goes)"));
+  var phoneIn = el("input"); phoneIn.type = "tel";
+  newCustWrap.appendChild(phoneIn);
+  newCustWrap.appendChild(el("label", "Email (or use instead of phone)"));
+  var emailIn = el("input"); emailIn.type = "email";
+  newCustWrap.appendChild(emailIn);
+  card.appendChild(newCustWrap);
+
+  var existWrap = el("div");
+  existWrap.appendChild(el("label", "Customer"));
+  var custSel = el("select");
+  DIRECTORY.customers.forEach(function (c) {
+    var o = el("option", c.name);
+    o.value = c.id;
+    custSel.appendChild(o);
+  });
+  existWrap.appendChild(custSel);
+  card.appendChild(existWrap);
+
+  var carToggleHost = el("div");
+  card.appendChild(carToggleHost);
+  var newCarWrap = el("div");
+  newCarWrap.appendChild(el("label", "Car (year and model, as the customer knows it)"));
+  var carNameIn = el("input"); carNameIn.type = "text";
+  newCarWrap.appendChild(carNameIn);
+  card.appendChild(newCarWrap);
+  var existCarWrap = el("div");
+  existCarWrap.appendChild(el("label", "Car"));
+  var carSel = el("select");
+  existCarWrap.appendChild(carSel);
+  card.appendChild(existCarWrap);
+
+  function fillCars() {
+    rpc("shop_customer_cars", {
+      p_actor_id: ACTOR, p_customer_id: custSel.value
+    }).then(function (data) {
+      CARS = (data && data.cars) || [];
+      carSel.innerHTML = "";
+      CARS.forEach(function (c) {
+        var o = el("option", c.name);
+        o.value = c.id;
+        carSel.appendChild(o);
+      });
+      syncVisibility();
+    });
+  }
+  custSel.addEventListener("change", function () {
+    CAR_MODE = CARS.length ? CAR_MODE : "new";
+    fillCars();
+  });
+
+  function syncVisibility() {
+    newCustWrap.style.display = CUST_MODE === "new" ? "" : "none";
+    existWrap.style.display = CUST_MODE === "existing" ? "" : "none";
+    carToggleHost.innerHTML = "";
+    if (CUST_MODE === "existing" && CARS.length > 0) {
+      toggleRow(carToggleHost, "Car",
+        [["new", "New car"], ["existing", "Existing car"]],
+        CAR_MODE, function (v) { CAR_MODE = v; syncVisibility(); });
+    } else if (CUST_MODE === "existing") {
+      CAR_MODE = "new";
+    }
+    var showNewCar = CUST_MODE === "new" || CAR_MODE === "new";
+    newCarWrap.style.display = showNewCar ? "" : "none";
+    existCarWrap.style.display =
+      CUST_MODE === "existing" && CAR_MODE === "existing" ? "" : "none";
+    stageWrap.style.display = START_MODE === "staged" ? "" : "none";
+  }
+
+  card.appendChild(el("label", "Job"));
+  var jobIn = el("input"); jobIn.type = "text";
+  card.appendChild(jobIn);
+  addSpeak(card, jobIn, note);
+
+  toggleRow(card, "When does it start?",
+    [["active", "Start now"], ["staged", "Stage it"]],
+    START_MODE, function (v) { START_MODE = v; syncVisibility(); });
+  var stageWrap = el("div");
+  stageWrap.appendChild(el("label",
+    "Agreed condition (the customer sees this as the status)"));
+  var condIn = el("input"); condIn.type = "text";
+  stageWrap.appendChild(condIn);
+  addSpeak(stageWrap, condIn, note);
+  card.appendChild(stageWrap);
+
+  card.appendChild(el("label", "Deposit in dollars (shop only, leave blank for none)"));
+  var depIn = el("input"); depIn.type = "text";
+  depIn.inputMode = "decimal";
+  card.appendChild(depIn);
+
+  card.appendChild(el("label", "Opening headline (optional)"));
+  var headIn = el("input"); headIn.type = "text";
+  card.appendChild(headIn);
+  addSpeak(card, headIn, note);
+
+  var sendBtn = el("button", "Commit this job", "send");
+  sendBtn.addEventListener("click", function () {
+    var body = { p_actor_id: ACTOR };
+    if (CUST_MODE === "new") {
+      if (!nameIn.value.trim()) { note.textContent = "The customer needs a name."; return; }
+      body.p_customer_name = nameIn.value.trim();
+      body.p_contact_phone = phoneIn.value.trim() || null;
+      body.p_contact_email = emailIn.value.trim() || null;
+    } else {
+      body.p_customer_id = custSel.value;
+    }
+    if (CUST_MODE === "existing" && CAR_MODE === "existing") {
+      if (!carSel.value) { note.textContent = "Pick the car first."; return; }
+      body.p_car_id = carSel.value;
+    } else {
+      if (!carNameIn.value.trim()) { note.textContent = "The car needs a name."; return; }
+      body.p_car_name = carNameIn.value.trim();
+    }
+    if (!jobIn.value.trim()) { note.textContent = "The job needs a name."; return; }
+    body.p_job_title = jobIn.value.trim();
+    body.p_start_state = START_MODE;
+    if (START_MODE === "staged") {
+      if (!condIn.value.trim()) {
+        note.textContent = "A staged job needs its agreed condition.";
+        return;
+      }
+      body.p_agreed_condition = condIn.value.trim();
+    }
+    var dep = depIn.value.replace(/[$,]/g, "").trim();
+    if (dep) {
+      var dollars = parseFloat(dep);
+      if (isNaN(dollars) || dollars < 0) {
+        note.textContent = "That deposit does not read as an amount.";
+        return;
+      }
+      body.p_deposit_amount_cents = Math.round(dollars * 100);
+    }
+    body.p_headline = headIn.value.trim() || null;
+
+    sendBtn.disabled = true;
+    note.textContent = "Committing...";
+    rpc("shop_commit", body).then(function (res) {
+      sendBtn.disabled = false;
+      if (!res) {
+        note.textContent = "That did not go through. Please try again.";
+        return;
+      }
+      var custName = CUST_MODE === "new"
+        ? nameIn.value.trim()
+        : custSel.options[custSel.selectedIndex].textContent;
+      var carName = body.p_car_id
+        ? carSel.options[carSel.selectedIndex].textContent
+        : carNameIn.value.trim();
+      showBanner("Committed: " + carName + " · " + body.p_job_title +
+        " for " + custName + " (" +
+        (res.state === "staged" ? "staged" : "started") + ").");
+      if (res.minted && res.token) {
+        showLink(res.token, custName);
+      } else {
+        var host = document.getElementById("result");
+        host.innerHTML = "";
+        host.style.display = "";
+        host.appendChild(el("p", custName, "who"));
+        host.appendChild(el("p",
+          "This customer already has a live link. Nothing new to send.",
+          "note"));
+      }
+      note.textContent = "";
+      load();
+    });
+  });
+  card.appendChild(sendBtn);
+  card.appendChild(note);
+  host.appendChild(card);
+  if (CUST_MODE === "existing" && DIRECTORY.customers.length > 0) {
+    fillCars();
+  } else {
+    syncVisibility();
+  }
+}
+
+function renderResend() {
+  var host = document.getElementById("resend");
+  host.innerHTML = "";
+  DIRECTORY.customers.forEach(function (c) {
+    var card = el("div", null, "card");
+    card.appendChild(el("p", c.name, "who"));
+    var note = el("p", "", "note");
+    var b = el("button", "Resend invitation", "plain");
+    b.addEventListener("click", function () {
+      b.disabled = true;
+      note.textContent = "Minting a fresh link...";
+      rpc("shop_reissue_token", {
+        p_actor_id: ACTOR, p_customer_id: c.id
+      }).then(function (token) {
+        b.disabled = false;
+        if (!token) {
+          note.textContent = "That did not go through. Please try again.";
+          return;
+        }
+        note.textContent = "The old link stopped working just now.";
+        showBanner("Fresh invitation minted for " + c.name + ".");
+        showLink(token, c.name);
+      });
+    });
+    card.appendChild(b);
+    card.appendChild(note);
+    host.appendChild(card);
+  });
+  if (DIRECTORY.customers.length === 0) {
+    host.appendChild(el("p", "No customers yet.", "note"));
+  }
+}
+
+function load() {
+  rpc("shop_directory", { p_actor_id: ACTOR }).then(function (data) {
+    var host = document.getElementById("form");
+    if (!data || !data.customers) {
+      host.innerHTML = "";
+      host.appendChild(el("p",
+        "That shop key was not accepted. Open this page from the shop link.", "note"));
+      document.getElementById("resend").innerHTML = "";
+      return;
+    }
+    DIRECTORY = data;
+    buildForm();
+    renderResend();
+  });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", function () {
+  load();
+});
+
+if (!ACTOR) {
+  document.getElementById("form").innerHTML = "";
+  document.getElementById("form").appendChild(el("p",
+    "This page needs the shop link. Ask for the link with your key in it.", "note"));
+  document.getElementById("resend").innerHTML = "";
+} else {
+  load();
+}
+</script>
+</body>
+</html>

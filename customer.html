@@ -296,7 +296,17 @@ var RESPONSE_LABEL = {
 };
 
 function refreshOutbound() {
-  rpc("customer_outbound", { p_token: TOKEN }).then(function (data) {
+  fetch(SUPABASE_URL + "/rest/v1/rpc/customer_outbound", {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ p_token: token })
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).then(function (data) {
     OUTBOUND = {};
     if (data && data.requests) {
       data.requests.forEach(function (r) {
@@ -307,8 +317,8 @@ function refreshOutbound() {
     if (LASTDATA) render(LASTDATA);
   }).catch(function () {});
 }
-
-function outboundSection(card, entry) {
+  
+  function outboundSection(card, entry) {
   var list = OUTBOUND[entry.episodeId] || [];
   if (list.length === 0) return;
   card.appendChild(el("h2", "From the shop"));
@@ -349,11 +359,21 @@ function outboundSection(card, entry) {
       b.addEventListener("click", function () {
         btns.forEach(function (x) { x.disabled = true; });
         note.textContent = "Sending...";
-        rpc("customer_respond", {
-          p_token: TOKEN,
-          p_outbound_id: r.id,
-          p_response: def[0]
-        }).then(function (ok) {
+fetch(SUPABASE_URL + "/rest/v1/rpc/customer_respond", {
+  method: "POST",
+  headers: {
+    "apikey": PUBLISHABLE_KEY,
+    "Authorization": "Bearer " + PUBLISHABLE_KEY,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    p_token: token,
+    p_outbound_id: r.id,
+    p_response: def[0]
+  })
+}).then(function (resp) {
+  return resp.ok ? resp.json() : null;
+}).then(function (ok) {
           if (ok === true) {
             box.innerHTML = "";
             box.appendChild(el("p",
