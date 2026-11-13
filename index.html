@@ -315,8 +315,13 @@
             display: block; width: 100%; font-size: 0.75rem; background: #2d3748; color: #63b3ed;
             padding: 4px 8px; border-radius: 4px; margin-top: 4px; cursor: pointer; text-decoration: none;
         }
-    .hub-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
-    .hub-nav a { flex: 1 1 40%; text-align: center; background: #1f7a3d; color: #fff; font-weight: 600; padding: 10px 6px; border-radius: 10px; text-decoration: none; font-size: 0.95rem; }
+        .menu-wrap { position: relative; margin: 10px 0 4px; }
+        .menu-btn { width: 100%; background: #1f7a3d; color: #fff; font-weight: 700; font-size: 1rem; padding: 12px; border: none; border-radius: 10px; cursor: pointer; }
+        .menu-panel { background: #1a202c; border: 1px solid #2d3748; border-radius: 10px; margin-top: 6px; overflow: hidden; }
+        .menu-panel a { display: block; padding: 13px 14px; color: #fff; text-decoration: none; font-size: 1rem; border-top: 1px solid #2d3748; }
+        .menu-panel a:first-child { border-top: none; }
+        .menu-flag { height: 18px; vertical-align: -3px; }
+        .car-selector { width: 100%; box-sizing: border-box; background: #1a202c; color: #fff; border: 1px solid #2d3748; border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
 </style>
 </head>
 <body>
@@ -324,48 +329,45 @@
     <div class="header-top">
         <h1>
             <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge">
-            Coco la Chaneque del Double-O Garage
+            Coco la Chaneque<br>del Double-O Garage
         </h1>
-        <button id="view-toggle-btn" class="view-toggle-btn" onclick="toggleArchiveView()">📁 View Archive</button>
     </div>
     <div class="subtitle" id="board-subtitle">Active Builds</div>
-<nav class="hub-nav">
-    <a href="commit.html">➕ New Job</a>
-    <a href="inbox.html">💬 Questions</a>
-    <a href="ask.html">🛒 Ask a Customer</a>
-    <a href="close.html">🏁 End a Job</a>
-    <a href="dates.html">📅 Dates</a>
-</nav>
+<div class="menu-wrap">
+    <button type="button" class="menu-btn" onclick="toggleMenu()">🧰 Shop ▾</button>
+    <div id="menu-panel" class="menu-panel" style="display:none">
+        <a href="commit.html">➕ New Job</a>
+        <a href="inbox.html">💬 Questions</a>
+        <a href="ask.html">🛒 Ask a Customer</a>
+        <a href="close.html"><img src="checkered-flag.png" alt="" class="menu-flag"> End a Job</a>
+        <a href="dates.html">📅 Dates</a>
+        <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
+        <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
+        <a href="#" onclick="document.getElementById('import-file').click(); toggleMenu(); return false;">📂 Import Backup</a>
+        <a href="#" onclick="toggleAddCar(); toggleMenu(); return false;">🚗 Add a board card</a>
+        <a href="#" onclick="openFeedbackModal(); toggleMenu(); return false;">🎤 Tell Tío Clave What You Think</a>
+    </div>
+</div>
 
     <!-- Vehicle Filter Bar -->
-    <div id="filter-bar" class="vehicle-filter-bar"></div>
+    <select id="filter-bar" class="car-selector" onchange="pickVehicle(this.value)"></select>
 
-    <div class="add-car-container">
+    <div class="add-car-container" id="add-car-row" style="display:none">
         <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
         <button class="btn-add" onclick="addCar()">+ Add</button>
     </div>
 
-    <div class="toolbar">
-        <button class="btn-tool" onclick="exportData()">💾 Backup Export (.json)</button>
-        <button class="btn-tool" onclick="document.getElementById('import-file').click()">📂 Import Backup</button>
-        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-    </div>
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
 
     <div id="board-container"></div>
 
     <!-- Floating Feedback Trigger -->
-    <div class="feedback-bar">
-        <button class="btn-feedback" onclick="openFeedbackModal()">
-            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco">
-            TELL SCOT WHAT YOU THINK
-        </button>
-    </div>
 
     <!-- Feedback Modal -->
     <div id="feedback-modal" class="modal-overlay">
         <div class="modal-card" style="text-align: center;">
             <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="modal-avatar">
-            <div class="modal-title">Tell Scot What You Think</div>
+            <div class="modal-title">Tell Tío Clave What You Think</div>
             <div id="speech-status" class="modal-status">
                 Tap the box below, press the 🎙️ <b>keyboard mic</b>, and speak.
             </div>
@@ -466,28 +468,40 @@
             renderFilterBar();
             renderBoard();
         }
+        
+    function renderFilterBar() {
+    const filterBar = document.getElementById('filter-bar');
+    filterBar.innerHTML = '';
 
-        function renderFilterBar() {
-            const filterBar = document.getElementById('filter-bar');
-            filterBar.innerHTML = '';
+    const availableProjects = projects.filter(p => !!p.archived === showingArchive);
+    const options = ['ALL', ...availableProjects.map(p => p.title)];
 
-            const availableProjects = projects.filter(p => !!p.archived === showingArchive);
-            const options = ['ALL', ...availableProjects.map(p => p.title)];
+    if (!options.includes(selectedVehicleFilter)) {
+        selectedVehicleFilter = 'ALL';
+    }
 
-            if (!options.includes(selectedVehicleFilter)) {
-                selectedVehicleFilter = 'ALL';
-            }
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        filterBar.appendChild(option);
+    });
+    filterBar.value = selectedVehicleFilter;
+}
 
-            options.forEach(opt => {
-                const chip = document.createElement('div');
-                chip.className = `filter-chip ${selectedVehicleFilter === opt ? 'active' : ''}`;
-                chip.innerText = opt;
-                chip.onclick = () => {
-                    selectedVehicleFilter = opt;
-                    saveState();
-                };
-                filterBar.appendChild(chip);
-            });
+function pickVehicle(value) {
+    selectedVehicleFilter = value;
+    saveState();
+}
+
+        function toggleMenu() {
+            const panel = document.getElementById('menu-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function toggleAddCar() {
+        const row = document.getElementById('add-car-row');
+        row.style.display = row.style.display === 'none' ? 'flex' : 'none';
         }
 
         function toggleArchiveView() {
@@ -495,13 +509,13 @@
             const btn = document.getElementById('view-toggle-btn');
             const sub = document.getElementById('board-subtitle');
 
-            if (showingArchive) {
-                btn.innerText = "🛠️ View Active Builds";
-                sub.innerText = "Archived Builds Repository";
-            } else {
-                btn.innerText = "📁 View Archive";
-                sub.innerText = "Double-O Garage • Active Builds";
-            }
+        if (showingArchive) {
+            if (btn) btn.innerText = "🛠️ View Active Builds";
+            sub.innerText = "Archived Builds Repository";
+        } else {
+            if (btn) btn.innerText = "📁 View Archive";
+            sub.innerText = "Double-O Garage • Active Builds";
+        }
             saveState();
         }
 
@@ -765,7 +779,7 @@
                 return;
             }
 
-            statusEl.innerHTML = "Sending email to Scot...";
+            statusEl.innerHTML = "Sending email to Tío Clave...";
             try {
                 const response = await fetch("https://api.web3forms.com/submit", {
                     method: "POST",
@@ -779,7 +793,7 @@
                     })
                 });
                 if (response.ok) {
-                    alert("Feedback sent directly to Scot's email!");
+                    alert("Feedback sent directly to Tío Clave's email!");
                 } else {
                     alert("Saved locally! (Email dispatch failed)");
                 }
