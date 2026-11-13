@@ -343,6 +343,7 @@
         <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
         <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
         <a href="#" onclick="document.getElementById('import-file').click(); toggleMenu(); return false;">📂 Import Backup</a>
+        <a href="#" onclick="toggleAddCar(); toggleMenu(); return false;">🚗 Add a board card</a>
         <a href="#" onclick="openFeedbackModal(); toggleMenu(); return false;">🎤 Tell Tío Clave What You Think</a>
     </div>
 </div>
@@ -350,26 +351,16 @@
     <!-- Vehicle Filter Bar -->
     <div id="filter-bar" class="vehicle-filter-bar"></div>
 
-    <div class="add-car-container">
+    <div class="add-car-container" id="add-car-row" style="display:none">
         <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
         <button class="btn-add" onclick="addCar()">+ Add</button>
     </div>
 
-    <div class="toolbar">
-        <button class="btn-tool" onclick="exportData()">💾 Backup Export (.json)</button>
-        <button class="btn-tool" onclick="document.getElementById('import-file').click()">📂 Import Backup</button>
-        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-    </div>
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
 
     <div id="board-container"></div>
 
     <!-- Floating Feedback Trigger -->
-    <div class="feedback-bar">
-        <button class="btn-feedback" onclick="openFeedbackModal()">
-            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco">
-                    TELL TÍO CLAVE WHAT YOU THINK
-        </button>
-    </div>
 
     <!-- Feedback Modal -->
     <div id="feedback-modal" class="modal-overlay">
@@ -502,6 +493,11 @@
         function toggleMenu() {
             const panel = document.getElementById('menu-panel');
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function toggleAddCar() {
+        const row = document.getElementById('add-car-row');
+        row.style.display = row.style.display === 'none' ? 'flex' : 'none';
         }
 
         function toggleArchiveView() {
