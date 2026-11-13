@@ -321,6 +321,7 @@
         .menu-panel a { display: block; padding: 13px 14px; color: #fff; text-decoration: none; font-size: 1rem; border-top: 1px solid #2d3748; }
         .menu-panel a:first-child { border-top: none; }
         .menu-flag { height: 18px; vertical-align: -3px; }
+        .car-selector { width: 100%; box-sizing: border-box; background: #1a202c; color: #fff; border: 1px solid #2d3748; border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
 </style>
 </head>
 <body>
@@ -349,7 +350,7 @@
 </div>
 
     <!-- Vehicle Filter Bar -->
-    <div id="filter-bar" class="vehicle-filter-bar"></div>
+    <select id="filter-bar" class="car-selector" onchange="pickVehicle(this.value)"></select>
 
     <div class="add-car-container" id="add-car-row" style="display:none">
         <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
@@ -467,29 +468,32 @@
             renderFilterBar();
             renderBoard();
         }
+        
+    function renderFilterBar() {
+    const filterBar = document.getElementById('filter-bar');
+    filterBar.innerHTML = '';
 
-        function renderFilterBar() {
-            const filterBar = document.getElementById('filter-bar');
-            filterBar.innerHTML = '';
+    const availableProjects = projects.filter(p => !!p.archived === showingArchive);
+    const options = ['ALL', ...availableProjects.map(p => p.title)];
 
-            const availableProjects = projects.filter(p => !!p.archived === showingArchive);
-            const options = ['ALL', ...availableProjects.map(p => p.title)];
+    if (!options.includes(selectedVehicleFilter)) {
+        selectedVehicleFilter = 'ALL';
+    }
 
-            if (!options.includes(selectedVehicleFilter)) {
-                selectedVehicleFilter = 'ALL';
-            }
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        filterBar.appendChild(option);
+    });
+    filterBar.value = selectedVehicleFilter;
+}
 
-            options.forEach(opt => {
-                const chip = document.createElement('div');
-                chip.className = `filter-chip ${selectedVehicleFilter === opt ? 'active' : ''}`;
-                chip.innerText = opt;
-                chip.onclick = () => {
-                    selectedVehicleFilter = opt;
-                    saveState();
-                };
-                filterBar.appendChild(chip);
-            });
-        }
+function pickVehicle(value) {
+    selectedVehicleFilter = value;
+    saveState();
+}
+
         function toggleMenu() {
             const panel = document.getElementById('menu-panel');
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
