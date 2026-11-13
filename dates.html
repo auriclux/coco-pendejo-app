@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Completion Dates</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f6f6f4; color: #1a1a1a; }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  .card { background: #fff; border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  label { display: block; font-size: 13px; color: #555; margin: 12px 0 4px; }
+  input[type="text"], input[type="date"] { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; background: #fff; }
+  button.send { margin-top: 10px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+  button.send:disabled { opacity: 0.5; }
+  button.speak { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+  .note { color: #666; font-size: 14px; margin: 8px 0 0; }
+  .banner { background: #e6f4ea; border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
+  .who { font-size: 16px; font-weight: 700; margin: 0; }
+  .car { color: #444; font-size: 14px; margin: 2px 0 0; }
+  .target { font-size: 16px; margin: 10px 0 0; }
+  .delays { color: #c1121f; font-size: 14px; font-weight: 700; margin: 4px 0 0; }
+  .rev { color: #444; font-size: 14px; margin: 3px 0 0; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  .refresh { font-size: 14px; color: #1f7a3d; background: none; border: none; cursor: pointer; font-weight: 600; padding: 0; }
+  .backline a { color: #1f7a3d; font-weight: 600; text-decoration: none; font-size: 15px; }
+</style>
+</head>
+<body>
+<main id="app">
+  <p class="backline"><a href="index.html">← Back to the board</a></p>
+  <div class="topbar">
+    <h1>Completion dates</h1>
+    <button class="refresh" id="refreshBtn" type="button">Refresh</button>
+  </div>
+  <div class="banner" id="banner"></div>
+  <div id="list"><p class="note">Loading...</p></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+var MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+
+function fmtDate(iso) {
+  if (!iso) return "";
+  var p = String(iso).split("-");
+  var y = parseInt(p[0], 10), m = parseInt(p[1], 10), d = parseInt(p[2], 10);
+  if (!y || !m || !d) return String(iso);
+  return MONTHS[m - 1] + " " + d + ", " + y;
+}
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function showBanner(text) {
+  var b = document.getElementById("banner");
+  b.textContent = text;
+  b.style.display = "block";
+}
+
+function addSpeak(card, input, note) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  var mic = el("button", "🎤 Speak", "speak");
+  var recog = new SR();
+  recog.lang = navigator.language || "en-US";
+  recog.interimResults = true;
+  var listening = false;
+  var baseText = "";
+  mic.addEventListener("click", function () {
+    if (listening) { recog.stop(); return; }
+    baseText = input.value.trim();
+    if (baseText) baseText += " ";
+    recog.start();
+  });
+  recog.addEventListener("start", function () {
+    listening = true;
+    mic.textContent = "⏹ Stop";
+    note.textContent = "Listening... speak now.";
+  });
+  recog.addEventListener("result", function (ev) {
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) {
+      txt += ev.results[i][0].transcript;
+    }
+    input.value = baseText + txt;
+  });
+  recog.addEventListener("end", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+  });
+  recog.addEventListener("error", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    note.textContent = "The microphone did not work here. You can type instead.";
+  });
+  card.appendChild(mic);
+}
+
+function renderList(data) {
+  var host = document.getElementById("list");
+  host.innerHTML = "";
+  if (!data.episodes || data.episodes.length === 0) {
+    host.appendChild(el("p", "No live jobs.", "note"));
+    return;
+  }
+  data.episodes.forEach(function (e) {
+    var card = el("div", null, "card");
+    card.appendChild(el("p", e.customer_name, "who"));
+    card.appendChild(el("p",
+      e.car_name + " · " + e.job_title +
+      (e.state === "staged" ? " (staged)" : ""), "car"));
+    if (e.current_date) {
+      card.appendChild(el("p",
+        "Target completion: " + fmtDate(e.current_date), "target"));
+    } else {
+      card.appendChild(el("p", "No completion date set yet.", "target"));
+    }
+    if (e.delay_count > 0) {
+      card.appendChild(el("p",
+        "Delayed " + e.delay_count +
+        (e.delay_count === 1 ? " time" : " times") + " so far.", "delays"));
+    }
+    (e.revisions || []).forEach(function (r) {
+      var line = r.old_date
+        ? fmtDate(r.old_date) + " → " + fmtDate(r.new_date)
+        : "Set for " + fmtDate(r.new_date);
+      if (r.excuse) line += " · " + r.excuse;
+      card.appendChild(el("p", line, "rev"));
+    });
+
+    var note = el("p", "", "note");
+    card.appendChild(el("label",
+      e.current_date ? "New completion date" : "Completion date"));
+    var dateIn = el("input");
+    dateIn.type = "date";
+    card.appendChild(dateIn);
+    card.appendChild(el("label",
+      e.current_date
+        ? "Why is it moving? (shop only, required)"
+        : "Why, if you want it on record (shop only)"));
+    var excuseIn = el("input");
+    excuseIn.type = "text";
+    card.appendChild(excuseIn);
+    addSpeak(card, excuseIn, note);
+
+    var sendBtn = el("button",
+      e.current_date ? "Move the date" : "Set the date", "send");
+    sendBtn.addEventListener("click", function () {
+      if (!dateIn.value) {
+        note.textContent = "Pick the date first.";
+        return;
+      }
+      if (e.current_date && !excuseIn.value.trim()) {
+        note.textContent = "Moving a date needs the reason, for the record.";
+        return;
+      }
+      sendBtn.disabled = true;
+      note.textContent = "Saving...";
+      rpc("shop_set_done_date", {
+        p_actor_id: ACTOR,
+        p_episode_id: e.episode_id,
+        p_new_date: dateIn.value,
+        p_excuse: excuseIn.value.trim() || null
+      }).then(function (res) {
+        sendBtn.disabled = false;
+        if (!res) {
+          note.textContent = "That did not go through. Please try again.";
+          return;
+        }
+        note.textContent = "✓ " + e.job_title + " now targets " +
+          fmtDate(dateIn.value) + " (delay " + res.delay_count + ").";
+        showBanner("Date set: " + e.car_name + " · " + e.job_title +
+          " targets " + fmtDate(dateIn.value) + ".");
+        setTimeout(load, 2500);
+      });
+    });
+    card.appendChild(sendBtn);
+    card.appendChild(note);
+    host.appendChild(card);
+  });
+}
+
+function load() {
+  rpc("shop_dates_open", { p_actor_id: ACTOR }).then(function (data) {
+    var host = document.getElementById("list");
+    if (!data || !data.episodes) {
+      host.innerHTML = "";
+      host.appendChild(el("p",
+        "That shop key was not accepted. Open this page from the shop link.", "note"));
+      return;
+    }
+    renderList(data);
+  });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", function () {
+  load();
+});
+
+if (!ACTOR) {
+  document.getElementById("list").innerHTML = "";
+  document.getElementById("list").appendChild(el("p",
+    "This page needs the shop link. Ask for the link with your key in it.", "note"));
+} else {
+  load();
+}
+</script>
+</body>
+</html>
