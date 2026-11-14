@@ -307,6 +307,7 @@
         .task-item .task-grip { cursor: grab; touch-action: none; color: var(--subtext); padding: 4px 2px; font-size: 1rem; line-height: 1; user-select: none; -webkit-user-select: none; }
         .task-item.completed span.task-grip { text-decoration: none; }
         .task-item.dragging { opacity: 0.55; background: var(--surface2); }
+        .shop-meta { flex-basis: 100%; font-size: 0.8rem; color: var(--subtext); background: var(--surface2); border-radius: 6px; padding: 4px 8px; }
         
         .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
@@ -469,7 +470,6 @@
         <a href="close.html"><img src="checkered-flag.png" alt="" class="menu-flag"> End a Job</a>
         <a href="dates.html">📅 Dates</a>
         <a href="worker.html">👷 Jobs &amp; Hours</a>
-        <a href="shoptasks.html">📋 Shop Tasks</a>
         <a href="manual.html">📖 Manual</a>
         <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
         <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
@@ -620,12 +620,17 @@
             e.preventDefault();
             const item = grip.closest('.task-item');
             if (!item) return;
-            taskDrag = {
-                item: item,
-                list: item.parentElement,
-                carId: parseInt(grip.getAttribute('data-car'), 10),
-                from: parseInt(grip.getAttribute('data-index'), 10)
-            };
+            const shopId = grip.getAttribute('data-shop');
+            if (shopId) {
+                taskDrag = { item: item, list: item.parentElement, shop: true };
+            } else {
+                taskDrag = {
+                    item: item,
+                    list: item.parentElement,
+                    carId: parseInt(grip.getAttribute('data-car'), 10),
+                    from: parseInt(grip.getAttribute('data-index'), 10)
+                };
+            }
             item.classList.add('dragging');
         });
         document.addEventListener('pointermove', function (e) {
@@ -645,6 +650,12 @@
             const drag = taskDrag;
             taskDrag = null;
             drag.item.classList.remove('dragging');
+            if (drag.shop) {
+                const ids = [];
+                drag.list.querySelectorAll('.task-item').forEach(function (r) { ids.push(r.getAttribute('data-shop-row')); });
+                ooRpc('shop_task_reorder', { p_actor_id: ooActor(), p_task_ids: ids }).then(function () { renderBoard(); });
+                return;
+            }
             const rows = drag.list.querySelectorAll('.task-item');
             let to = -1;
             for (let i = 0; i < rows.length; i++) if (rows[i] === drag.item) to = i;
@@ -659,22 +670,122 @@
         }
         document.addEventListener('pointerup', endTaskDrag);
         document.addEventListener('pointercancel', endTaskDrag);
+
+        // Shop Tasks as a project card (Baby Step 30): the same
+        // shell, rows, grips, and add-task foot as a car card,
+        // fed by the substrate instead of oo_projects. Checkbox
+        // is Done, the X cancels (Reopen lives on the full
+        // list), and the drag order is Omar's everywhere via
+        // shop_task_reorder. Cancelled tasks stay off the board.
+        var OO_SUPABASE_URL = 'https://lnyfpelahepvwlfwppgj.supabase.co';
+        var OO_PUBLISHABLE_KEY = 'sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP';
+
+        function ooActor() {
+            try { return localStorage.getItem('oo_actor') || ''; } catch (e) { return ''; }
+        }
+
+        function ooRpc(name, body) {
+            return fetch(OO_SUPABASE_URL + '/rest/v1/rpc/' + name, {
+                method: 'POST',
+                headers: {
+                    'apikey': OO_PUBLISHABLE_KEY,
+                    'Authorization': 'Bearer ' + OO_PUBLISHABLE_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            }).then(function (r) { return r.json(); }).catch(function () { return null; });
+        }
+
+        function renderShopCard(container) {
+            const card = document.createElement('div');
+            card.className = 'car-card shop-card';
+            card.innerHTML = `
+                <div class="car-header">
+                    <span class="car-title">Shop Tasks</span>
+                    <div class="header-actions">
+                        <a class="btn-archive" href="shoptasks.html" style="text-decoration: none;">Full list →</a>
+                    </div>
+                </div>
+                <div class="task-list" id="shop-task-list">
+                    <div style="padding: 6px 0; color: var(--subtext); font-size: 0.9rem;">Loading…</div>
+                </div>
+                <div class="add-task-container">
+                    <input type="text" id="input-shop-task" placeholder="Add task...">
+                    <button onclick="addShopTask()">+ Task</button>
+                </div>
+            `;
+            container.appendChild(card);
+            const listEl = card.querySelector('#shop-task-list');
+            const actor = ooActor();
+            if (!actor) {
+                listEl.innerHTML = '<div style="padding: 6px 0; color: var(--subtext); font-size: 0.9rem;">Open the board from your shop link once so it knows you.</div>';
+                return;
+            }
+            ooRpc('shop_tasks_open', { p_actor_id: actor, p_include_closed: true }).then(function (res) {
+                if (!res) {
+                    listEl.innerHTML = '<div style="padding: 6px 0; color: var(--subtext); font-size: 0.9rem;">Could not load shop tasks.</div>';
+                    return;
+                }
+                const tasks = (res.tasks || []).filter(t => t.state !== 'cancelled');
+                if (!tasks.length) {
+                    listEl.innerHTML = '<div style="padding: 6px 0; color: var(--subtext); font-size: 0.9rem;">No shop tasks yet. Add the first one below.</div>';
+                    return;
+                }
+                listEl.innerHTML = tasks.map(t => {
+                    const parts = [];
+                    if (t.category && t.category !== 'General') parts.push(escapeHtml(t.category));
+                    if (t.state === 'in_progress') parts.push('In progress');
+                    if (t.assignedToName) parts.push('Assigned to ' + escapeHtml(t.assignedToName));
+                    if (t.detail) parts.push(escapeHtml(t.detail));
+                    const meta = parts.length ? `<span class="shop-meta">${parts.join(' · ')}</span>` : '';
+                    return `
+                        <div class="task-item ${t.state === 'done' ? 'completed' : ''}" data-shop-row="${t.id}">
+                            <span class="task-grip" data-shop="${t.id}" title="Drag to set priority">⠿</span>
+                            <input type="checkbox" ${t.state === 'done' ? 'checked' : ''} onchange="toggleShopTask('${t.id}', this.checked)">
+                            <span>${escapeHtml(t.title)}</span>
+                            <button class="remove-task" onclick="cancelShopTask('${t.id}')">✕</button>
+                            ${meta}
+                        </div>
+                    `;
+                }).join('');
+            });
+        }
+
+        function toggleShopTask(id, checked) {
+            ooRpc('shop_task_set_state', { p_actor_id: ooActor(), p_task_id: id, p_state: checked ? 'done' : 'open' })
+                .then(function () { renderBoard(); });
+        }
+
+        function cancelShopTask(id) {
+            ooRpc('shop_task_set_state', { p_actor_id: ooActor(), p_task_id: id, p_state: 'cancelled' })
+                .then(function () { renderBoard(); });
+        }
+
+        function addShopTask() {
+            const input = document.getElementById('input-shop-task');
+            const title = input.value.trim();
+            if (!title) return;
+            ooRpc('shop_task_create', { p_actor_id: ooActor(), p_title: title, p_detail: null, p_category: null, p_assigned_to: null })
+                .then(function () { renderBoard(); });
+        }
         
     function renderFilterBar() {
     const filterBar = document.getElementById('filter-bar');
     filterBar.innerHTML = '';
 
     const availableProjects = projects.filter(p => !!p.archived === showingArchive);
-    const options = ['ALL', ...availableProjects.map(p => p.title)];
+    const options = [{ value: 'ALL', text: 'ALL' },
+        { value: '__SHOPTASKS__', text: 'Shop Tasks' },
+        ...availableProjects.map(p => ({ value: p.title, text: p.title }))];
 
-    if (!options.includes(selectedVehicleFilter)) {
+    if (!options.some(o => o.value === selectedVehicleFilter)) {
         selectedVehicleFilter = 'ALL';
     }
 
     options.forEach(opt => {
         const option = document.createElement('option');
-        option.value = opt;
-        option.textContent = opt;
+        option.value = opt.value;
+        option.textContent = opt.text;
         filterBar.appendChild(option);
     });
     filterBar.value = selectedVehicleFilter;
@@ -733,6 +844,11 @@ function toggleCocoMenu() {
         function renderBoard() {
             const container = document.getElementById('board-container');
             container.innerHTML = '';
+
+            if (selectedVehicleFilter === '__SHOPTASKS__') {
+                renderShopCard(container);
+                return;
+            }
 
             let filteredProjects = projects.filter(p => !!p.archived === showingArchive);
 
