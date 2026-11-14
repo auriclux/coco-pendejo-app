@@ -335,29 +335,36 @@ function jobById(id) {
 function renderJobs() {
   var wrap = document.getElementById("jobs");
   wrap.textContent = "";
-  if (!JOBS.length) {
-    wrap.appendChild(el("p", "No cars are in the shop right now.", "none"));
+  var v = ctxValue();
+  if (v === "") {
+    var c0 = el("div", null, "card");
+    c0.appendChild(el("div", "Shop work", "car"));
+    c0.appendChild(el("div", "Work that belongs to no car in particular.", "job"));
+    wrap.appendChild(c0);
     return;
   }
-  JOBS.forEach(function (j) {
-    var card = el("div", null, "card");
-    var carLine = el("div", null, "car");
-    carLine.appendChild(document.createTextNode(j.carName));
-    if (j.state === "staged") carLine.appendChild(el("span", "Staged", "tag staged"));
-    card.appendChild(carLine);
-    card.appendChild(el("div", j.episodeTitle, "job"));
-    if (j.headline) card.appendChild(el("div", j.headline, "head"));
-    if (j.inProgress && j.inProgress.length) {
-      card.appendChild(el("div", "In progress: " + j.inProgress.join(", "), "prog"));
-    }
-    if (j.state === "staged" && j.agreedCondition) {
-      card.appendChild(el("div", "Starts: " + j.agreedCondition, "target"));
-    }
-    if (j.blessedDoneDate) {
-      card.appendChild(el("div", "Target: " + fmtDate(j.blessedDoneDate), "target"));
-    }
-    wrap.appendChild(card);
-  });
+  var j = jobById(v);
+  if (!j) {
+    wrap.appendChild(el("p", "That job is not in the shop anymore.", "none"));
+    return;
+  }
+  var card = el("div", null, "card");
+  var carLine = el("div", null, "car");
+  carLine.appendChild(document.createTextNode(j.carName));
+  if (j.state === "staged") carLine.appendChild(el("span", "Staged", "tag staged"));
+  card.appendChild(carLine);
+  card.appendChild(el("div", j.episodeTitle, "job"));
+  if (j.headline) card.appendChild(el("div", j.headline, "head"));
+  if (j.inProgress && j.inProgress.length) {
+    card.appendChild(el("div", "In progress: " + j.inProgress.join(", "), "prog"));
+  }
+  if (j.state === "staged" && j.agreedCondition) {
+    card.appendChild(el("div", "Starts: " + j.agreedCondition, "target"));
+  }
+  if (j.blessedDoneDate) {
+    card.appendChild(el("div", "Target: " + fmtDate(j.blessedDoneDate), "target"));
+  }
+  wrap.appendChild(card);
 }
 
 function ctxValue() {
@@ -584,12 +591,12 @@ function init() {
   document.getElementById("save").addEventListener("click", save);
   document.getElementById("clear").addEventListener("click", clearForm);
   document.getElementById("post").addEventListener("click", postNote);
-  document.getElementById("ctx").addEventListener("change", function () { renderEntries(); renderNotes(); });
+  document.getElementById("ctx").addEventListener("change", function () { renderJobs(); renderEntries(); renderNotes(); });
   addSpeak(document.getElementById("notecard"), document.getElementById("n-body"), document.getElementById("notenote"));
   rpc("shop_jobs_overview", { p_actor_id: ACTOR }).then(function (res) {
     if (res) { JOBS = res.jobs || []; }
-    renderJobs();
     fillContext();
+    renderJobs();
   });
   loadHours();
   loadNotes();
