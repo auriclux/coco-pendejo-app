@@ -265,14 +265,20 @@ function questionCard(q) {
   card.appendChild(el("p", carLine, "car"));
   card.appendChild(el("p", waiting(q.created_at), "wait"));
   var pl = q.payload || {};
-  if (q.kind === "receipt") {
-    card.appendChild(el("p", "Receipt photo", "qtext"));
+  var pid = pl.receiptId || pl.photoId || null;
+  if ((q.kind === "receipt" || q.kind === "photo" ||
+       q.kind === "worker_photo") && pid) {
+    var headline = q.kind === "receipt" ? "Receipt photo"
+      : q.kind === "worker_photo"
+        ? "Photo from " + (pl.actorName || "a worker")
+        : "Photo";
+    card.appendChild(el("p", headline, "qtext"));
     if (pl.caption) card.appendChild(el("p", pl.caption, "car"));
     var rctl = el("div", null, "reply");
     var rnote = el("p", "", "note");
     var rimg = document.createElement("img");
     rimg.className = "receiptimg";
-    rimg.alt = "Receipt photo";
+    rimg.alt = "Photo";
     rimg.style.display = "none";
     var loadedUrl = null;
     var showBtn = el("button", "Show photo");
@@ -291,7 +297,7 @@ function questionCard(q) {
       rnote.textContent = "Loading photo...";
       rpc("shop_receipt_photo", {
         p_actor_id: ACTOR,
-        p_receipt_id: pl.receiptId
+        p_receipt_id: pid
       }).then(function (res) {
         showBtn.disabled = false;
         if (res && res.imageB64) {
@@ -313,7 +319,7 @@ function questionCard(q) {
       revBtn.disabled = true;
       rpc("shop_receipt_review", {
         p_actor_id: ACTOR,
-        p_receipt_id: pl.receiptId
+        p_receipt_id: pid
       }).then(function (res) {
         if (res && res.ok === true) {
           var done = el("p", "✓ Reviewed", "note");
@@ -366,7 +372,7 @@ function questionCard(q) {
       rnote.textContent = "Loading cars...";
       rpc("shop_photo_move_targets", {
         p_actor_id: ACTOR,
-        p_photo_id: pl.receiptId
+        p_photo_id: pid
       }).then(function (res) {
         mvBtn.disabled = false;
         if (!res || !res.episodes) {
@@ -402,7 +408,7 @@ function questionCard(q) {
           rnote.textContent = "Moving...";
           rpc("shop_photo_move", {
             p_actor_id: ACTOR,
-            p_photo_id: pl.receiptId,
+            p_photo_id: pid,
             p_new_episode_id: target
           }).then(function (mres) {
             mvBtn.disabled = false;
