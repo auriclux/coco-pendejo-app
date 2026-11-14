@@ -304,6 +304,9 @@
         .task-item input[type="checkbox"] { width: 18px; height: 18px; }
         .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
         .task-item .remove-task { margin-left: auto; color: var(--subtext); background: none; padding: 2px 6px; }
+        .task-item .task-grip { cursor: grab; touch-action: none; color: var(--subtext); padding: 4px 2px; font-size: 1rem; line-height: 1; user-select: none; -webkit-user-select: none; }
+        .task-item.completed span.task-grip { text-decoration: none; }
+        .task-item.dragging { opacity: 0.55; background: var(--surface2); }
         
         .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
@@ -466,6 +469,7 @@
         <a href="close.html"><img src="checkered-flag.png" alt="" class="menu-flag"> End a Job</a>
         <a href="dates.html">📅 Dates</a>
         <a href="worker.html">👷 Jobs &amp; Hours</a>
+        <a href="shoptasks.html">📋 Shop Tasks</a>
         <a href="manual.html">📖 Manual</a>
         <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
         <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
@@ -601,6 +605,60 @@
             renderFilterBar();
             renderBoard();
         }
+
+        // Drag-to-prioritize (Baby Step 29): press the grip handle
+        // and slide; the row follows, and on release the task array
+        // takes the new order and saves. Top of the list is first
+        // priority; publish.js already emits tasks in list order,
+        // so the order reaches the worker links at the next
+        // Sign Off & Publish. Pointer events only, so the same
+        // code serves Omar's phone and a desktop mouse.
+        let taskDrag = null;
+        document.addEventListener('pointerdown', function (e) {
+            const grip = e.target.closest ? e.target.closest('.task-grip') : null;
+            if (!grip) return;
+            e.preventDefault();
+            const item = grip.closest('.task-item');
+            if (!item) return;
+            taskDrag = {
+                item: item,
+                list: item.parentElement,
+                carId: parseInt(grip.getAttribute('data-car'), 10),
+                from: parseInt(grip.getAttribute('data-index'), 10)
+            };
+            item.classList.add('dragging');
+        });
+        document.addEventListener('pointermove', function (e) {
+            if (!taskDrag) return;
+            const siblings = taskDrag.list.querySelectorAll('.task-item:not(.dragging)');
+            for (let i = 0; i < siblings.length; i++) {
+                const r = siblings[i].getBoundingClientRect();
+                if (e.clientY < r.top + r.height / 2) {
+                    taskDrag.list.insertBefore(taskDrag.item, siblings[i]);
+                    return;
+                }
+            }
+            taskDrag.list.appendChild(taskDrag.item);
+        });
+        function endTaskDrag() {
+            if (!taskDrag) return;
+            const drag = taskDrag;
+            taskDrag = null;
+            drag.item.classList.remove('dragging');
+            const rows = drag.list.querySelectorAll('.task-item');
+            let to = -1;
+            for (let i = 0; i < rows.length; i++) if (rows[i] === drag.item) to = i;
+            const car = projects.find(p => p.id === drag.carId);
+            if (car && to >= 0 && to !== drag.from) {
+                const moved = car.tasks.splice(drag.from, 1)[0];
+                car.tasks.splice(to, 0, moved);
+                saveState();
+            } else {
+                renderBoard();
+            }
+        }
+        document.addEventListener('pointerup', endTaskDrag);
+        document.addEventListener('pointercancel', endTaskDrag);
         
     function renderFilterBar() {
     const filterBar = document.getElementById('filter-bar');
@@ -707,6 +765,7 @@ function toggleCocoMenu() {
 
                     return `
                         <div class="task-item ${task.done ? 'completed' : ''}">
+                            <span class="task-grip" data-car="${car.id}" data-index="${index}" title="Drag to set priority">⠿</span>
                             <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
                             <span>${escapeHtml(task.text)}</span>
                             <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
