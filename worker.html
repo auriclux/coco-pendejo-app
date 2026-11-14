@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jobs &amp; Hours — Double-O Garage</title>
+<script>
+(function () {
+  try {
+    var s = localStorage.getItem('oo_skin');
+    if (!s) {
+      var d = new Date();
+      if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+    }
+    if (s) document.documentElement.setAttribute('data-skin', s);
+  } catch (e) {}
+})();
+</script>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card-bg: #ffffff;
+    --surface2: #efefec;
+    --text: #1a1a1a;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #8a6d1a;
+    --danger: #c1121f;
+    --subtext: #666666;
+    --archive-color: #0277bd;
+    --line: #999999;
+    --line2: #6f6f6f;
+    --track: #efefec;
+    --accent-ink: #000000;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(26, 26, 26, 0.55);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #4a4a4a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+  }
+  :root[data-skin="taller"] {
+    --bg: #121212;
+    --card-bg: #1c1c1c;
+    --surface2: #262626;
+    --text: #ffffff;
+    --on-accent: #ffffff;
+    --accent: #00e676;
+    --brand: #1f7a3d;
+    --warn: #ff9100;
+    --danger: #ff1744;
+    --subtext: #aaaaaa;
+    --archive-color: #29b6f6;
+    --line: #333333;
+    --line2: #444444;
+    --track: #2a2a2a;
+    --accent-ink: #000000;
+    --archive-soft: rgba(41, 182, 246, 0.15);
+    --archive-line: rgba(41, 182, 246, 0.4);
+    --danger-soft: rgba(255, 23, 68, 0.12);
+    --danger-line: rgba(255, 23, 68, 0.3);
+    --danger-glow: rgba(229, 57, 53, 0.4);
+    --scrim: rgba(0, 0, 0, 0.85);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #cccccc;
+    --ok-soft: rgba(0, 230, 118, 0.13);
+    --warn-soft: rgba(255, 145, 0, 0.13);
+    --warn-line: rgba(255, 145, 0, 0.5);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+  }
+  :root[data-skin="papel"] {
+    --bg: #f3ecd9;
+    --card-bg: #fffdf4;
+    --surface2: #efe6cf;
+    --text: #2a2118;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #6f6152;
+    --archive-color: #0277bd;
+    --line: #ddd0ae;
+    --line2: #cbbd97;
+    --track: #e7dcc0;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(42, 33, 24, 0.55);
+    --shadow: rgba(42, 33, 24, 0.25);
+    --dim: #57493a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(42, 33, 24, 0.10);
+  }
+  :root[data-skin="primer"] {
+    --bg: #d7dee4;
+    --card-bg: #eef2f5;
+    --surface2: #dde5eb;
+    --text: #1d2a33;
+    --on-accent: #ffffff;
+    --accent: #0e7a3d;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #54666f;
+    --archive-color: #0277bd;
+    --line: #b4c2cc;
+    --line2: #97a9b5;
+    --track: #c3d0d9;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(29, 42, 51, 0.55);
+    --shadow: rgba(29, 42, 51, 0.25);
+    --dim: #3c4c56;
+    --ok-soft: #e2f2e6;
+    --warn-soft: #fdf0d5;
+    --warn-line: #b98a1c;
+    --card-shadow: rgba(29, 42, 51, 0.10);
+  }
+  :root[data-skin="navidad"] {
+    --bg: #12241a;
+    --card-bg: #1a3324;
+    --surface2: #234531;
+    --text: #f5eedd;
+    --on-accent: #ffffff;
+    --accent: #ffd54a;
+    --brand: #a31621;
+    --warn: #ffb74d;
+    --danger: #ff6f60;
+    --subtext: #b9c9a8;
+    --archive-color: #7fd4ff;
+    --line: #2c5238;
+    --line2: #3a6a49;
+    --track: #1f4230;
+    --accent-ink: #201600;
+    --archive-soft: rgba(127, 212, 255, 0.15);
+    --archive-line: rgba(127, 212, 255, 0.4);
+    --danger-soft: rgba(255, 111, 96, 0.14);
+    --danger-line: rgba(255, 111, 96, 0.4);
+    --danger-glow: rgba(255, 111, 96, 0.4);
+    --scrim: rgba(0, 0, 0, 0.8);
+    --shadow: rgba(0, 0, 0, 0.6);
+    --dim: #d8cfb8;
+    --ok-soft: rgba(255, 213, 74, 0.15);
+    --warn-soft: rgba(255, 183, 77, 0.15);
+    --warn-line: rgba(255, 183, 77, 0.55);
+    --card-shadow: rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+  main { max-width: 560px; margin: 0 auto; padding: 18px 16px 40px; }
+  .back { display: inline-block; margin-bottom: 10px; color: var(--brand); text-decoration: none; font-size: 15px; }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  .who { color: var(--subtext); font-size: 14px; margin-bottom: 14px; }
+  h2 { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtext); margin: 22px 0 8px; }
+  .card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 10px; box-shadow: 0 1px 3px var(--card-shadow); }
+  .car { font-size: 16px; font-weight: 600; }
+  .job { color: var(--dim); font-size: 14px; margin-top: 1px; }
+  .head { font-size: 15px; margin-top: 6px; }
+  .prog { font-size: 14px; color: var(--dim); margin-top: 2px; }
+  .target { font-size: 13px; color: var(--subtext); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; }
+  .tag.staged { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line); }
+  .dayhead { font-size: 15px; font-weight: 600; margin: 16px 0 6px; }
+  .dayhead .total { color: var(--subtext); font-weight: 400; font-size: 13px; }
+  .entry { display: flex; align-items: baseline; gap: 8px; background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin: 0 0 6px; }
+  .entry.mine { cursor: pointer; }
+  .entry .ecar { flex: 1; font-size: 15px; }
+  .entry .enote { display: block; font-size: 13px; color: var(--dim); }
+  .entry .ewho { display: block; font-size: 12px; color: var(--subtext); }
+  .entry .ehrs { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .entry .eedit { font-size: 13px; color: var(--brand); white-space: nowrap; }
+  .none { color: var(--subtext); font-size: 14px; margin: 0 0 6px; }
+  label { display: block; font-size: 13px; color: var(--subtext); margin: 10px 0 4px; }
+  input, select { width: 100%; font-size: 16px; padding: 9px; border: 1px solid var(--line2); border-radius: 8px; background: var(--card-bg); color: var(--text); }
+  .saverow { display: flex; gap: 8px; margin-top: 14px; }
+  .save { flex: 1; font-size: 16px; font-weight: 600; padding: 11px; border: 1px solid var(--brand); border-radius: 8px; background: var(--brand); color: var(--on-accent); cursor: pointer; }
+  .clear { font-size: 15px; padding: 11px 14px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
+  .formnote { font-size: 14px; min-height: 18px; margin-top: 10px; }
+  .formnote.ok { color: var(--brand); font-weight: 600; }
+  .message { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+</style>
+</head>
+<body>
+<main id="app">
+<a class="back" href="index.html">← Shop board</a>
+<h1>Jobs &amp; Hours</h1>
+<div class="who" id="who"></div>
+
+<h2>Cars in the shop</h2>
+<div id="jobs"></div>
+
+<h2>Add or fix hours</h2>
+<div class="card" id="formcard">
+  <label for="f-date">Day</label>
+  <input type="date" id="f-date">
+  <label for="f-job">Car</label>
+  <select id="f-job"></select>
+  <label for="f-hours">Hours (your best estimate)</label>
+  <input type="number" id="f-hours" inputmode="decimal" step="0.25" min="0" max="24" placeholder="e.g. 3.5">
+  <label for="f-note">Note (optional)</label>
+  <input type="text" id="f-note" placeholder="What you worked on">
+  <div class="saverow">
+    <button type="button" class="save" id="save">Save hours</button>
+    <button type="button" class="clear" id="clear">Clear</button>
+  </div>
+  <div class="formnote" id="formnote"></div>
+</div>
+
+<h2>Last two weeks</h2>
+<div id="days"></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+var MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+var WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function pad(n) { return (n < 10 ? "0" : "") + n; }
+
+function isoOf(d) {
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+
+function addDays(iso, n) {
+  var p = iso.split("-");
+  var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10) + n);
+  return isoOf(d);
+}
+
+function fmtDate(iso) {
+  if (!iso) return "";
+  var p = String(iso).split("-");
+  var y = parseInt(p[0], 10), m = parseInt(p[1], 10), d = parseInt(p[2], 10);
+  if (!y || !m || !d) return String(iso);
+  return MONTHS[m - 1] + " " + d + ", " + y;
+}
+
+function fmtDay(iso) {
+  var p = String(iso).split("-");
+  var d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+  return WEEKDAYS[d.getDay()] + ", " + fmtDate(iso);
+}
+
+function fmtHours(h) {
+  var v = Math.round(parseFloat(h) * 100) / 100;
+  return String(v);
+}
+
+var TODAY = isoOf(new Date());
+var FROM = addDays(TODAY, -13);
+var JOBS = [];
+var ENTRIES = [];
+var SEEALL = false;
+
+function jobById(id) {
+  for (var i = 0; i < JOBS.length; i++) if (JOBS[i].episodeId === id) return JOBS[i];
+  return null;
+}
+
+function renderJobs() {
+  var wrap = document.getElementById("jobs");
+  wrap.textContent = "";
+  if (!JOBS.length) {
+    wrap.appendChild(el("p", "No cars are in the shop right now.", "none"));
+    return;
+  }
+  JOBS.forEach(function (j) {
+    var card = el("div", null, "card");
+    var carLine = el("div", null, "car");
+    carLine.appendChild(document.createTextNode(j.carName));
+    if (j.state === "staged") carLine.appendChild(el("span", "Staged", "tag staged"));
+    card.appendChild(carLine);
+    card.appendChild(el("div", j.episodeTitle, "job"));
+    if (j.headline) card.appendChild(el("div", j.headline, "head"));
+    if (j.inProgress && j.inProgress.length) {
+      card.appendChild(el("div", "In progress: " + j.inProgress.join(", "), "prog"));
+    }
+    if (j.state === "staged" && j.agreedCondition) {
+      card.appendChild(el("div", "Starts: " + j.agreedCondition, "target"));
+    }
+    if (j.blessedDoneDate) {
+      card.appendChild(el("div", "Target: " + fmtDate(j.blessedDoneDate), "target"));
+    }
+    wrap.appendChild(card);
+  });
+}
+
+function fillJobSelect() {
+  var sel = document.getElementById("f-job");
+  sel.textContent = "";
+  JOBS.forEach(function (j) {
+    var o = document.createElement("option");
+    o.value = j.episodeId;
+    o.textContent = j.carName + " — " + j.episodeTitle;
+    sel.appendChild(o);
+  });
+}
+
+function renderDays() {
+  var wrap = document.getElementById("days");
+  wrap.textContent = "";
+  for (var iso = TODAY; ; iso = addDays(iso, -1)) {
+    var rows = ENTRIES.filter(function (e) { return e.workDate === iso; });
+    var head = el("div", null, "dayhead");
+    head.appendChild(document.createTextNode(iso === TODAY ? "Today — " + fmtDay(iso) : fmtDay(iso)));
+    if (rows.length) {
+      var total = 0;
+      rows.forEach(function (e) { total += parseFloat(e.hours); });
+      head.appendChild(el("span", " · " + fmtHours(total) + " hrs", "total"));
+    }
+    wrap.appendChild(head);
+    if (!rows.length) {
+      wrap.appendChild(el("p", "No hours logged.", "none"));
+    }
+    rows.forEach(function (e) {
+      var mine = e.actorId === ACTOR;
+      var row = el("div", null, "entry" + (mine ? " mine" : ""));
+      var left = el("div", null, "ecar");
+      var j = jobById(e.episodeId);
+      left.appendChild(document.createTextNode(e.carName + (j ? " — " + j.episodeTitle : "")));
+      if (!mine && SEEALL) left.appendChild(el("span", e.actorName, "ewho"));
+      if (e.note) left.appendChild(el("span", e.note, "enote"));
+      row.appendChild(left);
+      row.appendChild(el("span", fmtHours(e.hours) + " hrs", "ehrs"));
+      if (mine) {
+        row.appendChild(el("span", "Edit", "eedit"));
+        row.addEventListener("click", function () { editEntry(e); });
+      }
+      wrap.appendChild(row);
+    });
+    if (iso === FROM) break;
+  }
+}
+
+function setFormNote(text, ok) {
+  var n = document.getElementById("formnote");
+  n.textContent = text || "";
+  n.className = "formnote" + (ok ? " ok" : "");
+}
+
+function editEntry(e) {
+  document.getElementById("f-date").value = e.workDate;
+  document.getElementById("f-job").value = e.episodeId;
+  document.getElementById("f-hours").value = fmtHours(e.hours);
+  document.getElementById("f-note").value = e.note || "";
+  setFormNote("Editing your " + fmtDate(e.workDate) + " entry on " + e.carName + ". Save updates it.", false);
+  document.getElementById("formcard").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function clearForm() {
+  document.getElementById("f-date").value = TODAY;
+  document.getElementById("f-hours").value = "";
+  document.getElementById("f-note").value = "";
+  setFormNote("", false);
+}
+
+function loadHours() {
+  return rpc("shop_hours_open", { p_actor_id: ACTOR, p_from: FROM, p_to: TODAY }).then(function (res) {
+    if (res) {
+      ENTRIES = res.hours || [];
+      SEEALL = !!res.canSeeAll;
+      document.getElementById("who").textContent = SEEALL
+        ? "You see everyone's hours below. Entries you add are under your own name."
+        : "Your hours for the last two weeks. Tap one of your entries to fix it.";
+    }
+    renderDays();
+  });
+}
+
+function save() {
+  var date = document.getElementById("f-date").value;
+  var job = document.getElementById("f-job").value;
+  var hours = parseFloat(document.getElementById("f-hours").value);
+  var note = document.getElementById("f-note").value.trim();
+  if (!date) { setFormNote("Pick the day you worked.", false); return; }
+  if (!job) { setFormNote("Pick the car.", false); return; }
+  if (!hours || hours <= 0 || hours > 24) { setFormNote("Hours must be more than 0 and no more than 24.", false); return; }
+  rpc("shop_hours_set", {
+    p_actor_id: ACTOR,
+    p_episode_id: job,
+    p_work_date: date,
+    p_hours: hours,
+    p_note: note || null
+  }).then(function (row) {
+    if (!row) { setFormNote("That did not save. Try again.", false); return; }
+    var j = jobById(job);
+    setFormNote("✓ Saved: " + fmtHours(row.hours) + " hrs on " + (j ? j.carName : "the car") + ", " + fmtDate(row.workDate) + ".", true);
+    document.getElementById("f-hours").value = "";
+    document.getElementById("f-note").value = "";
+    loadHours();
+  });
+}
+
+function init() {
+  var app = document.getElementById("app");
+  if (!ACTOR) {
+    app.appendChild(el("div", "This page needs your shop link. Open it from the board on the shop phone.", "message"));
+    return;
+  }
+  document.getElementById("f-date").value = TODAY;
+  document.getElementById("f-date").max = addDays(TODAY, 1);
+  document.getElementById("save").addEventListener("click", save);
+  document.getElementById("clear").addEventListener("click", clearForm);
+  rpc("shop_jobs_overview", { p_actor_id: ACTOR }).then(function (res) {
+    if (res) { JOBS = res.jobs || []; }
+    renderJobs();
+    fillJobSelect();
+  });
+  loadHours();
+}
+
+init();
+
+</script>
+</body>
+</html>
