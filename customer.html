@@ -4,53 +4,236 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your car — current status</title>
+<script>
+(function () {
+  try {
+    var s = localStorage.getItem('oo_skin');
+    if (!s) {
+      var d = new Date();
+      if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+    }
+    if (s) document.documentElement.setAttribute('data-skin', s);
+  } catch (e) {}
+})();
+</script>
 <style>
-  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; line-height: 1.5; color: #1c1c1c; background: #fafafa; }
+:root {
+  --bg: #fafafa;
+  --card-bg: #ffffff;
+  --surface2: #f0f0ee;
+  --text: #1c1c1c;
+  --on-accent: #ffffff;
+  --accent: #1a7a34;
+  --brand: #1f7a3d;
+  --warn: #8a6d1a;
+  --danger: #c1121f;
+  --subtext: #666666;
+  --archive-color: #0277bd;
+  --line: #dddddd;
+  --line2: #999999;
+  --track: #efefec;
+  --accent-ink: #000000;
+  --archive-soft: rgba(2, 119, 189, 0.12);
+  --archive-line: rgba(2, 119, 189, 0.45);
+  --danger-soft: rgba(193, 18, 31, 0.10);
+  --danger-line: rgba(193, 18, 31, 0.35);
+  --danger-glow: rgba(193, 18, 31, 0.35);
+  --scrim: rgba(28, 28, 28, 0.55);
+  --shadow: rgba(0, 0, 0, 0.5);
+  --dim: #444444;
+  --ok-soft: #e6f4ea;
+  --warn-soft: #fdf3e0;
+  --warn-line: #c9a227;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+}
+:root[data-skin="taller"] {
+  --bg: #121212;
+  --card-bg: #1c1c1c;
+  --surface2: #262626;
+  --text: #ffffff;
+  --on-accent: #ffffff;
+  --accent: #00e676;
+  --brand: #1f7a3d;
+  --warn: #ff9100;
+  --danger: #ff1744;
+  --subtext: #aaaaaa;
+  --archive-color: #29b6f6;
+  --line: #333333;
+  --line2: #444444;
+  --track: #2a2a2a;
+  --accent-ink: #000000;
+  --archive-soft: rgba(41, 182, 246, 0.15);
+  --archive-line: rgba(41, 182, 246, 0.4);
+  --danger-soft: rgba(255, 23, 68, 0.12);
+  --danger-line: rgba(255, 23, 68, 0.3);
+  --danger-glow: rgba(229, 57, 53, 0.4);
+  --scrim: rgba(0, 0, 0, 0.85);
+  --shadow: rgba(0, 0, 0, 0.5);
+  --dim: #cccccc;
+  --ok-soft: rgba(0, 230, 118, 0.13);
+  --warn-soft: rgba(255, 145, 0, 0.13);
+  --warn-line: rgba(255, 145, 0, 0.5);
+  --card-shadow: rgba(0, 0, 0, 0.5);
+}
+:root[data-skin="papel"] {
+  --bg: #f3ecd9;
+  --card-bg: #fffdf4;
+  --surface2: #efe6cf;
+  --text: #2a2118;
+  --on-accent: #ffffff;
+  --accent: #1a7a34;
+  --brand: #1f7a3d;
+  --warn: #b25e00;
+  --danger: #c1121f;
+  --subtext: #6f6152;
+  --archive-color: #0277bd;
+  --line: #ddd0ae;
+  --line2: #cbbd97;
+  --track: #e7dcc0;
+  --accent-ink: #ffffff;
+  --archive-soft: rgba(2, 119, 189, 0.12);
+  --archive-line: rgba(2, 119, 189, 0.45);
+  --danger-soft: rgba(193, 18, 31, 0.10);
+  --danger-line: rgba(193, 18, 31, 0.35);
+  --danger-glow: rgba(193, 18, 31, 0.35);
+  --scrim: rgba(42, 33, 24, 0.55);
+  --shadow: rgba(42, 33, 24, 0.25);
+  --dim: #57493a;
+  --ok-soft: #e6f4ea;
+  --warn-soft: #fdf3e0;
+  --warn-line: #c9a227;
+  --card-shadow: rgba(42, 33, 24, 0.10);
+}
+:root[data-skin="primer"] {
+  --bg: #d7dee4;
+  --card-bg: #eef2f5;
+  --surface2: #dde5eb;
+  --text: #1d2a33;
+  --on-accent: #ffffff;
+  --accent: #0e7a3d;
+  --brand: #1f7a3d;
+  --warn: #b25e00;
+  --danger: #c1121f;
+  --subtext: #54666f;
+  --archive-color: #0277bd;
+  --line: #b4c2cc;
+  --line2: #97a9b5;
+  --track: #c3d0d9;
+  --accent-ink: #ffffff;
+  --archive-soft: rgba(2, 119, 189, 0.12);
+  --archive-line: rgba(2, 119, 189, 0.45);
+  --danger-soft: rgba(193, 18, 31, 0.10);
+  --danger-line: rgba(193, 18, 31, 0.35);
+  --danger-glow: rgba(193, 18, 31, 0.35);
+  --scrim: rgba(29, 42, 51, 0.55);
+  --shadow: rgba(29, 42, 51, 0.25);
+  --dim: #3c4c56;
+  --ok-soft: #e2f2e6;
+  --warn-soft: #fdf0d5;
+  --warn-line: #b98a1c;
+  --card-shadow: rgba(29, 42, 51, 0.10);
+}
+:root[data-skin="navidad"] {
+  --bg: #12241a;
+  --card-bg: #1a3324;
+  --surface2: #234531;
+  --text: #f5eedd;
+  --on-accent: #ffffff;
+  --accent: #ffd54a;
+  --brand: #a31621;
+  --warn: #ffb74d;
+  --danger: #ff6f60;
+  --subtext: #b9c9a8;
+  --archive-color: #7fd4ff;
+  --line: #2c5238;
+  --line2: #3a6a49;
+  --track: #1f4230;
+  --accent-ink: #201600;
+  --archive-soft: rgba(127, 212, 255, 0.15);
+  --archive-line: rgba(127, 212, 255, 0.4);
+  --danger-soft: rgba(255, 111, 96, 0.14);
+  --danger-line: rgba(255, 111, 96, 0.4);
+  --danger-glow: rgba(255, 111, 96, 0.4);
+  --scrim: rgba(0, 0, 0, 0.8);
+  --shadow: rgba(0, 0, 0, 0.6);
+  --dim: #d8cfb8;
+  --ok-soft: rgba(255, 213, 74, 0.15);
+  --warn-soft: rgba(255, 183, 77, 0.15);
+  --warn-line: rgba(255, 183, 77, 0.55);
+  --card-shadow: rgba(0, 0, 0, 0.45);
+}
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; line-height: 1.5; color: var(--text); background: var(--bg); }
 main { max-width: 560px; margin: 0 auto; padding: 20px 16px 40px; }
 h1 { font-size: 20px; margin: 0 0 2px; }
-.sub { color: #666; font-size: 14px; margin: 0 0 16px; }
+.sub { color: var(--subtext); font-size: 14px; margin: 0 0 16px; }
 .switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
-.switcher button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #999; background: #fff; color: #1c1c1c; cursor: pointer; }
-.switcher button.active { background: #1f7a3d; border-color: #1f7a3d; color: #fff; font-weight: 600; }
-.card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 16px 18px; }
+.switcher button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line2); background: var(--card-bg); color: var(--text); cursor: pointer; }
+.switcher button.active { background: var(--brand); border-color: var(--brand); color: var(--on-accent); font-weight: 600; }
+.card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
 .car { font-size: 18px; font-weight: 700; margin: 0 0 2px; }
-.job { color: #444; margin: 0 0 4px; }
-.asof { color: #c1121f; font-size: 14px; font-weight: 700; margin: 0 0 12px; }
+.job { color: var(--dim); margin: 0 0 4px; }
+.asof { color: var(--danger); font-size: 14px; font-weight: 700; margin: 0 0 12px; }
 .headline { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
 .eta { font-size: 15px; margin: 0 0 2px; }
 .eta b { font-weight: 700; }
-h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #555; margin: 16px 0 4px; }
+h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--dim); margin: 16px 0 4px; }
 ul { margin: 0; padding-left: 20px; }
 li { margin: 2px 0; }
 .nextlast { font-size: 15px; margin: 0; }
-.storydate { color: #666; font-size: 13px; margin: 10px 0 0; }
+.storydate { color: var(--subtext); font-size: 13px; margin: 10px 0 0; }
 .storytext { font-size: 15px; margin: 0 0 2px; }
-.ask textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid #999; border-radius: 8px; }
-.ask button { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid #1f7a3d; background: #1f7a3d; color: #fff; font-weight: 600; cursor: pointer; }
+.ask textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid var(--line2); border-radius: 8px; }
+.ask button { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-accent); font-weight: 600; cursor: pointer; }
 .ask button:disabled { opacity: 0.5; }
-.ask button.speak { background: #fff; color: #1f7a3d; margin-right: 8px; }
-.asknote { color: #666; font-size: 14px; margin: 8px 0 0; }
-.cwho { font-size: 13px; color: #666; margin: 10px 0 0; }
-.cwho b { color: #1c1c1c; }
+.ask button.speak { background: var(--card-bg); color: var(--brand); margin-right: 8px; }
+.asknote { color: var(--subtext); font-size: 14px; margin: 8px 0 0; }
+.cwho { font-size: 13px; color: var(--subtext); margin: 10px 0 0; }
+.cwho b { color: var(--text); }
 .ctext { font-size: 15px; margin: 0 0 2px; }
-.cwait { color: #666; font-size: 14px; font-style: italic; margin: 2px 0 0; }
-.agree { display: inline-block; background: #e6f4ea; color: #1f7a3d; border: 1px solid #1f7a3d; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 1px 8px; margin-left: 6px; }
-.convobtn { margin-top: 10px; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
+.cwait { color: var(--subtext); font-size: 14px; font-style: italic; margin: 2px 0 0; }
+.agree { display: inline-block; background: var(--ok-soft); color: var(--brand); border: 1px solid var(--brand); border-radius: 999px; font-size: 12px; font-weight: 700; padding: 1px 8px; margin-left: 6px; }
+.convobtn { margin-top: 10px; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--brand); background: var(--card-bg); color: var(--brand); font-weight: 600; cursor: pointer; }
 .rrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.rrow button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid #1f7a3d; background: #fff; color: #1f7a3d; font-weight: 600; cursor: pointer; }
-.rrow button.primary { background: #1f7a3d; color: #fff; }
+.rrow button { font-size: 15px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--brand); background: var(--card-bg); color: var(--brand); font-weight: 600; cursor: pointer; }
+.rrow button.primary { background: var(--brand); color: var(--on-accent); }
 .rrow button:disabled { opacity: 0.5; }
 .rlink { font-size: 15px; margin: 8px 0 0; }
 .rdone { font-size: 15px; font-weight: 600; margin: 10px 0 0; }
-.endbox { border-radius: 10px; padding: 10px 12px; margin: 12px 0 0; font-size: 15px; font-weight: 600; background: #e6f4ea; }
-.endbox.paused { background: #fdf3e0; }
+.endbox { border-radius: 10px; padding: 10px 12px; margin: 12px 0 0; font-size: 15px; font-weight: 600; background: var(--ok-soft); }
+.endbox.paused { background: var(--warn-soft); }
 .endbox p { margin: 0; }
 .endbox .enddate { font-weight: 400; font-size: 14px; margin-top: 2px; }
-.note { color: #666; font-size: 14px; }
-.message { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+.note { color: var(--subtext); font-size: 14px; }
+.message { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+
+.mastwrap { max-width: 560px; margin: 0 auto; padding: 16px 16px 0; }
+.masthead { display: flex; align-items: center; gap: 10px; }
+.mast-name { font-size: 19px; font-weight: 700; line-height: 1.25; }
+.coco-btn { background: none; border: none; padding: 0; cursor: pointer; position: relative; flex: none; }
+.coco-badge { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid var(--brand); object-fit: cover; display: block; animation: cocopeek 0.9s ease-out 0.3s 1; }
+.coco-caret { position: absolute; right: -2px; bottom: -2px; background: var(--brand); color: var(--on-accent); font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
+@keyframes cocopeek { 0% { transform: translateY(6px) rotate(-5deg); } 55% { transform: translateY(-2px) rotate(2deg); } 100% { transform: translateY(0) rotate(0deg); } }
+@media (prefers-reduced-motion: reduce) { .coco-badge { animation: none; } }
+.coco-panel { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-top: 10px; font-size: 15px; }
+.coco-panel p { margin: 0 0 10px; }
+.coco-panel .coco-sign { margin: 0; font-weight: 700; }
 </style>
 </head>
 <body>
+<div class="mastwrap">
+  <div class="masthead">
+    <button type="button" class="coco-btn" onclick="toggleCocoMenu()"><img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge"><span class="coco-caret">▾</span></button>
+    <div class="mast-name">Coco la Chaneque<br>del Double-O Garage</div>
+  </div>
+  <div id="coco-panel" class="coco-panel" style="display:none">
+    <p>¿Quién's Coco? Ola! I'm Coco. I run the app here at Double-O Garage, which means this page you're looking at? That's me keeping it tidy, bien ordenadita.</p>
+    <p>I'm the local girl that keeps Omar's shop in my pocket so you never have to call and wonder, sin preocupaciones. When Omar signs off on work, I put it right here where you can see it: what's done, what's happening now, what we're waiting on. And if you ask something in this app you're asking me, so if I can answer from what's already signed off, I will, con confianza. I holler at Omar with it, too, that's a promise, se lo prometo.</p>
+    <p>Pero mira, what I don't do: I don't turn wrenches, I don't set prices, and I don't make promises Omar hasn't signed. He's the man, el jefe. I'm the one who never sleeps, jamás, and never loses a receipt.</p>
+    <p>Órale pues — do you happen to have any 9/16 or 10mm sockets? I can't find any more around the shop, and you know, a girl likes her regalitos.</p>
+    <p class="coco-sign">— Coco</p>
+  </div>
+</div>
+
 <main id="app">
   <p class="note">Loading your car's status...</p>
 </main>
@@ -71,6 +254,11 @@ function el(tag, text, cls) {
   if (text != null) n.textContent = text;
   if (cls) n.className = cls;
   return n;
+}
+
+function toggleCocoMenu() {
+  var p = document.getElementById("coco-panel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
 }
 
 // "2026-11-20" -> "November 20, 2026", parsed by hand so no
