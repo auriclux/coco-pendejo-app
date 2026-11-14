@@ -227,20 +227,7 @@
 
 <div id="shoptasks-wrap">
 <h2>Shop Tasks</h2>
-<div class="card" id="taskcard" hidden>
-  <label for="t-title" style="margin-top:0">New shop task</label>
-  <input type="text" id="t-title" placeholder="e.g. Sweep and organize the bay">
-  <label for="t-detail">Detail (optional)</label>
-  <input type="text" id="t-detail" placeholder="Anything worth adding">
-  <label for="t-category">Category (optional)</label>
-  <input type="text" id="t-category" placeholder="General">
-  <label for="t-assign">Assign to</label>
-  <select id="t-assign"></select>
-  <div class="saverow">
-    <button type="button" class="save" id="t-add">Add task</button>
-  </div>
-  <div class="formnote" id="tasknote"></div>
-</div>
+<div class="formnote" id="tasknote"></div>
 <div id="tasks"></div>
 </div>
 
@@ -355,8 +342,6 @@ var JOBS = [];
 var ENTRIES = [];
 var SEEALL = false;
 var SHOP_TASKS = [];
-var CAN_MANAGE_TASKS = false;
-var ROSTER = [];
 
 function jobById(id) {
   for (var i = 0; i < JOBS.length; i++) if (JOBS[i].episodeId === id) return JOBS[i];
@@ -640,42 +625,10 @@ function stateLabel(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function fillAssignSelect(sel, current) {
-  sel.textContent = "";
-  var o = document.createElement("option");
-  o.value = "";
-  o.textContent = "Unassigned";
-  sel.appendChild(o);
-  ROSTER.forEach(function (a) {
-    var opt = document.createElement("option");
-    opt.value = a.id;
-    opt.textContent = a.name;
-    sel.appendChild(opt);
-  });
-  sel.value = current || "";
-}
-
-function loadRoster() {
-  rpc("shop_actors_open", { p_actor_id: ACTOR }).then(function (res) {
-    if (res) {
-      ROSTER = res.actors || [];
-      fillAssignSelect(document.getElementById("t-assign"), "");
-      renderShopTasks();
-    }
-  });
-}
-
 function loadShopTasks() {
   return rpc("shop_tasks_open", { p_actor_id: ACTOR, p_include_closed: false }).then(function (res) {
     if (!res) return;
-    CAN_MANAGE_TASKS = !!res.canManage;
     SHOP_TASKS = res.tasks || [];
-    if (CAN_MANAGE_TASKS) {
-      return rpc("shop_tasks_open", { p_actor_id: ACTOR, p_include_closed: true }).then(function (res2) {
-        if (res2) SHOP_TASKS = res2.tasks || [];
-        renderShopTasks();
-      });
-    }
     renderShopTasks();
   });
 }
@@ -686,7 +639,6 @@ function renderShopTasks() {
   var shopCtx = ctxValue() === "";
   wrap.style.display = shopCtx ? "" : "none";
   if (!shopCtx) return;
-  document.getElementById("taskcard").hidden = !CAN_MANAGE_TASKS;
   var box = document.getElementById("tasks");
   box.textContent = "";
   if (!SHOP_TASKS.length) {
@@ -700,12 +652,6 @@ function renderShopTasks() {
     var meta = stateLabel(t.state) + " \u00b7 " + (t.category || "General");
     meta += t.assignedToName ? " \u00b7 Assigned to " + t.assignedToName : " \u00b7 Unassigned";
     card.appendChild(el("div", meta, "tmeta"));
-    if (t.state === "done" && t.completedByName) {
-      card.appendChild(el("div", "Done by " + t.completedByName, "tmeta"));
-    }
-    if (t.state === "cancelled" && t.cancelledByName) {
-      card.appendChild(el("div", "Cancelled by " + t.cancelledByName, "tmeta"));
-    }
     var row = el("div", null, "trow");
     function btn(label, state, primary) {
       var b = el("button", label, primary ? "tbtn primary" : "tbtn");
@@ -714,27 +660,9 @@ function renderShopTasks() {
       row.appendChild(b);
     }
     var mine = t.assignedTo === ACTOR;
-    if (t.state === "open") {
-      if (CAN_MANAGE_TASKS || mine) { btn("Start", "in_progress", true); btn("Done", "done", false); }
-    } else if (t.state === "in_progress") {
-      if (CAN_MANAGE_TASKS || mine) btn("Done", "done", true);
-      if (CAN_MANAGE_TASKS) btn("Back to Open", "open", false);
-    } else if (t.state === "done" && CAN_MANAGE_TASKS) {
-      btn("Reopen", "open", false);
-    } else if (t.state === "cancelled" && CAN_MANAGE_TASKS) {
-      btn("Reopen", "open", false);
-    }
-    if (CAN_MANAGE_TASKS && (t.state === "open" || t.state === "in_progress")) {
-      btn("Cancel", "cancelled", false);
-    }
+    if (mine && t.state === "open") { btn("Start", "in_progress", true); btn("Done", "done", false); }
+    else if (mine && t.state === "in_progress") { btn("Done", "done", true); }
     if (row.children.length) card.appendChild(row);
-    if (CAN_MANAGE_TASKS) {
-      var sel = document.createElement("select");
-      sel.className = "assign";
-      fillAssignSelect(sel, t.assignedTo || "");
-      sel.addEventListener("change", function () { assignTask(t, sel.value || null); });
-      card.appendChild(sel);
-    }
     box.appendChild(card);
   });
 }
@@ -752,32 +680,6 @@ function setTaskState(t, state) {
   });
 }
 
-function assignTask(t, who) {
-  rpc("shop_task_assign", { p_actor_id: ACTOR, p_task_id: t.id, p_assigned_to: who }).then(function (row) {
-    if (!row) { noteTask("That assignment did not save. Try again.", false); return; }
-    loadShopTasks();
-  });
-}
-
-function addTask() {
-  var title = document.getElementById("t-title").value.trim();
-  if (!title) { noteTask("Give the task a name first.", false); return; }
-  rpc("shop_task_create", {
-    p_actor_id: ACTOR,
-    p_title: title,
-    p_detail: document.getElementById("t-detail").value.trim() || null,
-    p_category: document.getElementById("t-category").value.trim() || null,
-    p_assigned_to: document.getElementById("t-assign").value || null
-  }).then(function (row) {
-    if (!row) { noteTask("That task did not save. Try again.", false); return; }
-    document.getElementById("t-title").value = "";
-    document.getElementById("t-detail").value = "";
-    document.getElementById("t-category").value = "";
-    noteTask("\u2713 Task added: " + row.title, true);
-    loadShopTasks();
-  });
-}
-
 function init() {
   var app = document.getElementById("app");
   if (!ACTOR) {
@@ -790,8 +692,6 @@ function init() {
   document.getElementById("clear").addEventListener("click", clearForm);
   document.getElementById("post").addEventListener("click", postNote);
   document.getElementById("ctx").addEventListener("change", function () { renderJobs(); renderEntries(); renderNotes(); renderShopTasks(); });
-  document.getElementById("t-add").addEventListener("click", addTask);
-  addSpeak(document.getElementById("taskcard"), document.getElementById("t-title"), document.getElementById("tasknote"));
   addSpeak(document.getElementById("notecard"), document.getElementById("n-body"), document.getElementById("notenote"));
   rpc("shop_jobs_overview", { p_actor_id: ACTOR }).then(function (res) {
     if (res) { JOBS = res.jobs || []; }
@@ -802,7 +702,6 @@ function init() {
   loadHours();
   loadNotes();
   loadShopTasks();
-  loadRoster();
 }
 
 init();
