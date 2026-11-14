@@ -36,6 +36,14 @@
     --line: #333333;
     --line2: #444444;
     --track: #2a2a2a;
+            --accent-ink: #000000;
+            --archive-soft: rgba(41, 182, 246, 0.15);
+            --archive-line: rgba(41, 182, 246, 0.4);
+            --danger-soft: rgba(255, 23, 68, 0.12);
+            --danger-line: rgba(255, 23, 68, 0.3);
+            --danger-glow: rgba(229, 57, 53, 0.4);
+            --scrim: rgba(0, 0, 0, 0.85);
+            --shadow: rgba(0, 0, 0, 0.5);
 }
 :root[data-skin="papel"] {
     --bg: #f3ecd9;
@@ -52,6 +60,14 @@
     --line: #ddd0ae;
     --line2: #cbbd97;
     --track: #e7dcc0;
+            --accent-ink: #ffffff;
+            --archive-soft: rgba(2, 119, 189, 0.12);
+            --archive-line: rgba(2, 119, 189, 0.45);
+            --danger-soft: rgba(193, 18, 31, 0.10);
+            --danger-line: rgba(193, 18, 31, 0.35);
+            --danger-glow: rgba(193, 18, 31, 0.35);
+            --scrim: rgba(42, 33, 24, 0.55);
+            --shadow: rgba(42, 33, 24, 0.25);
 }
 :root[data-skin="primer"] {
     --bg: #d7dee4;
@@ -68,6 +84,14 @@
     --line: #b4c2cc;
     --line2: #97a9b5;
     --track: #c3d0d9;
+            --accent-ink: #ffffff;
+            --archive-soft: rgba(2, 119, 189, 0.12);
+            --archive-line: rgba(2, 119, 189, 0.45);
+            --danger-soft: rgba(193, 18, 31, 0.10);
+            --danger-line: rgba(193, 18, 31, 0.35);
+            --danger-glow: rgba(193, 18, 31, 0.35);
+            --scrim: rgba(29, 42, 51, 0.55);
+            --shadow: rgba(29, 42, 51, 0.25);
 }
 :root[data-skin="navidad"] {
     --bg: #12241a;
@@ -84,6 +108,14 @@
     --line: #2c5238;
     --line2: #3a6a49;
     --track: #1f4230;
+            --accent-ink: #201600;
+            --archive-soft: rgba(127, 212, 255, 0.15);
+            --archive-line: rgba(127, 212, 255, 0.4);
+            --danger-soft: rgba(255, 111, 96, 0.14);
+            --danger-line: rgba(255, 111, 96, 0.4);
+            --danger-glow: rgba(255, 111, 96, 0.4);
+            --scrim: rgba(0, 0, 0, 0.8);
+            --shadow: rgba(0, 0, 0, 0.6);
 }
 
         body {
@@ -116,7 +148,7 @@
             object-fit: cover;
         }
         .view-toggle-btn {
-            background: #2a2a2a;
+            background: var(--track);
             color: var(--archive-color);
             border: 1px solid var(--archive-color);
             padding: 6px 10px;
@@ -141,9 +173,9 @@
         }
         .vehicle-filter-bar::-webkit-scrollbar { display: none; }
         .filter-chip {
-            background: #222;
-            color: #aaa;
-            border: 1px solid #333;
+            background: var(--surface2);
+            color: var(--subtext);
+            border: 1px solid var(--line);
             padding: 6px 12px;
             border-radius: 16px;
             font-size: 0.8rem;
@@ -153,7 +185,7 @@
         }
         .filter-chip.active {
             background: var(--accent);
-            color: #000;
+            color: var(--accent-ink);
             border-color: var(--accent);
             font-weight: bold;
         }
@@ -167,9 +199,9 @@
             flex: 1;
             padding: 10px;
             border-radius: 6px;
-            border: 1px solid #333;
-            background: #222;
-            color: #fff;
+            border: 1px solid var(--line);
+            background: var(--surface2);
+            color: var(--text);
             font-size: 0.95rem;
         }
         button {
@@ -180,21 +212,21 @@
             cursor: pointer;
             font-size: 0.95rem;
         }
-        .btn-add { background: var(--accent); color: #000; }
+        .btn-add { background: var(--accent); color: var(--accent-ink); }
         
         .toolbar {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
-            background: #181818;
+            background: var(--card-bg);
             padding: 8px;
             border-radius: 6px;
-            border: 1px solid #282828;
+            border: 1px solid var(--line);
         }
         .btn-tool {
             flex: 1;
-            background: #282828;
-            color: #ddd;
+            background: var(--surface2);
+            color: var(--text);
             font-size: 0.75rem;
             padding: 8px;
             border-radius: 4px;
@@ -205,11 +237,11 @@
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 16px;
-            border: 1px solid #2a2a2a;
+            border: 1px solid var(--line);
         }
         .car-card.is-archived {
             opacity: 0.85;
-            border-color: #0288d1;
+            border-color: var(--archive-color);
         }
         .car-header {
             display: flex;
@@ -226,17 +258,17 @@
             gap: 6px;
         }
         .btn-archive {
-            background: rgba(41, 182, 246, 0.15);
+            background: var(--archive-soft);
             color: var(--archive-color);
-            border: 1px solid rgba(41, 182, 246, 0.4);
+            border: 1px solid var(--archive-line);
             padding: 5px 8px;
             font-size: 0.8rem;
             border-radius: 6px;
         }
         .btn-delete {
-            background: rgba(255, 23, 68, 0.12);
+            background: var(--danger-soft);
             color: var(--danger);
-            border: 1px solid rgba(255, 23, 68, 0.3);
+            border: 1px solid var(--danger-line);
             padding: 5px 8px;
             font-size: 0.8rem;
             border-radius: 6px;
@@ -248,16 +280,16 @@
             margin-bottom: 12px;
         }
         .status-btn {
-            background: #2a2a2a;
+            background: var(--track);
             color: var(--subtext);
             padding: 8px 4px;
             font-size: 0.75rem;
             border-radius: 4px;
             text-align: center;
         }
-        .status-btn.active-In-Progress { background: var(--accent); color: #000; }
-        .status-btn.active-Waiting-Parts { background: var(--warn); color: #000; }
-        .status-btn.active-Done { background: #444; color: #fff; }
+        .status-btn.active-In-Progress { background: var(--accent); color: var(--accent-ink); }
+        .status-btn.active-Waiting-Parts { background: var(--warn); color: var(--accent-ink); }
+        .status-btn.active-Done { background: var(--line2); color: var(--text); }
         
         .task-list { margin-bottom: 10px; }
         .task-item {
@@ -265,17 +297,17 @@
             align-items: center;
             gap: 8px;
             padding: 6px 0;
-            border-bottom: 1px solid #262626;
+            border-bottom: 1px solid var(--surface2);
             font-size: 0.9rem;
             flex-wrap: wrap;
         }
         .task-item input[type="checkbox"] { width: 18px; height: 18px; }
         .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
-        .task-item .remove-task { margin-left: auto; color: #666; background: none; padding: 2px 6px; }
+        .task-item .remove-task { margin-left: auto; color: var(--subtext); background: none; padding: 2px 6px; }
         
         .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
-        .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: #333; color: #fff; }
+        .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: var(--track); color: var(--text); }
 
         /* Floating Feedback Bar */
         .feedback-bar {
@@ -283,18 +315,18 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: #181818;
+            background: var(--card-bg);
             padding: 12px;
-            border-top: 1px solid #333;
-            box-shadow: 0 -4px 12px rgba(0,0,0,0.5);
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -4px 12px var(--shadow);
             display: flex;
             justify-content: center;
         }
         .btn-feedback {
             width: 100%;
             max-width: 400px;
-            background: #e53935;
-            color: #fff;
+            background: var(--danger);
+            color: var(--on-accent);
             padding: 10px;
             font-size: 0.95rem;
             border-radius: 8px;
@@ -302,7 +334,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            box-shadow: 0 2px 8px rgba(229, 57, 53, 0.4);
+            box-shadow: 0 2px 8px var(--danger-glow);
         }
         .btn-feedback img {
             width: 26px;
@@ -315,25 +347,25 @@
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85);
+            background: var(--scrim);
             z-index: 1000;
             align-items: center;
             justify-content: center;
             padding: 16px;
         }
         .modal-card {
-            background: #1e1e1e;
+            background: var(--card-bg);
             border-radius: 12px;
             width: 100%;
             max-width: 420px;
             padding: 20px;
-            border: 1px solid #444;
+            border: 1px solid var(--line2);
         }
         .modal-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;
+            margin-bottom: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
         }
-        .close-btn { background: none; border: none; color: #888; font-size: 1.5rem; cursor: pointer; }
+        .close-btn { background: none; border: none; color: var(--subtext); font-size: 1.5rem; cursor: pointer; }
         
         .modal-avatar {
             width: 48px;
@@ -357,10 +389,10 @@
         .feedback-textarea {
             width: 100%;
             height: 110px;
-            background: #111;
-            border: 1px solid #444;
+            background: var(--bg);
+            border: 1px solid var(--line2);
             border-radius: 6px;
-            color: #fff;
+            color: var(--text);
             padding: 10px;
             font-size: 1rem;
             box-sizing: border-box;
@@ -368,36 +400,36 @@
             margin-bottom: 16px;
         }
         .form-group { margin-bottom: 1rem; text-align: left; }
-        .form-group label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 0.25rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--subtext); margin-bottom: 0.25rem; }
         .form-group input {
             width: 100%; padding: 0.6rem; border-radius: 4px;
-            border: 1px solid #444; background: #2a2a2a; color: #fff; box-sizing: border-box;
+            border: 1px solid var(--line2); background: var(--track); color: var(--text); box-sizing: border-box;
         }
         .modal-actions {
             display: flex;
             gap: 10px;
         }
-        .btn-modal-send { flex: 2; background: var(--accent); color: #000; }
-        .btn-modal-cancel { flex: 1; background: #444; color: #fff; }
+        .btn-modal-send { flex: 2; background: var(--accent); color: var(--accent-ink); }
+        .btn-modal-cancel { flex: 1; background: var(--line2); color: var(--text); }
         
         .part-tag {
-            display: block; width: 100%; font-size: 0.75rem; background: #2d3748; color: #63b3ed;
+            display: block; width: 100%; font-size: 0.75rem; background: var(--surface2); color: var(--archive-color);
             padding: 4px 8px; border-radius: 4px; margin-top: 4px; cursor: pointer; text-decoration: none;
         }
         .menu-wrap { position: relative; margin: 10px 0 4px; }
-        .menu-btn { width: 100%; background: #1f7a3d; color: #fff; font-weight: 700; font-size: 1rem; padding: 12px; border: none; border-radius: 10px; cursor: pointer; }
-        .menu-panel { background: #1a202c; border: 1px solid #2d3748; border-radius: 10px; margin-top: 6px; overflow: hidden; }
-        .menu-panel a { display: block; padding: 13px 14px; color: #fff; text-decoration: none; font-size: 1rem; border-top: 1px solid #2d3748; }
+        .menu-btn { width: 100%; background: var(--brand); color: var(--on-accent); font-weight: 700; font-size: 1rem; padding: 12px; border: none; border-radius: 10px; cursor: pointer; }
+        .menu-panel { background: var(--card-bg); border: 1px solid var(--line2); border-radius: 10px; margin-top: 6px; overflow: hidden; }
+        .menu-panel a { display: block; padding: 13px 14px; color: var(--text); text-decoration: none; font-size: 1rem; border-top: 1px solid var(--line2); }
         .menu-panel a:first-child { border-top: none; }
         .menu-flag { height: 18px; vertical-align: -3px; }
-        .car-selector { width: 100%; box-sizing: border-box; background: #1a202c; color: #fff; border: 1px solid #2d3748; border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
-        .menu-label { padding: 10px 14px 4px; color: #aaa; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .car-selector { width: 100%; box-sizing: border-box; background: var(--card-bg); color: var(--text); border: 1px solid var(--line2); border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
+        .menu-label { padding: 10px 14px 4px; color: var(--subtext); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
         .coco-btn { background: none; border: none; padding: 0; cursor: pointer; position: relative; flex: none; }
-        .coco-caret { position: absolute; right: -2px; bottom: -2px; background: #1f7a3d; color: #fff; font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
+        .coco-caret { position: absolute; right: -2px; bottom: -2px; background: var(--brand); color: var(--on-accent); font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
         .menu-btn-top { width: auto; padding: 10px 14px; }
-        .coco-panel { padding: 14px; color: #e8e8e8; font-size: 0.95rem; line-height: 1.45; }
+        .coco-panel { padding: 14px; color: var(--text); font-size: 0.95rem; line-height: 1.45; }
         .coco-panel p { margin: 0 0 10px; }
-        .coco-panel .coco-sign { margin: 0; color: #fff; font-weight: 700; }
+        .coco-panel .coco-sign { margin: 0; color: var(--text); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -651,7 +683,7 @@ function toggleCocoMenu() {
 
             if (filteredProjects.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align:center; padding:30px; color:#666; font-size:0.9rem;">
+                    <div style="text-align:center; padding:30px; color:var(--subtext); font-size:0.9rem;">
                         ${showingArchive ? 'No archived builds stored.' : 'No active builds matching filter.'}
                     </div>
                 `;
@@ -668,7 +700,7 @@ function toggleCocoMenu() {
                         if (task.partInfo && task.partInfo.vendor) {
                             partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})">📦 <b>${escapeHtml(task.partInfo.vendor)}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})</span>`;
                         } else {
-                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})" style="color: #f6ad55;">+ Add Part / Vendor Tracking</span>`;
+                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})" style="color: var(--warn);">+ Add Part / Vendor Tracking</span>`;
                         }
                     }
 
