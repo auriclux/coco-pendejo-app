@@ -1,0 +1,963 @@
+<!-- ci trigger -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Coco la Chaneque del Double-O Garage</title>
+    
+<script>
+(function () {
+    try {
+        var s = localStorage.getItem('oo_skin');
+        if (!s) {
+            var d = new Date();
+            if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+        }
+        if (s) document.documentElement.setAttribute('data-skin', s);
+    } catch (e) {}
+})();
+    
+</script>
+    <link rel="manifest" href="manifest.json">
+    <style>
+:root {
+    --bg: #121212;
+    --card-bg: #1c1c1c;
+    --surface2: #262626;
+    --text: #ffffff;
+    --on-accent: #ffffff;
+    --accent: #00e676;
+    --brand: #1f7a3d;
+    --warn: #ff9100;
+    --danger: #ff1744;
+    --subtext: #aaaaaa;
+    --archive-color: #29b6f6;
+    --line: #333333;
+    --line2: #444444;
+    --track: #2a2a2a;
+            --accent-ink: #000000;
+            --archive-soft: rgba(41, 182, 246, 0.15);
+            --archive-line: rgba(41, 182, 246, 0.4);
+            --danger-soft: rgba(255, 23, 68, 0.12);
+            --danger-line: rgba(255, 23, 68, 0.3);
+            --danger-glow: rgba(229, 57, 53, 0.4);
+            --scrim: rgba(0, 0, 0, 0.85);
+            --shadow: rgba(0, 0, 0, 0.5);
+}
+:root[data-skin="papel"] {
+    --bg: #f3ecd9;
+    --card-bg: #fffdf4;
+    --surface2: #efe6cf;
+    --text: #2a2118;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #6f6152;
+    --archive-color: #0277bd;
+    --line: #ddd0ae;
+    --line2: #cbbd97;
+    --track: #e7dcc0;
+            --accent-ink: #ffffff;
+            --archive-soft: rgba(2, 119, 189, 0.12);
+            --archive-line: rgba(2, 119, 189, 0.45);
+            --danger-soft: rgba(193, 18, 31, 0.10);
+            --danger-line: rgba(193, 18, 31, 0.35);
+            --danger-glow: rgba(193, 18, 31, 0.35);
+            --scrim: rgba(42, 33, 24, 0.55);
+            --shadow: rgba(42, 33, 24, 0.25);
+}
+:root[data-skin="primer"] {
+    --bg: #d7dee4;
+    --card-bg: #eef2f5;
+    --surface2: #dde5eb;
+    --text: #1d2a33;
+    --on-accent: #ffffff;
+    --accent: #0e7a3d;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #54666f;
+    --archive-color: #0277bd;
+    --line: #b4c2cc;
+    --line2: #97a9b5;
+    --track: #c3d0d9;
+            --accent-ink: #ffffff;
+            --archive-soft: rgba(2, 119, 189, 0.12);
+            --archive-line: rgba(2, 119, 189, 0.45);
+            --danger-soft: rgba(193, 18, 31, 0.10);
+            --danger-line: rgba(193, 18, 31, 0.35);
+            --danger-glow: rgba(193, 18, 31, 0.35);
+            --scrim: rgba(29, 42, 51, 0.55);
+            --shadow: rgba(29, 42, 51, 0.25);
+}
+:root[data-skin="navidad"] {
+    --bg: #12241a;
+    --card-bg: #1a3324;
+    --surface2: #234531;
+    --text: #f5eedd;
+    --on-accent: #ffffff;
+    --accent: #ffd54a;
+    --brand: #a31621;
+    --warn: #ffb74d;
+    --danger: #ff6f60;
+    --subtext: #b9c9a8;
+    --archive-color: #7fd4ff;
+    --line: #2c5238;
+    --line2: #3a6a49;
+    --track: #1f4230;
+            --accent-ink: #201600;
+            --archive-soft: rgba(127, 212, 255, 0.15);
+            --archive-line: rgba(127, 212, 255, 0.4);
+            --danger-soft: rgba(255, 111, 96, 0.14);
+            --danger-line: rgba(255, 111, 96, 0.4);
+            --danger-glow: rgba(255, 111, 96, 0.4);
+            --scrim: rgba(0, 0, 0, 0.8);
+            --shadow: rgba(0, 0, 0, 0.6);
+}
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 12px;
+            padding-bottom: 90px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .coco-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid var(--accent);
+            object-fit: cover;
+        }
+        .view-toggle-btn {
+            background: var(--track);
+            color: var(--archive-color);
+            border: 1px solid var(--archive-color);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--subtext);
+            margin-bottom: 12px;
+        }
+
+        /* Vehicle Filter Bar */
+        .vehicle-filter-bar {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            scrollbar-width: none;
+        }
+        .vehicle-filter-bar::-webkit-scrollbar { display: none; }
+        .filter-chip {
+            background: var(--surface2);
+            color: var(--subtext);
+            border: 1px solid var(--line);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .filter-chip.active {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border-color: var(--accent);
+            font-weight: bold;
+        }
+
+        .add-car-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        input[type="text"], input[type="date"] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        button {
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .btn-add { background: var(--accent); color: var(--accent-ink); }
+        
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+        }
+        .btn-tool {
+            flex: 1;
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 0.75rem;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .car-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            border: 1px solid var(--line);
+        }
+        .car-card.is-archived {
+            opacity: 0.85;
+            border-color: var(--archive-color);
+        }
+        .car-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .car-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .header-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .btn-archive {
+            background: var(--archive-soft);
+            color: var(--archive-color);
+            border: 1px solid var(--archive-line);
+            padding: 5px 8px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+        .btn-delete {
+            background: var(--danger-soft);
+            color: var(--danger);
+            border: 1px solid var(--danger-line);
+            padding: 5px 8px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+        .status-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .status-btn {
+            background: var(--track);
+            color: var(--subtext);
+            padding: 8px 4px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-btn.active-In-Progress { background: var(--accent); color: var(--accent-ink); }
+        .status-btn.active-Waiting-Parts { background: var(--warn); color: var(--accent-ink); }
+        .status-btn.active-Done { background: var(--line2); color: var(--text); }
+        
+        .task-list { margin-bottom: 10px; }
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--surface2);
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        .task-item input[type="checkbox"] { width: 18px; height: 18px; }
+        .task-item.completed span { text-decoration: line-through; color: var(--subtext); }
+        .task-item .remove-task { margin-left: auto; color: var(--subtext); background: none; padding: 2px 6px; }
+        
+        .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
+        .add-task-container input { font-size: 0.85rem; padding: 6px; }
+        .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: var(--track); color: var(--text); }
+
+        /* Floating Feedback Bar */
+        .feedback-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            padding: 12px;
+            border-top: 1px solid var(--line);
+            box-shadow: 0 -4px 12px var(--shadow);
+            display: flex;
+            justify-content: center;
+        }
+        .btn-feedback {
+            width: 100%;
+            max-width: 400px;
+            background: var(--danger);
+            color: var(--on-accent);
+            padding: 10px;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 2px 8px var(--danger-glow);
+        }
+        .btn-feedback img {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+        }
+
+        /* Modal Overlay & Card Styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--scrim);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            border: 1px solid var(--line2);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 0.5rem;
+        }
+        .close-btn { background: none; border: none; color: var(--subtext); font-size: 1.5rem; cursor: pointer; }
+        
+        .modal-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--warn);
+            margin-bottom: 8px;
+        }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--warn);
+            margin-bottom: 8px;
+        }
+        .modal-status {
+            font-size: 0.85rem;
+            color: var(--subtext);
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        .feedback-textarea {
+            width: 100%;
+            height: 110px;
+            background: var(--bg);
+            border: 1px solid var(--line2);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            resize: none;
+            margin-bottom: 16px;
+        }
+        .form-group { margin-bottom: 1rem; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--subtext); margin-bottom: 0.25rem; }
+        .form-group input {
+            width: 100%; padding: 0.6rem; border-radius: 4px;
+            border: 1px solid var(--line2); background: var(--track); color: var(--text); box-sizing: border-box;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-modal-send { flex: 2; background: var(--accent); color: var(--accent-ink); }
+        .btn-modal-cancel { flex: 1; background: var(--line2); color: var(--text); }
+        
+        .part-tag {
+            display: block; width: 100%; font-size: 0.75rem; background: var(--surface2); color: var(--archive-color);
+            padding: 4px 8px; border-radius: 4px; margin-top: 4px; cursor: pointer; text-decoration: none;
+        }
+        .menu-wrap { position: relative; margin: 10px 0 4px; }
+        .menu-btn { width: 100%; background: var(--brand); color: var(--on-accent); font-weight: 700; font-size: 1rem; padding: 12px; border: none; border-radius: 10px; cursor: pointer; }
+        .menu-panel { background: var(--card-bg); border: 1px solid var(--line2); border-radius: 10px; margin-top: 6px; overflow: hidden; }
+        .menu-panel a { display: block; padding: 13px 14px; color: var(--text); text-decoration: none; font-size: 1rem; border-top: 1px solid var(--line2); }
+        .menu-panel a:first-child { border-top: none; }
+        .menu-flag { height: 18px; vertical-align: -3px; }
+        .car-selector { width: 100%; box-sizing: border-box; background: var(--card-bg); color: var(--text); border: 1px solid var(--line2); border-radius: 10px; padding: 11px; font-size: 1rem; margin: 2px 0 4px; }
+        .menu-label { padding: 10px 14px 4px; color: var(--subtext); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .coco-btn { background: none; border: none; padding: 0; cursor: pointer; position: relative; flex: none; }
+        .coco-caret { position: absolute; right: -2px; bottom: -2px; background: var(--brand); color: var(--on-accent); font-size: 10px; line-height: 1; padding: 2px 3px; border-radius: 6px; }
+        .menu-btn-top { width: auto; padding: 10px 14px; }
+        .coco-panel { padding: 14px; color: var(--text); font-size: 0.95rem; line-height: 1.45; }
+        .coco-panel p { margin: 0 0 10px; }
+        .coco-panel .coco-sign { margin: 0; color: var(--text); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header-top">
+    <h1>
+        <button type="button" class="coco-btn" onclick="toggleCocoMenu()"><img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="coco-badge"><span class="coco-caret">▾</span></button>
+        Coco la Chaneque<br>del Double-O Garage
+    </h1>
+    <button type="button" class="menu-btn menu-btn-top" onclick="toggleMenu()">🧰 Shop ▾</button>
+</div>
+<div id="coco-panel" class="menu-panel coco-panel" style="display:none">
+    <p>¿Quién's Coco? Ola! I'm Coco. I run the app here at Double-O Garage, which means this page you're looking at? That's me keeping it tidy, bien ordenadita.</p>
+    <p>I'm the local girl that keeps Omar's shop in my pocket so you never have to call and wonder, sin preocupaciones. When Omar signs off on work, I put it right here where you can see it: what's done, what's happening now, what we're waiting on. And if you ask something in this app you're asking me, so if I can answer from what's already signed off, I will, con confianza. I holler at Omar with it, too, that's a promise, se lo prometo.</p>
+    <p>Pero mira, what I don't do: I don't turn wrenches, I don't set prices, and I don't make promises Omar hasn't signed. He's the man, el jefe. I'm the one who never sleeps, jamás, and never loses a receipt.</p>
+    <p>Órale pues — do you happen to have any 9/16 or 10mm sockets? I can't find any more around the shop, and you know, a girl likes her regalitos.</p>
+    <p class="coco-sign">— Coco</p>
+</div>
+
+<div id="coco-panel" class="menu-panel coco-panel" style="display:none">
+    <p>¿Quién's Coco? Ola! I'm Coco. I run the app here at Double-O Garage, which means this page you're looking at? That's me keeping it tidy, bien ordenadita.</p>
+    <p>I'm the local girl that keeps Omar's shop in my pocket so you never have to call and wonder, sin preocupaciones. When Omar signs off on work, I put it right here where you can see it: what's done, what's happening now, what we're waiting on. And if you ask something in this app you're asking me, so if I can answer from what's already signed off, I will, con confianza. I holler at Omar with it, too, that's a promise, se lo prometo.</p>
+    <p>Pero mira, what I don't do: I don't turn wrenches, I don't set prices, and I don't make promises Omar hasn't signed. He's the man, el jefe. I'm the one who never sleeps, jamás, and never loses a receipt.</p>
+    <p>Órale pues — do you happen to have any 9/16 or 10mm sockets? I can't find any more around the shop, and you know, a girl likes her regalitos.</p>
+    <p class="coco-sign">— Coco</p>
+</div>
+
+    <div class="subtitle" id="board-subtitle">Active Builds</div>
+<div class="menu-wrap">
+    <div id="menu-panel" class="menu-panel" style="display:none">
+        <a href="commit.html">➕ New Job</a>
+        <a href="inbox.html">💬 Questions</a>
+        <a href="ask.html">🛒 Ask a Customer</a>
+        <a href="close.html"><img src="checkered-flag.png" alt="" class="menu-flag"> End a Job</a>
+        <a href="dates.html">📅 Dates</a>
+        <a href="manual.html">📖 Manual</a>
+        <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
+        <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
+        <a href="#" onclick="document.getElementById('import-file').click(); toggleMenu(); return false;">📂 Import Backup</a>
+        <a href="#" onclick="toggleAddCar(); toggleMenu(); return false;">🚗 Add a board card</a>
+        <a href="#" onclick="openFeedbackModal(); toggleMenu(); return false;">🎤 Tell Tío Clave What You Think</a>
+        <div class="menu-label">Look</div>
+        <a href="#" onclick="setSkin('taller'); toggleMenu(); return false;">🌑 Taller</a>
+        <a href="#" onclick="setSkin('papel'); toggleMenu(); return false;">📄 Papel</a>
+        <a href="#" onclick="setSkin('primer'); toggleMenu(); return false;">🩵 Primer</a>
+        <a href="#" onclick="setSkin(''); toggleMenu(); return false;">↩️ Shop default</a>
+        <div class="menu-label">Funions</div>
+        <a href="#" onclick="setSkin('navidad'); toggleMenu(); return false;">🎄 Navidad · Dec 23–26</a>
+    </div>
+</div>
+
+    <!-- Vehicle Filter Bar -->
+    <select id="filter-bar" class="car-selector" onchange="pickVehicle(this.value)"></select>
+
+    <div class="add-car-container" id="add-car-row" style="display:none">
+        <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
+        <button class="btn-add" onclick="addCar()">+ Add</button>
+    </div>
+
+    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+
+    <div id="board-container"></div>
+
+    <!-- Floating Feedback Trigger -->
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal-overlay">
+        <div class="modal-card" style="text-align: center;">
+            <img src="coco_avatar_palming_a_socket.jpg" alt="Coco" class="modal-avatar">
+            <div class="modal-title">Tell Tío Clave What You Think</div>
+            <div id="speech-status" class="modal-status">
+                Tap the box below, press the 🎙️ <b>keyboard mic</b>, and speak.
+            </div>
+            <textarea id="feedback-text" class="feedback-textarea" placeholder="Tap here, then hit keyboard mic..." inputmode="text"></textarea>
+            <div class="modal-actions">
+                <button class="btn-modal-send" onclick="sendFeedback()">✅ DONE / SEND</button>
+                <button class="btn-modal-cancel" onclick="closeFeedbackModal()">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Part Order & Vendor Tracking Modal -->
+    <div id="part-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>📦 Track Part Order</h3>
+                <button class="close-btn" onclick="closePartModal()">&times;</button>
+            </div>
+            <form id="part-form" onsubmit="savePartDetails(event)">
+                <input type="hidden" id="modal-car-id">
+                <input type="hidden" id="modal-task-index">
+                <div class="form-group">
+                    <label for="vendor-name">Vendor / Supplier</label>
+                    <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend" required>
+                </div>
+                <div class="form-group">
+                    <label for="part-desc">Part Name / Number</label>
+                    <input type="text" id="part-desc" placeholder="e.g. Holley Terminator X MAX" required>
+                </div>
+                <div class="form-group">
+                    <label for="tracking-num">Tracking / PO Number</label>
+                    <input type="text" id="tracking-num" placeholder="e.g. 1Z9999999999999999">
+                </div>
+                <div class="form-group">
+                    <label for="eta-date">Expected Delivery</label>
+                    <input type="date" id="eta-date">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-modal-cancel" onclick="closePartModal()">Cancel</button>
+                    <button type="submit" class="btn-modal-send">Save Part Details</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const defaultProjects = [
+            {
+                id: 1,
+                title: "ScapeGoat (1968 GTO)",
+                status: "In Progress",
+                archived: false,
+                tasks: [
+                    { text: "Box chassis frame rails & weld X-member", done: true },
+                    { text: "Fit Weld ProStar 15x14 rear wheels & tires", done: true },
+                    { text: "Wire Holley Terminator X MAX ECU", done: false }
+                ]
+            },
+            {
+                id: 2,
+                title: "Not for Higher (1952 GMC COE)",
+                status: "In Progress",
+                archived: false,
+                tasks: [
+                    { text: "Mount 1952 COE cab on RAM 5500 frame", done: true },
+                    { text: "Hook up Edge Insight CTS3 monitor", done: false }
+                ]
+            },
+            {
+                id: 3,
+                title: "Midnight Caprice (1974 Caprice)",
+                status: "Waiting Parts",
+                archived: false,
+                tasks: [
+                    { text: "Twin-turbo piping clearance check", done: false, partInfo: { vendor: "Summit Racing", desc: "V-Band Clamps", tracking: "1Z88888", eta: "2026-11-10" } },
+                    { text: "Install bagged air suspension lines", done: false }
+                ]
+            },
+            {
+                id: 4,
+                title: "Torky-T (1923 Ford T-Bucket)",
+                status: "In Progress",
+                archived: false,
+                tasks: [
+                    { text: "Inspect front radius rods and steering linkage", done: true },
+                    { text: "Check ignition and fuel delivery setup", done: false }
+                ]
+            }
+        ];
+
+        let projects = JSON.parse(localStorage.getItem('oo_projects')) || defaultProjects;
+        let selectedVehicleFilter = localStorage.getItem('oo_selected_filter') || 'ALL';
+        let showingArchive = false;
+
+        function saveState() {
+            localStorage.setItem('oo_projects', JSON.stringify(projects));
+            localStorage.setItem('oo_selected_filter', selectedVehicleFilter);
+            renderFilterBar();
+            renderBoard();
+        }
+        
+    function renderFilterBar() {
+    const filterBar = document.getElementById('filter-bar');
+    filterBar.innerHTML = '';
+
+    const availableProjects = projects.filter(p => !!p.archived === showingArchive);
+    const options = ['ALL', ...availableProjects.map(p => p.title)];
+
+    if (!options.includes(selectedVehicleFilter)) {
+        selectedVehicleFilter = 'ALL';
+    }
+
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        filterBar.appendChild(option);
+    });
+    filterBar.value = selectedVehicleFilter;
+}
+
+function pickVehicle(value) {
+    selectedVehicleFilter = value;
+    saveState();
+}
+
+function toggleMenu() {
+    const panel = document.getElementById('menu-panel');
+    const coco = document.getElementById('coco-panel');
+    if (coco) coco.style.display = 'none';
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleCocoMenu() {
+    const panel = document.getElementById('coco-panel');
+    const menu = document.getElementById('menu-panel');
+    if (menu) menu.style.display = 'none';
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+    function setSkin(name) {
+    try {
+        if (name) {
+            localStorage.setItem('oo_skin', name);
+            document.documentElement.setAttribute('data-skin', name);
+        } else {
+            localStorage.removeItem('oo_skin');
+            document.documentElement.removeAttribute('data-skin');
+        }
+    } catch (e) {}
+}
+
+        function toggleAddCar() {
+        const row = document.getElementById('add-car-row');
+        row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function toggleArchiveView() {
+            showingArchive = !showingArchive;
+            const btn = document.getElementById('view-toggle-btn');
+            const sub = document.getElementById('board-subtitle');
+
+        if (showingArchive) {
+            if (btn) btn.innerText = "🛠️ View Active Builds";
+            sub.innerText = "Archived Builds Repository";
+        } else {
+            if (btn) btn.innerText = "📁 View Archive";
+            sub.innerText = "Double-O Garage • Active Builds";
+        }
+            saveState();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            let filteredProjects = projects.filter(p => !!p.archived === showingArchive);
+
+            if (selectedVehicleFilter !== 'ALL') {
+                filteredProjects = filteredProjects.filter(p => p.title === selectedVehicleFilter);
+            }
+
+            if (filteredProjects.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding:30px; color:var(--subtext); font-size:0.9rem;">
+                        ${showingArchive ? 'No archived builds stored.' : 'No active builds matching filter.'}
+                    </div>
+                `;
+                return;
+            }
+
+            filteredProjects.forEach((car) => {
+                const card = document.createElement('div');
+                card.className = `car-card ${car.archived ? 'is-archived' : ''}`;
+
+                let tasksHtml = car.tasks.map((task, index) => {
+                    let partTagHtml = '';
+                    if (car.status === 'Waiting Parts') {
+                        if (task.partInfo && task.partInfo.vendor) {
+                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})">📦 <b>${escapeHtml(task.partInfo.vendor)}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})</span>`;
+                        } else {
+                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})" style="color: var(--warn);">+ Add Part / Vendor Tracking</span>`;
+                        }
+                    }
+
+                    return `
+                        <div class="task-item ${task.done ? 'completed' : ''}">
+                            <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
+                            <span>${escapeHtml(task.text)}</span>
+                            <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
+                            ${partTagHtml}
+                        </div>
+                    `;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="car-header">
+                        <span class="car-title">${escapeHtml(car.title)}</span>
+                        <div class="header-actions">
+                            <button class="btn-archive" onclick="toggleArchiveCar(${car.id})">
+                                ${car.archived ? 'Unarchive' : '📦 Archive'}
+                            </button>
+                            <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="status-selector">
+                        <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setStatus(${car.id}, 'In Progress')">In Progress</div>
+                        <div class="status-btn ${car.status === 'Waiting Parts' ? 'active-Waiting-Parts' : ''}" onclick="setStatus(${car.id}, 'Waiting Parts')">Waiting Parts</div>
+                        <div class="status-btn ${car.status === 'Done' ? 'active-Done' : ''}" onclick="setStatus(${car.id}, 'Done')">Done</div>
+                    </div>
+                    <div class="task-list">${tasksHtml}</div>
+                    <div class="add-task-container">
+                        <input type="text" id="input-task-${car.id}" placeholder="Add task...">
+                        <button onclick="addTask(${car.id})">+ Task</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addCar() {
+            const input = document.getElementById('new-car-name');
+            const title = input.value.trim();
+            if (!title) return;
+
+            projects.push({
+                id: Date.now(),
+                title: title,
+                status: "In Progress",
+                archived: false,
+                tasks: []
+            });
+            input.value = '';
+            saveState();
+        }
+
+        function toggleArchiveCar(id) {
+            const car = projects.find(p => p.id === id);
+            if (car) {
+                car.archived = !car.archived;
+                saveState();
+            }
+        }
+
+        function deleteCar(id) {
+            const car = projects.find(p => p.id === id);
+            const name = car ? car.title : "this car";
+            
+            if (confirm(`Permanently delete "${name}" and all associated tasks?`)) {
+                projects = projects.filter(p => p.id !== id);
+                saveState();
+            }
+        }
+
+        function setStatus(id, newStatus) {
+            const project = projects.find(p => p.id === id);
+            if (project) {
+                project.status = newStatus;
+                saveState();
+            }
+        }
+
+        function addTask(carId) {
+            const input = document.getElementById(`input-task-${carId}`);
+            const text = input.value.trim();
+            if (!text) return;
+
+            const project = projects.find(p => p.id === carId);
+            if (project) {
+                project.tasks.push({ text: text, done: false });
+                saveState();
+            }
+        }
+
+        function toggleTask(carId, taskIndex) {
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                project.tasks[taskIndex].done = !project.tasks[taskIndex].done;
+                saveState();
+            }
+        }
+
+        function removeTask(carId, taskIndex) {
+            const project = projects.find(p => p.id === carId);
+            if (project) {
+                project.tasks.splice(taskIndex, 1);
+                saveState();
+            }
+        }
+
+        /* Part Order Modal Logic */
+        function openPartModal(carId, taskIndex) {
+            document.getElementById('modal-car-id').value = carId;
+            document.getElementById('modal-task-index').value = taskIndex;
+            
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                const task = project.tasks[taskIndex];
+                if (task.partInfo) {
+                    document.getElementById('vendor-name').value = task.partInfo.vendor || '';
+                    document.getElementById('part-desc').value = task.partInfo.desc || '';
+                    document.getElementById('tracking-num').value = task.partInfo.tracking || '';
+                    document.getElementById('eta-date').value = task.partInfo.eta || '';
+                } else {
+                    document.getElementById('part-form').reset();
+                    document.getElementById('part-desc').value = task.text;
+                }
+            }
+            document.getElementById('part-modal').style.display = 'flex';
+        }
+
+        function closePartModal() {
+            document.getElementById('part-modal').style.display = 'none';
+        }
+
+        function savePartDetails(e) {
+            e.preventDefault();
+            const carId = parseInt(document.getElementById('modal-car-id').value);
+            const taskIndex = parseInt(document.getElementById('modal-task-index').value);
+            
+            const partInfo = {
+                vendor: document.getElementById('vendor-name').value,
+                desc: document.getElementById('part-desc').value,
+                tracking: document.getElementById('tracking-num').value,
+                eta: document.getElementById('eta-date').value
+            };
+            
+            const project = projects.find(p => p.id === carId);
+            if (project && project.tasks[taskIndex]) {
+                project.tasks[taskIndex].partInfo = partInfo;
+                saveState();
+            }
+            closePartModal();
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projects, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `coco_shop_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedProjects = JSON.parse(e.target.result);
+                    if (Array.isArray(importedProjects)) {
+                        if (confirm(`Import ${importedProjects.length} builds into your board?`)) {
+                            projects = importedProjects;
+                            saveState();
+                            alert("Shop board updated successfully!");
+                        }
+                    } else {
+                        alert("Invalid backup file format.");
+                    }
+                } catch (err) {
+                    alert("Error reading file: " + err.message);
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+                }[m];
+            });
+        }
+
+        /* Voice Matcher for Coco */
+        function speakAsCoco(textPrompt) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textPrompt);
+            utterance.pitch = 1.35;
+            utterance.rate = 1.1;
+            const voices = window.speechSynthesis.getVoices();
+            const cocoVoice = voices.find(v => 
+                v.lang.includes('es-MX') || v.name.includes('Paulina') || v.name.includes('Monica') || v.name.includes('Sofia')
+            ) || voices.find(v => v.lang.includes('es'));
+            if (cocoVoice) utterance.voice = cocoVoice;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function openFeedbackModal() {
+            const modal = document.getElementById('feedback-modal');
+            const textInput = document.getElementById('feedback-text');
+            modal.style.display = 'flex';
+            textInput.value = '';
+            speakAsCoco("Press the microphone icon on your keyboard, then speak your note into your phone.");
+            setTimeout(() => { textInput.focus(); }, 300);
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedback-modal').style.display = 'none';
+        }
+
+        async function sendFeedback() {
+            const textInput = document.getElementById('feedback-text');
+            const feedback = textInput.value.trim();
+            const statusEl = document.getElementById('speech-status');
+            
+            if (!feedback) {
+                alert("Please speak or type a note first!");
+                return;
+            }
+
+            statusEl.innerHTML = "Sending email to Tío Clave...";
+            try {
+                const response = await fetch("https://api.web3forms.com/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", Accept: "application/json" },
+                    body: JSON.stringify({
+                        access_key: "e6949144-9b5f-4c9f-9fb2-4091301d309b",
+                        subject: "🚨 Double-O Garage App Feedback from Omar",
+                        from_name: "Coco",
+                        message: feedback,
+                        timestamp: new Date().toLocaleString()
+                    })
+                });
+                if (response.ok) {
+                    alert("Feedback sent directly to Tío Clave's email!");
+                } else {
+                    alert("Saved locally! (Email dispatch failed)");
+                }
+            } catch (error) {
+                alert("Saved locally! (Offline or network error)");
+            }
+            document.getElementById('feedback-modal').style.display = 'none';
+            textInput.value = '';
+        }
+
+        saveState();
+    </script>
+    <script src="publish.js"></script>
+</body>
+</html>
