@@ -176,6 +176,8 @@
   .reply button:disabled { opacity: 0.5; }
   .reply button.speak { background: var(--card-bg); color: var(--brand); margin-right: 8px; }
   .reply button.handled { background: var(--card-bg); color: var(--dim); border-color: var(--line); margin-left: 8px; }
+  .receiptimg { max-width: 170px; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+  .receiptimg.full { max-width: 100%; }
   .note { color: var(--subtext); font-size: 14px; margin: 8px 0 0; }
   .banner { background: var(--ok-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
   .topbar { display: flex; justify-content: space-between; align-items: baseline; }
@@ -262,6 +264,103 @@ function questionCard(q) {
   card.appendChild(el("p", carLine, "car"));
   card.appendChild(el("p", waiting(q.created_at), "wait"));
   var pl = q.payload || {};
+  if (q.kind === "receipt") {
+    card.appendChild(el("p", "Receipt photo", "qtext"));
+    if (pl.caption) card.appendChild(el("p", pl.caption, "car"));
+    var rctl = el("div", null, "reply");
+    var rnote = el("p", "", "note");
+    var rimg = document.createElement("img");
+    rimg.className = "receiptimg";
+    rimg.alt = "Receipt photo";
+    rimg.style.display = "none";
+    var loadedUrl = null;
+    var showBtn = el("button", "Show photo");
+    showBtn.addEventListener("click", function () {
+      if (rimg.style.display !== "none") {
+        rimg.style.display = "none";
+        showBtn.textContent = "Show photo";
+        return;
+      }
+      if (loadedUrl) {
+        rimg.style.display = "block";
+        showBtn.textContent = "Hide photo";
+        return;
+      }
+      showBtn.disabled = true;
+      rnote.textContent = "Loading photo...";
+      rpc("shop_receipt_photo", {
+        p_actor_id: ACTOR,
+        p_receipt_id: pl.receiptId
+      }).then(function (res) {
+        showBtn.disabled = false;
+        if (res && res.imageB64) {
+          loadedUrl = "data:" + (res.mime || "image/jpeg") + ";base64," + res.imageB64;
+          rimg.src = loadedUrl;
+          rimg.style.display = "block";
+          showBtn.textContent = "Hide photo";
+          rnote.textContent = "";
+        } else {
+          rnote.textContent = "That photo did not load. Try Refresh.";
+        }
+      });
+    });
+    rimg.addEventListener("click", function () {
+      rimg.classList.toggle("full");
+    });
+    var revBtn = el("button", "Mark reviewed", "handled");
+    revBtn.addEventListener("click", function () {
+      revBtn.disabled = true;
+      rpc("shop_receipt_review", {
+        p_actor_id: ACTOR,
+        p_receipt_id: pl.receiptId
+      }).then(function (res) {
+        if (res && res.ok === true) {
+          var done = el("p", "✓ Reviewed", "note");
+          revBtn.parentNode.replaceChild(done, revBtn);
+          rnote.textContent = "";
+        } else {
+          revBtn.disabled = false;
+          rnote.textContent = "That did not go through. Please try again.";
+        }
+      });
+    });
+    var rhBtn = el("button", "Handled another way", "handled");
+    rhBtn.addEventListener("click", function () {
+      showBtn.disabled = true;
+      revBtn.disabled = true;
+      rhBtn.disabled = true;
+      rnote.textContent = "Sending...";
+      rpc("shop_inbox_resolve", {
+        p_actor_id: ACTOR,
+        p_item_id: q.id,
+        p_reply_text: null
+      }).then(function (ok) {
+        if (ok === true) {
+          card.remove();
+          showBanner("Marked handled for " + (q.customer_name || "the customer") + ".");
+          var list = document.getElementById("list");
+          setCount(list.querySelectorAll(".card").length);
+          if (!list.querySelector(".card")) {
+            list.appendChild(el("p", "No unanswered questions.", "note"));
+            setCount(0);
+          }
+        } else {
+          showBtn.disabled = false;
+          revBtn.disabled = false;
+          rhBtn.disabled = false;
+          rnote.textContent =
+            "That did not go through. It may already be answered. Try Refresh.";
+        }
+      });
+    });
+    rctl.appendChild(showBtn);
+    rctl.appendChild(revBtn);
+    rctl.appendChild(rhBtn);
+    rctl.appendChild(rimg);
+    rctl.appendChild(rnote);
+    card.appendChild(rctl);
+    return card;
+  }
 if (q.kind && q.kind.slice(-9) === "_response") {
   var labels = {
     bought: "Bought it", not_now: "Not now", call_me: "Call me",
