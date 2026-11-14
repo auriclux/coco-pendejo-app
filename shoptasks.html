@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop Tasks — Double-O Garage</title>
+<script>
+(function () {
+  try {
+    var s = localStorage.getItem('oo_skin');
+    if (!s) {
+      var d = new Date();
+      if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+    }
+    if (s) document.documentElement.setAttribute('data-skin', s);
+  } catch (e) {}
+})();
+</script>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card-bg: #ffffff;
+    --surface2: #efefec;
+    --text: #1a1a1a;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #8a6d1a;
+    --danger: #c1121f;
+    --subtext: #666666;
+    --archive-color: #0277bd;
+    --line: #999999;
+    --line2: #6f6f6f;
+    --track: #efefec;
+    --accent-ink: #000000;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(26, 26, 26, 0.55);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #4a4a4a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+  }
+  :root[data-skin="taller"] {
+    --bg: #121212;
+    --card-bg: #1c1c1c;
+    --surface2: #262626;
+    --text: #ffffff;
+    --on-accent: #ffffff;
+    --accent: #00e676;
+    --brand: #1f7a3d;
+    --warn: #ff9100;
+    --danger: #ff1744;
+    --subtext: #aaaaaa;
+    --archive-color: #29b6f6;
+    --line: #333333;
+    --line2: #444444;
+    --track: #2a2a2a;
+    --accent-ink: #000000;
+    --archive-soft: rgba(41, 182, 246, 0.15);
+    --archive-line: rgba(41, 182, 246, 0.4);
+    --danger-soft: rgba(255, 23, 68, 0.12);
+    --danger-line: rgba(255, 23, 68, 0.3);
+    --danger-glow: rgba(229, 57, 53, 0.4);
+    --scrim: rgba(0, 0, 0, 0.85);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #cccccc;
+    --ok-soft: rgba(0, 230, 118, 0.13);
+    --warn-soft: rgba(255, 145, 0, 0.13);
+    --warn-line: rgba(255, 145, 0, 0.5);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+  }
+  :root[data-skin="papel"] {
+    --bg: #f3ecd9;
+    --card-bg: #fffdf4;
+    --surface2: #efe6cf;
+    --text: #2a2118;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #6f6152;
+    --archive-color: #0277bd;
+    --line: #ddd0ae;
+    --line2: #cbbd97;
+    --track: #e7dcc0;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(42, 33, 24, 0.55);
+    --shadow: rgba(42, 33, 24, 0.25);
+    --dim: #57493a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(42, 33, 24, 0.10);
+  }
+  :root[data-skin="primer"] {
+    --bg: #d7dee4;
+    --card-bg: #eef2f5;
+    --surface2: #dde5eb;
+    --text: #1d2a33;
+    --on-accent: #ffffff;
+    --accent: #0e7a3d;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #54666f;
+    --archive-color: #0277bd;
+    --line: #b4c2cc;
+    --line2: #97a9b5;
+    --track: #c3d0d9;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(29, 42, 51, 0.55);
+    --shadow: rgba(29, 42, 51, 0.25);
+    --dim: #3c4c56;
+    --ok-soft: #e2f2e6;
+    --warn-soft: #fdf0d5;
+    --warn-line: #b98a1c;
+    --card-shadow: rgba(29, 42, 51, 0.10);
+  }
+  :root[data-skin="navidad"] {
+    --bg: #12241a;
+    --card-bg: #1a3324;
+    --surface2: #234531;
+    --text: #f5eedd;
+    --on-accent: #ffffff;
+    --accent: #ffd54a;
+    --brand: #a31621;
+    --warn: #ffb74d;
+    --danger: #ff6f60;
+    --subtext: #b9c9a8;
+    --archive-color: #7fd4ff;
+    --line: #2c5238;
+    --line2: #3a6a49;
+    --track: #1f4230;
+    --accent-ink: #201600;
+    --archive-soft: rgba(127, 212, 255, 0.15);
+    --archive-line: rgba(127, 212, 255, 0.4);
+    --danger-soft: rgba(255, 111, 96, 0.14);
+    --danger-line: rgba(255, 111, 96, 0.4);
+    --danger-glow: rgba(255, 111, 96, 0.4);
+    --scrim: rgba(0, 0, 0, 0.8);
+    --shadow: rgba(0, 0, 0, 0.6);
+    --dim: #d8cfb8;
+    --ok-soft: rgba(255, 213, 74, 0.15);
+    --warn-soft: rgba(255, 183, 77, 0.15);
+    --warn-line: rgba(255, 183, 77, 0.55);
+    --card-shadow: rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+  main { max-width: 560px; margin: 0 auto; padding: 18px 16px 40px; }
+  .back { display: inline-block; margin-bottom: 10px; color: var(--brand); text-decoration: none; font-size: 15px; }
+  h1 { font-size: 21px; margin: 0 0 4px; }
+  .who { color: var(--subtext); font-size: 14px; margin-bottom: 14px; }
+  h2 { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--subtext); margin: 22px 0 8px; }
+  .card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin: 0 0 10px; box-shadow: 0 1px 3px var(--card-shadow); }
+  .car { font-size: 16px; font-weight: 600; }
+  .job { color: var(--dim); font-size: 14px; margin-top: 1px; }
+  .head { font-size: 15px; margin-top: 6px; }
+  .prog { font-size: 14px; color: var(--dim); margin-top: 2px; }
+  .target { font-size: 13px; color: var(--subtext); margin-top: 6px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; }
+  .tag.staged { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line); }
+  .dayhead { font-size: 15px; font-weight: 600; margin: 16px 0 6px; }
+  .dayhead .total { color: var(--subtext); font-weight: 400; font-size: 13px; }
+  .entry { display: flex; align-items: baseline; gap: 8px; background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; margin: 0 0 6px; }
+  .entry.mine { cursor: pointer; }
+  .entry .ecar { flex: 1; font-size: 15px; }
+  .entry .enote { display: block; font-size: 13px; color: var(--dim); }
+  .entry .ewho { display: block; font-size: 12px; color: var(--subtext); }
+  .entry .ehrs { font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .entry .eedit { font-size: 13px; color: var(--brand); white-space: nowrap; }
+  .none { color: var(--subtext); font-size: 14px; margin: 0 0 6px; }
+  label { display: block; font-size: 13px; color: var(--subtext); margin: 10px 0 4px; }
+  input, select { width: 100%; font-size: 16px; padding: 9px; border: 1px solid var(--line2); border-radius: 8px; background: var(--card-bg); color: var(--text); }
+  .saverow { display: flex; gap: 8px; margin-top: 14px; }
+  .save { flex: 1; font-size: 16px; font-weight: 600; padding: 11px; border: 1px solid var(--brand); border-radius: 8px; background: var(--brand); color: var(--on-accent); cursor: pointer; }
+  .clear { font-size: 15px; padding: 11px 14px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
+  .formnote { font-size: 14px; min-height: 18px; margin-top: 10px; }
+  .formnote.ok { color: var(--brand); font-weight: 600; }
+  .message { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+
+  textarea { width: 100%; font-size: 16px; padding: 9px; border: 1px solid var(--line2); border-radius: 8px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+  .speak { margin-top: 10px; font-size: 15px; padding: 9px 14px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
+  .nbody { font-size: 15px; margin-top: 4px; }
+  .nmeta { font-size: 13px; color: var(--subtext); margin-top: 6px; }
+  .tmeta { font-size: 13px; color: var(--subtext); margin-top: 4px; }
+  .trow { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .tbtn { font-size: 14px; padding: 8px 12px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
+  .tbtn.primary { background: var(--brand); color: var(--on-accent); font-weight: 600; }
+  select.assign { margin-top: 8px; }
+  details.pd { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+  details.pd summary { font-size: 15px; font-weight: 600; color: var(--brand); cursor: pointer; }
+  details.pd ul { margin: 6px 0 2px; padding-left: 18px; }
+  details.pd li { font-size: 14px; margin: 3px 0; }
+</style>
+</head>
+<body>
+<main id="app">
+<a class="back" href="index.html">← Shop board</a>
+<h1>Shop Tasks</h1>
+<div class="who" id="who">The shop's own work: create it, assign it, track it.</div>
+
+<div class="card" id="taskcard" hidden>
+  <label for="t-title" style="margin-top:0">New shop task</label>
+  <input type="text" id="t-title" placeholder="e.g. Sweep and organize the bay">
+  <label for="t-detail">Detail (optional)</label>
+  <input type="text" id="t-detail" placeholder="Anything worth adding">
+  <label for="t-category">Category (optional)</label>
+  <input type="text" id="t-category" placeholder="General">
+  <label for="t-assign">Assign to</label>
+  <select id="t-assign"></select>
+  <div class="saverow">
+    <button type="button" class="save" id="t-add">Add task</button>
+  </div>
+  <div class="formnote" id="tasknote"></div>
+</div>
+
+<div id="tasks"></div>
+</main>
+<script>
+"use strict";
+
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+
+function actorId() {
+  var fromUrl = new URLSearchParams(window.location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+
+var ACTOR = actorId();
+function el(tag, text, cls) {
+  var n = document.createElement(tag);
+  if (text != null) n.textContent = text;
+  if (cls) n.className = cls;
+  return n;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (resp) {
+    return resp.ok ? resp.json() : null;
+  }).catch(function () { return null; });
+}
+
+function addSpeak(card, input, note) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  var mic = el("button", "🎤 Speak", "speak");
+  var recog = new SR();
+  recog.lang = navigator.language || "en-US";
+  recog.interimResults = true;
+  var listening = false;
+  var baseText = "";
+  mic.addEventListener("click", function () {
+    if (listening) { recog.stop(); return; }
+    baseText = input.value.trim();
+    if (baseText) baseText += " ";
+    recog.start();
+  });
+  recog.addEventListener("start", function () {
+    listening = true;
+    mic.textContent = "⏹ Stop";
+    note.textContent = "Listening... speak now.";
+  });
+  recog.addEventListener("result", function (ev) {
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) {
+      txt += ev.results[i][0].transcript;
+    }
+    input.value = baseText + txt;
+  });
+  recog.addEventListener("end", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+  });
+  recog.addEventListener("error", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    note.textContent = "The microphone did not work here. You can type instead.";
+  });
+  card.appendChild(mic);
+}
+
+function stateLabel(s) {
+  if (s === "in_progress") return "In progress";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function fillAssignSelect(sel, current) {
+  sel.textContent = "";
+  var o = document.createElement("option");
+  o.value = "";
+  o.textContent = "Unassigned";
+  sel.appendChild(o);
+  ROSTER.forEach(function (a) {
+    var opt = document.createElement("option");
+    opt.value = a.id;
+    opt.textContent = a.name;
+    sel.appendChild(opt);
+  });
+  sel.value = current || "";
+}
+
+function noteTask(text, ok) {
+  var n = document.getElementById("tasknote");
+  n.textContent = text;
+  if (ok) n.classList.add("ok"); else n.classList.remove("ok");
+}
+
+function setTaskState(t, state) {
+  rpc("shop_task_set_state", { p_actor_id: ACTOR, p_task_id: t.id, p_state: state }).then(function (row) {
+    if (!row) { noteTask("That change did not save. Try again.", false); return; }
+    loadShopTasks();
+  });
+}
+
+function assignTask(t, who) {
+  rpc("shop_task_assign", { p_actor_id: ACTOR, p_task_id: t.id, p_assigned_to: who }).then(function (row) {
+    if (!row) { noteTask("That assignment did not save. Try again.", false); return; }
+    loadShopTasks();
+  });
+}
+
+function addTask() {
+  var title = document.getElementById("t-title").value.trim();
+  if (!title) { noteTask("Give the task a name first.", false); return; }
+  rpc("shop_task_create", {
+    p_actor_id: ACTOR,
+    p_title: title,
+    p_detail: document.getElementById("t-detail").value.trim() || null,
+    p_category: document.getElementById("t-category").value.trim() || null,
+    p_assigned_to: document.getElementById("t-assign").value || null
+  }).then(function (row) {
+    if (!row) { noteTask("That task did not save. Try again.", false); return; }
+    document.getElementById("t-title").value = "";
+    document.getElementById("t-detail").value = "";
+    document.getElementById("t-category").value = "";
+    noteTask("\u2713 Task added: " + row.title, true);
+    loadShopTasks();
+  });
+}
+
+var SHOP_TASKS = [];
+var CAN_MANAGE_TASKS = false;
+var ROSTER = [];
+
+function loadRoster() {
+  rpc("shop_actors_open", { p_actor_id: ACTOR }).then(function (res) {
+    if (res) {
+      ROSTER = res.actors || [];
+      fillAssignSelect(document.getElementById("t-assign"), "");
+      renderShopTasks();
+    }
+  });
+}
+
+function loadShopTasks() {
+  return rpc("shop_tasks_open", { p_actor_id: ACTOR, p_include_closed: true }).then(function (res) {
+    if (!res) return;
+    CAN_MANAGE_TASKS = !!res.canManage;
+    SHOP_TASKS = res.tasks || [];
+    document.getElementById("taskcard").hidden = !CAN_MANAGE_TASKS;
+    if (!CAN_MANAGE_TASKS) {
+      document.getElementById("who").textContent =
+        "This is Omar's side of the list. You can see the work; he runs it from here.";
+    }
+    renderShopTasks();
+  });
+}
+
+function renderShopTasks() {
+  var box = document.getElementById("tasks");
+  if (!box) return;
+  box.textContent = "";
+  if (!SHOP_TASKS.length) {
+    box.appendChild(el("p", "No shop tasks right now.", "none"));
+    return;
+  }
+  SHOP_TASKS.forEach(function (t) {
+    var card = el("div", null, "card");
+    card.appendChild(el("div", t.title, "car"));
+    if (t.detail) card.appendChild(el("div", t.detail, "job"));
+    var meta = stateLabel(t.state) + " \u00b7 " + (t.category || "General");
+    meta += t.assignedToName ? " \u00b7 Assigned to " + t.assignedToName : " \u00b7 Unassigned";
+    card.appendChild(el("div", meta, "tmeta"));
+    if (t.state === "done" && t.completedByName) {
+      card.appendChild(el("div", "Done by " + t.completedByName, "tmeta"));
+    }
+    if (t.state === "cancelled" && t.cancelledByName) {
+      card.appendChild(el("div", "Cancelled by " + t.cancelledByName, "tmeta"));
+    }
+    if (!CAN_MANAGE_TASKS) { box.appendChild(card); return; }
+    var row = el("div", null, "trow");
+    function btn(label, state, primary) {
+      var b = el("button", label, primary ? "tbtn primary" : "tbtn");
+      b.type = "button";
+      b.addEventListener("click", function () { setTaskState(t, state); });
+      row.appendChild(b);
+    }
+    if (t.state === "open") {
+      btn("Start", "in_progress", true); btn("Done", "done", false); btn("Cancel", "cancelled", false);
+    } else if (t.state === "in_progress") {
+      btn("Done", "done", true); btn("Back to Open", "open", false); btn("Cancel", "cancelled", false);
+    } else if (t.state === "done") {
+      btn("Reopen", "open", false);
+    } else if (t.state === "cancelled") {
+      btn("Reopen", "open", false);
+    }
+    if (row.children.length) card.appendChild(row);
+    var sel = document.createElement("select");
+    sel.className = "assign";
+    fillAssignSelect(sel, t.assignedTo || "");
+    sel.addEventListener("change", function () { assignTask(t, sel.value || null); });
+    card.appendChild(sel);
+    box.appendChild(card);
+  });
+}
+
+function init() {
+  var app = document.getElementById("app");
+  if (!ACTOR) {
+    app.appendChild(el("div", "This page needs your shop link. Open it from the board on the shop phone.", "message"));
+    return;
+  }
+  document.getElementById("t-add").addEventListener("click", addTask);
+  addSpeak(document.getElementById("taskcard"), document.getElementById("t-title"), document.getElementById("tasknote"));
+  loadShopTasks();
+  loadRoster();
+}
+
+init();
+
+</script>
+</body>
+</html>
