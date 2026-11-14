@@ -15,10 +15,17 @@ jobs:
           MESSAGE="https://auriclux.github.io/coco-pendejo-app/coco_avatar_palming_a_socket.jpg
           🚨 Coco here! Oye, just updated the Double-O Garage app. Ve a checarlo real quick when you get a chance!
             https://github.com/auriclux/coco-pendejo-app"
-          
+
+          FAILED=0
           for PHONE in "${RECIPIENTS[@]}"; do
-            curl -X POST https://textbelt.com/text \
+            RESP=$(curl -s -X POST https://textbelt.com/text \
               --data-urlencode "phone=$PHONE" \
               --data-urlencode "message=$MESSAGE" \
-              --data-urlencode "key=$TEXTBELT_KEY"
+              --data-urlencode "key=$TEXTBELT_KEY")
+            echo "$PHONE -> $RESP"
+            if ! echo "$RESP" | grep -qE '"success": ?true'; then
+              echo "::error::Textbelt did not confirm the text to $PHONE"
+              FAILED=1
+            fi
           done
+          exit $FAILED
