@@ -195,6 +195,11 @@
   .formnote { font-size: 14px; min-height: 18px; margin-top: 10px; }
   .formnote.ok { color: var(--brand); font-weight: 600; }
   .message { background: var(--card-bg); border: 1px solid var(--line); border-radius: 10px; padding: 20px 18px; font-size: 16px; }
+
+  textarea { width: 100%; font-size: 16px; padding: 9px; border: 1px solid var(--line2); border-radius: 8px; background: var(--card-bg); color: var(--text); font-family: inherit; }
+  .speak { margin-top: 10px; font-size: 15px; padding: 9px 14px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
+  .nbody { font-size: 15px; margin-top: 4px; }
+  .nmeta { font-size: 13px; color: var(--subtext); margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -222,6 +227,21 @@
   </div>
   <div class="formnote" id="formnote"></div>
 </div>
+
+<h2>Tell Omar</h2>
+<div class="card" id="notecard">
+  <label for="n-job">Car</label>
+  <select id="n-job"></select>
+  <label for="n-body">What you did, what you found, what changed</label>
+  <textarea id="n-body" rows="3" placeholder="Say it or type it"></textarea>
+  <div class="saverow">
+    <button type="button" class="save" id="post">Post note</button>
+  </div>
+  <div class="formnote" id="notenote"></div>
+</div>
+
+<h2>Shop notes</h2>
+<div id="notes"></div>
 
 <h2>Last two weeks</h2>
 <div id="days"></div>
@@ -339,13 +359,15 @@ function renderJobs() {
 }
 
 function fillJobSelect() {
-  var sel = document.getElementById("f-job");
-  sel.textContent = "";
-  JOBS.forEach(function (j) {
-    var o = document.createElement("option");
-    o.value = j.episodeId;
-    o.textContent = j.carName + " — " + j.episodeTitle;
-    sel.appendChild(o);
+  ["f-job", "n-job"].forEach(function (id) {
+    var sel = document.getElementById(id);
+    sel.textContent = "";
+    JOBS.forEach(function (j) {
+      var o = document.createElement("option");
+      o.value = j.episodeId;
+      o.textContent = j.carName + " — " + j.episodeTitle;
+      sel.appendChild(o);
+    });
   });
 }
 
@@ -444,6 +466,100 @@ function save() {
   });
 }
 
+
+function addSpeak(card, input, note) {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  var mic = el("button", "🎤 Speak", "speak");
+  var recog = new SR();
+  recog.lang = navigator.language || "en-US";
+  recog.interimResults = true;
+  var listening = false;
+  var baseText = "";
+  mic.addEventListener("click", function () {
+    if (listening) { recog.stop(); return; }
+    baseText = input.value.trim();
+    if (baseText) baseText += " ";
+    recog.start();
+  });
+  recog.addEventListener("start", function () {
+    listening = true;
+    mic.textContent = "⏹ Stop";
+    note.textContent = "Listening... speak now.";
+  });
+  recog.addEventListener("result", function (ev) {
+    var txt = "";
+    for (var i = 0; i < ev.results.length; i++) {
+      txt += ev.results[i][0].transcript;
+    }
+    input.value = baseText + txt;
+  });
+  recog.addEventListener("end", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    if (note.textContent.indexOf("Listening") === 0) note.textContent = "";
+  });
+  recog.addEventListener("error", function () {
+    listening = false;
+    mic.textContent = "🎤 Speak";
+    note.textContent = "The microphone did not work here. You can type instead.";
+  });
+  card.appendChild(mic);
+}
+
+var NOTES = [];
+
+function fmtStamp(iso) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  var h = d.getHours();
+  var ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return MONTHS[d.getMonth()] + " " + d.getDate() + ", " + h + ":" + pad(d.getMinutes()) + " " + ampm;
+}
+
+function renderNotes() {
+  var wrap = document.getElementById("notes");
+  wrap.textContent = "";
+  if (!NOTES.length) {
+    wrap.appendChild(el("p", "No notes yet.", "none"));
+    return;
+  }
+  NOTES.forEach(function (n) {
+    var card = el("div", null, "card");
+    card.appendChild(el("div", n.carName + " — " + n.episodeTitle, "car"));
+    card.appendChild(el("div", n.body, "nbody"));
+    var meta = fmtStamp(n.createdAt);
+    if (n.actorId !== ACTOR) meta = n.actorName + " · " + meta;
+    card.appendChild(el("div", meta, "nmeta"));
+    wrap.appendChild(card);
+  });
+}
+
+function loadNotes() {
+  return rpc("shop_notes_open", { p_actor_id: ACTOR, p_limit: 50 }).then(function (res) {
+    if (res) NOTES = res.notes || [];
+    renderNotes();
+  });
+}
+
+function postNote() {
+  var note = document.getElementById("notenote");
+  var job = document.getElementById("n-job").value;
+  var body = document.getElementById("n-body").value.trim();
+  if (!job) { note.textContent = "Pick the car."; note.className = "formnote"; return; }
+  if (!body) { note.textContent = "Say or type the note first."; note.className = "formnote"; return; }
+  rpc("shop_note_add", { p_actor_id: ACTOR, p_episode_id: job, p_body: body }).then(function (row) {
+    if (!row) { note.textContent = "That did not post. Try again."; note.className = "formnote"; return; }
+    var j = jobById(job);
+    note.textContent = "✓ Posted on " + (j ? j.carName : "the car") + ". It's in the notes below, with your name and the time on it.";
+    note.className = "formnote ok";
+    document.getElementById("n-body").value = "";
+    loadNotes();
+  });
+}
+
 function init() {
   var app = document.getElementById("app");
   if (!ACTOR) {
@@ -454,12 +570,15 @@ function init() {
   document.getElementById("f-date").max = addDays(TODAY, 1);
   document.getElementById("save").addEventListener("click", save);
   document.getElementById("clear").addEventListener("click", clearForm);
+  document.getElementById("post").addEventListener("click", postNote);
+  addSpeak(document.getElementById("notecard"), document.getElementById("n-body"), document.getElementById("notenote"));
   rpc("shop_jobs_overview", { p_actor_id: ACTOR }).then(function (res) {
     if (res) { JOBS = res.jobs || []; }
     renderJobs();
     fillJobSelect();
   });
   loadHours();
+  loadNotes();
 }
 
 init();
