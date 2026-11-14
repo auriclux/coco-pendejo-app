@@ -208,6 +208,11 @@
 <h1>Jobs &amp; Hours</h1>
 <div class="who" id="who"></div>
 
+<div class="card">
+  <label for="ctx" style="margin-top:0">Working on</label>
+  <select id="ctx"></select>
+</div>
+
 <h2>Cars in the shop</h2>
 <div id="jobs"></div>
 
@@ -215,8 +220,6 @@
 <div class="card" id="formcard">
   <label for="f-date">Day</label>
   <input type="date" id="f-date">
-  <label for="f-job">Car</label>
-  <select id="f-job"></select>
   <label for="f-hours">Hours (your best estimate)</label>
   <input type="number" id="f-hours" inputmode="decimal" step="0.25" min="0" max="24" placeholder="e.g. 3.5">
   <label for="f-note">Note (optional)</label>
@@ -230,8 +233,6 @@
 
 <h2>Tell Omar</h2>
 <div class="card" id="notecard">
-  <label for="n-job">Car</label>
-  <select id="n-job"></select>
   <label for="n-body">What you did, what you found, what changed</label>
   <textarea id="n-body" rows="3" placeholder="Say it or type it"></textarea>
   <div class="saverow">
@@ -243,8 +244,9 @@
 <h2>Shop notes</h2>
 <div id="notes"></div>
 
-<h2>Last two weeks</h2>
-<div id="days"></div>
+<h2 id="entries-title">Hours</h2>
+<div class="none" id="hours-total"></div>
+<div id="entries"></div>
 </main>
 <script>
 "use strict";
@@ -320,7 +322,7 @@ function fmtHours(h) {
 }
 
 var TODAY = isoOf(new Date());
-var FROM = addDays(TODAY, -13);
+var FROM = addDays(TODAY, -89);
 var JOBS = [];
 var ENTRIES = [];
 var SEEALL = false;
@@ -358,53 +360,67 @@ function renderJobs() {
   });
 }
 
-function fillJobSelect() {
-  ["f-job", "n-job"].forEach(function (id) {
-    var sel = document.getElementById(id);
-    sel.textContent = "";
-    JOBS.forEach(function (j) {
-      var o = document.createElement("option");
-      o.value = j.episodeId;
-      o.textContent = j.carName + " — " + j.episodeTitle;
-      sel.appendChild(o);
-    });
+function ctxValue() {
+  return document.getElementById("ctx").value;
+}
+
+function ctxEpisode() {
+  var v = ctxValue();
+  return v === "" ? null : v;
+}
+
+function ctxLabel() {
+  var v = ctxValue();
+  if (v === "") return "Shop work";
+  var j = jobById(v);
+  return j ? j.carName + " — " + j.episodeTitle : "Shop work";
+}
+
+function fillContext() {
+  var sel = document.getElementById("ctx");
+  sel.textContent = "";
+  var o = document.createElement("option");
+  o.value = "";
+  o.textContent = "Shop work";
+  sel.appendChild(o);
+  JOBS.forEach(function (j) {
+    var opt = document.createElement("option");
+    opt.value = j.episodeId;
+    opt.textContent = j.carName + " — " + j.episodeTitle;
+    sel.appendChild(opt);
   });
 }
 
-function renderDays() {
-  var wrap = document.getElementById("days");
+function renderEntries() {
+  document.getElementById("entries-title").textContent = "Hours on " + ctxLabel();
+  var wrap = document.getElementById("entries");
   wrap.textContent = "";
-  for (var iso = TODAY; ; iso = addDays(iso, -1)) {
-    var rows = ENTRIES.filter(function (e) { return e.workDate === iso; });
-    var head = el("div", null, "dayhead");
-    head.appendChild(document.createTextNode(iso === TODAY ? "Today — " + fmtDay(iso) : fmtDay(iso)));
-    if (rows.length) {
-      var total = 0;
-      rows.forEach(function (e) { total += parseFloat(e.hours); });
-      head.appendChild(el("span", " · " + fmtHours(total) + " hrs", "total"));
-    }
-    wrap.appendChild(head);
-    if (!rows.length) {
-      wrap.appendChild(el("p", "No hours logged.", "none"));
-    }
-    rows.forEach(function (e) {
-      var mine = e.actorId === ACTOR;
-      var row = el("div", null, "entry" + (mine ? " mine" : ""));
-      var left = el("div", null, "ecar");
-      var j = jobById(e.episodeId);
-      left.appendChild(document.createTextNode(e.carName + (j ? " — " + j.episodeTitle : "")));
-      if (!mine && SEEALL) left.appendChild(el("span", e.actorName, "ewho"));
-      if (e.note) left.appendChild(el("span", e.note, "enote"));
-      row.appendChild(left);
-      row.appendChild(el("span", fmtHours(e.hours) + " hrs", "ehrs"));
-      if (mine) {
-        row.appendChild(el("span", "Edit", "eedit"));
-        row.addEventListener("click", function () { editEntry(e); });
-      }
-      wrap.appendChild(row);
-    });
-    if (iso === FROM) break;
+  var v = ctxValue();
+  var rows = ENTRIES.filter(function (e) { return (e.episodeId || "") === v; });
+  var total = 0;
+  rows.forEach(function (e) { total += parseFloat(e.hours); });
+  document.getElementById("hours-total").textContent = rows.length
+    ? "Total here: " + fmtHours(total) + " hrs over " + rows.length + (rows.length === 1 ? " day." : " days.")
+    : "";
+  if (!rows.length) {
+    wrap.appendChild(el("p", "No hours logged here yet.", "none"));
+    return;
   }
+  rows.slice().reverse().forEach(function (e) {
+    var mine = e.actorId === ACTOR;
+    var row = el("div", null, "entry" + (mine ? " mine" : ""));
+    var left = el("div", null, "ecar");
+    left.appendChild(document.createTextNode(fmtDay(e.workDate)));
+    if (!mine && SEEALL) left.appendChild(el("span", e.actorName, "ewho"));
+    if (e.note) left.appendChild(el("span", e.note, "enote"));
+    row.appendChild(left);
+    row.appendChild(el("span", fmtHours(e.hours) + " hrs", "ehrs"));
+    if (mine) {
+      row.appendChild(el("span", "Edit", "eedit"));
+      row.addEventListener("click", function () { editEntry(e); });
+    }
+    wrap.appendChild(row);
+  });
 }
 
 function setFormNote(text, ok) {
@@ -415,10 +431,9 @@ function setFormNote(text, ok) {
 
 function editEntry(e) {
   document.getElementById("f-date").value = e.workDate;
-  document.getElementById("f-job").value = e.episodeId;
   document.getElementById("f-hours").value = fmtHours(e.hours);
   document.getElementById("f-note").value = e.note || "";
-  setFormNote("Editing your " + fmtDate(e.workDate) + " entry on " + e.carName + ". Save updates it.", false);
+  setFormNote("Editing your " + fmtDate(e.workDate) + " entry on " + ctxLabel() + ". Save updates it.", false);
   document.getElementById("formcard").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -435,20 +450,19 @@ function loadHours() {
       ENTRIES = res.hours || [];
       SEEALL = !!res.canSeeAll;
       document.getElementById("who").textContent = SEEALL
-        ? "You see everyone's hours below. Entries you add are under your own name."
-        : "Your hours for the last two weeks. Tap one of your entries to fix it.";
+        ? "You see everyone's hours and notes for the selected job. Entries you add are under your own name."
+        : "Pick what you are working on above. Your hours and notes below follow it.";
     }
-    renderDays();
+    renderEntries();
   });
 }
 
 function save() {
   var date = document.getElementById("f-date").value;
-  var job = document.getElementById("f-job").value;
+  var job = ctxEpisode();
   var hours = parseFloat(document.getElementById("f-hours").value);
   var note = document.getElementById("f-note").value.trim();
   if (!date) { setFormNote("Pick the day you worked.", false); return; }
-  if (!job) { setFormNote("Pick the car.", false); return; }
   if (!hours || hours <= 0 || hours > 24) { setFormNote("Hours must be more than 0 and no more than 24.", false); return; }
   rpc("shop_hours_set", {
     p_actor_id: ACTOR,
@@ -458,8 +472,7 @@ function save() {
     p_note: note || null
   }).then(function (row) {
     if (!row) { setFormNote("That did not save. Try again.", false); return; }
-    var j = jobById(job);
-    setFormNote("✓ Saved: " + fmtHours(row.hours) + " hrs on " + (j ? j.carName : "the car") + ", " + fmtDate(row.workDate) + ".", true);
+    setFormNote("✓ Saved: " + fmtHours(row.hours) + " hrs on " + ctxLabel() + ", " + fmtDate(row.workDate) + ".", true);
     document.getElementById("f-hours").value = "";
     document.getElementById("f-note").value = "";
     loadHours();
@@ -522,11 +535,13 @@ function fmtStamp(iso) {
 function renderNotes() {
   var wrap = document.getElementById("notes");
   wrap.textContent = "";
-  if (!NOTES.length) {
-    wrap.appendChild(el("p", "No notes yet.", "none"));
+  var v = ctxValue();
+  var shown = NOTES.filter(function (n) { return (n.episodeId || "") === v; });
+  if (!shown.length) {
+    wrap.appendChild(el("p", "No notes on this one yet.", "none"));
     return;
   }
-  NOTES.forEach(function (n) {
+  shown.forEach(function (n) {
     var card = el("div", null, "card");
     card.appendChild(el("div", n.carName + " — " + n.episodeTitle, "car"));
     card.appendChild(el("div", n.body, "nbody"));
@@ -546,14 +561,12 @@ function loadNotes() {
 
 function postNote() {
   var note = document.getElementById("notenote");
-  var job = document.getElementById("n-job").value;
+  var job = ctxEpisode();
   var body = document.getElementById("n-body").value.trim();
-  if (!job) { note.textContent = "Pick the car."; note.className = "formnote"; return; }
   if (!body) { note.textContent = "Say or type the note first."; note.className = "formnote"; return; }
   rpc("shop_note_add", { p_actor_id: ACTOR, p_episode_id: job, p_body: body }).then(function (row) {
     if (!row) { note.textContent = "That did not post. Try again."; note.className = "formnote"; return; }
-    var j = jobById(job);
-    note.textContent = "✓ Posted on " + (j ? j.carName : "the car") + ". It's in the notes below, with your name and the time on it.";
+    note.textContent = "✓ Posted on " + ctxLabel() + ". It's in the notes below, with your name and the time on it.";
     note.className = "formnote ok";
     document.getElementById("n-body").value = "";
     loadNotes();
@@ -571,11 +584,12 @@ function init() {
   document.getElementById("save").addEventListener("click", save);
   document.getElementById("clear").addEventListener("click", clearForm);
   document.getElementById("post").addEventListener("click", postNote);
+  document.getElementById("ctx").addEventListener("change", function () { renderEntries(); renderNotes(); });
   addSpeak(document.getElementById("notecard"), document.getElementById("n-body"), document.getElementById("notenote"));
   rpc("shop_jobs_overview", { p_actor_id: ACTOR }).then(function (res) {
     if (res) { JOBS = res.jobs || []; }
     renderJobs();
-    fillJobSelect();
+    fillContext();
   });
   loadHours();
   loadNotes();
