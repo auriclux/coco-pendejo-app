@@ -378,6 +378,63 @@ function askSection(parent, entry) {
     box.appendChild(mic);
   }
   box.appendChild(btn);
+  var pinput = document.createElement("input");
+  pinput.type = "file";
+  pinput.accept = "image/*";
+  pinput.style.display = "none";
+  var pbtn = el("button", "📷 Send a photo", "speak");
+  pbtn.type = "button";
+  pbtn.addEventListener("click", function () { pinput.click(); });
+  pinput.addEventListener("change", function () {
+    var file = pinput.files && pinput.files[0];
+    pinput.value = "";
+    if (!file) return;
+    pbtn.disabled = true;
+    note.textContent = "Sending photo...";
+    shrinkImage(file, function (blob) {
+      if (!blob) {
+        pbtn.disabled = false;
+        note.textContent = "That photo could not be read. Please try another.";
+        return;
+      }
+      blobToB64(blob, function (b64) {
+        if (!b64) {
+          pbtn.disabled = false;
+          note.textContent = "That did not go through. Please try again.";
+          return;
+        }
+        fetch(SUPABASE_URL + "/rest/v1/rpc/customer_photo_submit", {
+          method: "POST",
+          headers: {
+            "apikey": PUBLISHABLE_KEY,
+            "Authorization": "Bearer " + PUBLISHABLE_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            p_token: token,
+            p_episode_id: entry.episodeId,
+            p_image_b64: b64,
+            p_caption: ta.value.trim() || null
+          })
+        }).then(function (resp) {
+          return resp.ok ? resp.json() : null;
+        }).then(function (res) {
+          pbtn.disabled = false;
+          if (res && res.ok === true) {
+            ta.value = "";
+            note.textContent = "✓ Photo sent. Omar will see it with this car.";
+          } else {
+            note.textContent = "That did not go through. Please try again.";
+          }
+        }).catch(function () {
+          pbtn.disabled = false;
+          note.textContent = "That did not go through. Please try again.";
+        });
+      });
+    });
+  });
+  box.appendChild(pbtn);
+  box.appendChild(pinput);
   box.appendChild(note);
   parent.appendChild(box);
 }
@@ -448,31 +505,14 @@ function convoSection(parent, entry) {
   var sets = THREADS[entry.episodeId];
   if (!sets || sets.length === 0) return;
   parent.appendChild(el("h2", "Conversation"));
-  var preview = el("div");
-  preview.appendChild(convoSet(sets[sets.length - 1], THREAD_NAME));
-  parent.appendChild(preview);
-  if (sets.length < 2) return;
-  var full = el("div");
-  full.style.display = "none";
-  sets.forEach(function (s) { full.appendChild(convoSet(s, THREAD_NAME)); });
-  var openBtn = el("button", "Press for full conversation", "convobtn");
-  var closeBtn = el("button", "Close Conversation", "convobtn");
-  closeBtn.style.display = "none";
-  openBtn.addEventListener("click", function () {
-    full.style.display = "block";
-    preview.style.display = "none";
-    openBtn.style.display = "none";
-    closeBtn.style.display = "";
+  var btn = el("button", "💬 See the conversation", "convobtn");
+  btn.type = "button";
+  btn.addEventListener("click", function () {
+    window.location.href = "conversation.html?t=" +
+      encodeURIComponent(token) + "&e=" +
+      encodeURIComponent(entry.episodeId);
   });
-  closeBtn.addEventListener("click", function () {
-    full.style.display = "none";
-    preview.style.display = "";
-    openBtn.style.display = "";
-    closeBtn.style.display = "none";
-  });
-  parent.appendChild(openBtn);
-  parent.appendChild(full);
-  parent.appendChild(closeBtn);
+  parent.appendChild(btn);
 }
 var OUTBOUND = {};
 
@@ -773,8 +813,8 @@ if (open.length > 0) {
     }
   }
 if (!ended) {
-  outboundSection(card, entry);
   askSection(card, entry);
+  outboundSection(card, entry);
   receiptSection(card, entry);
 }
 convoSection(card, entry);
