@@ -199,7 +199,7 @@ function cocoPublish(project, link, headlineInput, statusEl) {
 function cocoDecorate() {
   var projects = cocoBoardProjects();
   var links = cocoLinks();
-  document.querySelectorAll(".car-card").forEach(function (card) {
+  document.querySelectorAll(".car-card:not(.shop-card)").forEach(function (card) {
     if (card.querySelector(".coco-pub")) return;
     var titleEl = card.querySelector(".car-title");
     if (!titleEl) return;
