@@ -205,6 +205,10 @@
   .tbtn { font-size: 14px; padding: 8px 12px; border: 1px solid var(--brand); border-radius: 8px; background: var(--card-bg); color: var(--brand); cursor: pointer; }
   .tbtn.primary { background: var(--brand); color: var(--on-accent); font-weight: 600; }
   select.assign { margin-top: 8px; }
+  details.pd { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+  details.pd summary { font-size: 15px; font-weight: 600; color: var(--brand); cursor: pointer; }
+  details.pd ul { margin: 6px 0 2px; padding-left: 18px; }
+  details.pd li { font-size: 14px; margin: 3px 0; }
 </style>
 </head>
 <body>
@@ -359,6 +363,23 @@ function jobById(id) {
   return null;
 }
 
+function pulldown(label, items, word, emptyText) {
+  var d = el("details", null, "pd");
+  var list = items || [];
+  d.appendChild(el("summary", label + " (" + list.length + " " + word + ")"));
+  if (!list.length) {
+    d.appendChild(el("div", emptyText, "tmeta"));
+  } else {
+    var ul = el("ul");
+    list.forEach(function (it) {
+      ul.appendChild(el("li", typeof it === "string" ? it : (it.name || it.text || "")));
+    });
+    d.appendChild(ul);
+  }
+  d.appendChild(el("div", "From Omar's last signed-off status.", "tmeta"));
+  return d;
+}
+
 function renderJobs() {
   var wrap = document.getElementById("jobs");
   wrap.textContent = "";
@@ -390,6 +411,12 @@ function renderJobs() {
   }
   if (j.blessedDoneDate) {
     card.appendChild(el("div", "Target: " + fmtDate(j.blessedDoneDate), "target"));
+  }
+  if (j.state !== "staged") {
+    card.appendChild(pulldown("Tasks", j.inProgress, "outstanding",
+      "Nothing outstanding on the last signed-off status."));
+    card.appendChild(pulldown("Parts", j.waitingOn, "waiting",
+      "Nothing on the waiting list."));
   }
   wrap.appendChild(card);
 }
