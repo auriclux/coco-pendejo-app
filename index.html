@@ -434,6 +434,13 @@
         .coco-panel { padding: 14px; color: var(--text); font-size: 0.95rem; line-height: 1.45; }
         .coco-panel p { margin: 0 0 10px; }
         .coco-panel .coco-sign { margin: 0; color: var(--text); font-weight: 700; }
+        .board-note { display: none; background: var(--surface2); border: 1px solid var(--warn); color: var(--text); border-radius: 8px; padding: 9px 12px; font-size: 0.85rem; margin-bottom: 12px; }
+        .wait-toggle { background: none; border: 1px solid var(--line2); color: var(--subtext); border-radius: 10px; padding: 1px 7px; font-size: 0.75rem; cursor: pointer; }
+        .wait-toggle.on { background: var(--warn); color: var(--accent-ink); border-color: var(--warn); font-weight: bold; }
+        .signed-meta { flex-basis: 100%; font-size: 0.75rem; color: var(--accent); padding-left: 30px; }
+        .staged-chip { font-size: 0.7rem; background: var(--surface2); color: var(--warn); border: 1px solid var(--warn); border-radius: 8px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+        .quick-add { flex-wrap: wrap; }
+        .quick-add input { flex: 1 1 30%; min-width: 110px; }
 </style>
 </head>
 <body>
@@ -462,6 +469,7 @@
 </div>
 
     <div class="subtitle" id="board-subtitle">Active Builds</div>
+    <div class="board-note" id="board-note"></div>
 <div class="menu-wrap">
     <div id="menu-panel" class="menu-panel" style="display:none">
         <a href="commit.html">➕ New Job</a>
@@ -473,7 +481,6 @@
         <a href="manual.html">📖 Manual</a>
         <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
         <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
-        <a href="#" onclick="document.getElementById('import-file').click(); toggleMenu(); return false;">📂 Import Backup</a>
         <a href="#" onclick="toggleAddCar(); toggleMenu(); return false;">🚗 Add a board card</a>
         <a href="#" onclick="openFeedbackModal(); toggleMenu(); return false;">🎤 Tell Tío Clave What You Think</a>
         <div class="menu-label">Look</div>
@@ -489,12 +496,13 @@
     <!-- Vehicle Filter Bar -->
     <select id="filter-bar" class="car-selector" onchange="pickVehicle(this.value)"></select>
 
-    <div class="add-car-container" id="add-car-row" style="display:none">
-        <input type="text" id="new-car-name" placeholder="Add new vehicle build...">
+    <div class="add-car-container quick-add" id="add-car-row" style="display:none">
+        <input type="text" id="new-customer-name" placeholder="Customer (pick or new)" list="customer-list">
+        <datalist id="customer-list"></datalist>
+        <input type="text" id="new-car-name" placeholder="Car name...">
+        <input type="text" id="new-job-title" placeholder="Job title...">
         <button class="btn-add" onclick="addCar()">+ Add</button>
     </div>
-
-    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
 
     <div id="board-container"></div>
 
@@ -524,8 +532,8 @@
                 <button class="close-btn" onclick="closePartModal()">&times;</button>
             </div>
             <form id="part-form" onsubmit="savePartDetails(event)">
-                <input type="hidden" id="modal-car-id">
-                <input type="hidden" id="modal-task-index">
+                <input type="hidden" id="modal-task-id">
+                <input type="hidden" id="modal-part-id">
                 <div class="form-group">
                     <label for="vendor-name">Vendor / Supplier</label>
                     <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend" required>
@@ -541,6 +549,9 @@
                 <div class="form-group">
                     <label for="eta-date">Expected Delivery</label>
                     <input type="date" id="eta-date">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" id="part-arrived" style="width:auto; margin-right:6px;">Part has arrived</label>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-modal-cancel" onclick="closePartModal()">Cancel</button>
@@ -595,15 +606,103 @@
             }
         ];
 
+        // Baby Step 35C: the board is a substrate client. `projects`
+        // mirrors shop_board_open in the legacy render shape; the
+        // localStorage copy is a display cache, never the record.
+        // defaultProjects remains only as a first-paint fallback
+        // for a device that has never loaded the record.
         let projects = JSON.parse(localStorage.getItem('oo_projects')) || defaultProjects;
+        let endedProjects = [];
         let selectedVehicleFilter = localStorage.getItem('oo_selected_filter') || 'ALL';
         let showingArchive = false;
+        let ooDirectory = [];
+
+        function cacheBoard() {
+            try {
+                localStorage.setItem('oo_projects', JSON.stringify(projects));
+                localStorage.setItem('oo_selected_filter', selectedVehicleFilter);
+            } catch (e) {}
+        }
 
         function saveState() {
-            localStorage.setItem('oo_projects', JSON.stringify(projects));
-            localStorage.setItem('oo_selected_filter', selectedVehicleFilter);
+            cacheBoard();
             renderFilterBar();
             renderBoard();
+        }
+
+        function boardNote(text) {
+            const el = document.getElementById('board-note');
+            if (!el) return;
+            if (text) { el.textContent = text; el.style.display = 'block'; }
+            else { el.textContent = ''; el.style.display = 'none'; }
+        }
+
+        function projectFromEpisode(ep) {
+            const tasks = (ep.tasks || []).map(t => ({
+                id: t.id,
+                text: t.title,
+                done: !!t.checkedBy,
+                waiting: !!t.waiting,
+                signedOffAt: t.signedOffAt || null,
+                reopenedAt: t.reopenedAt || null,
+                partInfo: (t.parts && t.parts.length) ? {
+                    id: t.parts[0].id,
+                    vendor: t.parts[0].vendor || '',
+                    desc: t.parts[0].name || '',
+                    tracking: t.parts[0].tracking || '',
+                    eta: t.parts[0].eta || '',
+                    state: t.parts[0].state,
+                    buyer: t.parts[0].buyer || null
+                } : null
+            }));
+            const open = tasks.filter(t => !t.done);
+            const status = (tasks.length && open.length === 0) ? 'Done'
+                : (open.some(t => t.waiting) ? 'Waiting Parts' : 'In Progress');
+            return {
+                id: ep.episodeId,
+                episodeId: ep.episodeId,
+                title: ep.carName,
+                jobTitle: ep.title,
+                state: ep.state,
+                status: status,
+                archived: false,
+                tasks: tasks
+            };
+        }
+
+        function refreshBoard() {
+            const actor = ooActor();
+            if (!actor) {
+                boardNote('Open the board from your shop link once so it knows you. Showing the last copy this device loaded.');
+                return Promise.resolve(false);
+            }
+            return ooRpc('shop_board_open', { p_actor_id: actor }).then(function (res) {
+                if (!res || !res.episodes) {
+                    boardNote('Could not reach the shop record. Showing the last copy this device loaded.');
+                    return false;
+                }
+                projects = res.episodes.map(projectFromEpisode);
+                endedProjects = (res.ended || []).map(e => ({
+                    id: e.episodeId, episodeId: e.episodeId, title: e.carName,
+                    jobTitle: e.title, state: e.state, status: e.state, archived: true, tasks: []
+                }));
+                boardNote('');
+                saveState();
+                return true;
+            });
+        }
+
+        // Satellite links carry the actor key when the board
+        // knows it (ruled 2026-11-16; the 35C index replacement
+        // is where this patch was assigned to land).
+        function keyLinks() {
+            const actor = ooActor();
+            if (!actor) return;
+            const pages = ['commit.html','inbox.html','ask.html','close.html','dates.html','worker.html','manual.html','shoptasks.html'];
+            document.querySelectorAll('a[href]').forEach(function (a) {
+                const href = a.getAttribute('href');
+                if (pages.indexOf(href) !== -1) a.setAttribute('href', href + '?a=' + actor);
+            });
         }
 
         // Drag-to-prioritize (Baby Step 29): press the grip handle
@@ -627,8 +726,7 @@
                 taskDrag = {
                     item: item,
                     list: item.parentElement,
-                    carId: parseInt(grip.getAttribute('data-car'), 10),
-                    from: parseInt(grip.getAttribute('data-index'), 10)
+                    episodeId: grip.getAttribute('data-ep')
                 };
             }
             item.classList.add('dragging');
@@ -656,17 +754,10 @@
                 ooRpc('shop_task_reorder', { p_actor_id: ooActor(), p_task_ids: ids }).then(function () { renderBoard(); });
                 return;
             }
-            const rows = drag.list.querySelectorAll('.task-item');
-            let to = -1;
-            for (let i = 0; i < rows.length; i++) if (rows[i] === drag.item) to = i;
-            const car = projects.find(p => p.id === drag.carId);
-            if (car && to >= 0 && to !== drag.from) {
-                const moved = car.tasks.splice(drag.from, 1)[0];
-                car.tasks.splice(to, 0, moved);
-                saveState();
-            } else {
-                renderBoard();
-            }
+            const ids = [];
+            drag.list.querySelectorAll('.task-item').forEach(function (r) { ids.push(r.getAttribute('data-task-row')); });
+            ooRpc('shop_task_reorder', { p_actor_id: ooActor(), p_episode_id: drag.episodeId, p_task_ids: ids })
+                .then(function () { refreshBoard(); });
         }
         document.addEventListener('pointerup', endTaskDrag);
         document.addEventListener('pointercancel', endTaskDrag);
@@ -773,7 +864,7 @@
     const filterBar = document.getElementById('filter-bar');
     filterBar.innerHTML = '';
 
-    const availableProjects = projects.filter(p => !!p.archived === showingArchive);
+    const availableProjects = showingArchive ? endedProjects : projects;
     const options = [{ value: 'ALL', text: 'ALL' },
         { value: '__SHOPTASKS__', text: 'Shop Tasks' },
         ...availableProjects.map(p => ({ value: p.title, text: p.title }))];
@@ -847,10 +938,11 @@ function toggleCocoMenu() {
 
             if (selectedVehicleFilter === '__SHOPTASKS__') {
                 renderShopCard(container);
+                keyLinks();
                 return;
             }
 
-            let filteredProjects = projects.filter(p => !!p.archived === showingArchive);
+            let filteredProjects = showingArchive ? endedProjects.slice() : projects.slice();
 
             if (selectedVehicleFilter !== 'ALL') {
                 filteredProjects = filteredProjects.filter(p => p.title === selectedVehicleFilter);
@@ -859,7 +951,7 @@ function toggleCocoMenu() {
             if (filteredProjects.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; padding:30px; color:var(--subtext); font-size:0.9rem;">
-                        ${showingArchive ? 'No archived builds stored.' : 'No active builds matching filter.'}
+                        ${showingArchive ? 'No ended jobs in the record.' : 'No active builds matching filter.'}
                     </div>
                 `;
                 return;
@@ -869,139 +961,174 @@ function toggleCocoMenu() {
                 const card = document.createElement('div');
                 card.className = `car-card ${car.archived ? 'is-archived' : ''}`;
 
-                let tasksHtml = car.tasks.map((task, index) => {
-                    let partTagHtml = '';
-                    if (car.status === 'Waiting Parts') {
-                        if (task.partInfo && task.partInfo.vendor) {
-                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})">📦 <b>${escapeHtml(task.partInfo.vendor)}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})</span>`;
-                        } else {
-                            partTagHtml = `<span class="part-tag" onclick="openPartModal(${car.id}, ${index})" style="color: var(--warn);">+ Add Part / Vendor Tracking</span>`;
-                        }
-                    }
+                if (car.archived) {
+                    card.innerHTML = `
+                    <div class="car-header">
+                        <span class="car-title">${escapeHtml(car.title)}</span>
+                    </div>
+                    <div style="color: var(--subtext); font-size: 0.9rem;">${escapeHtml(car.jobTitle || '')} · ${car.state === 'paused' ? 'Paused' : 'Completed'}</div>
+                `;
+                    container.appendChild(card);
+                    return;
+                }
 
+                let tasksHtml = car.tasks.map((task) => {
+                    let partTagHtml = '';
+                    if (task.partInfo) {
+                        partTagHtml = `<span class="part-tag" onclick="openPartModal('${task.id}')">📦 <b>${escapeHtml(task.partInfo.vendor || 'Part')}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})${task.partInfo.state === 'arrived' ? ' · Arrived' : ''}</span>`;
+                    } else if (task.waiting) {
+                        partTagHtml = `<span class="part-tag" onclick="openPartModal('${task.id}')" style="color: var(--warn);">+ Add Part / Vendor Tracking</span>`;
+                    }
+                    const signedMeta = (task.done && task.signedOffAt)
+                        ? `<span class="signed-meta">✓ Signed off ${escapeHtml(String(task.signedOffAt).slice(0, 10))}</span>` : '';
+                    const waitBtn = task.done ? '' :
+                        `<button class="wait-toggle ${task.waiting ? 'on' : ''}" onclick="toggleWait('${task.id}')" title="Waiting on parts">⏸</button>`;
                     return `
-                        <div class="task-item ${task.done ? 'completed' : ''}">
-                            <span class="task-grip" data-car="${car.id}" data-index="${index}" title="Drag to set priority">⠿</span>
-                            <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${car.id}, ${index})">
+                        <div class="task-item ${task.done ? 'completed' : ''}" data-task-row="${task.id}">
+                            <span class="task-grip" data-ep="${car.episodeId}" title="Drag to set priority">⠿</span>
+                            <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask('${task.id}', this.checked)">
                             <span>${escapeHtml(task.text)}</span>
-                            <button class="remove-task" onclick="removeTask(${car.id}, ${index})">✕</button>
+                            ${waitBtn}
+                            <button class="remove-task" onclick="removeTask('${task.id}')">✕</button>
                             ${partTagHtml}
+                            ${signedMeta}
                         </div>
                     `;
                 }).join('');
 
                 card.innerHTML = `
                     <div class="car-header">
-                        <span class="car-title">${escapeHtml(car.title)}</span>
-                        <div class="header-actions">
-                            <button class="btn-archive" onclick="toggleArchiveCar(${car.id})">
-                                ${car.archived ? 'Unarchive' : '📦 Archive'}
-                            </button>
-                            <button class="btn-delete" onclick="deleteCar(${car.id})">🗑️</button>
-                        </div>
+                        <span class="car-title">${escapeHtml(car.title)}${car.state === 'staged' ? '<span class="staged-chip">Staged</span>' : ''}</span>
                     </div>
                     <div class="status-selector">
-                        <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setStatus(${car.id}, 'In Progress')">In Progress</div>
-                        <div class="status-btn ${car.status === 'Waiting Parts' ? 'active-Waiting-Parts' : ''}" onclick="setStatus(${car.id}, 'Waiting Parts')">Waiting Parts</div>
-                        <div class="status-btn ${car.status === 'Done' ? 'active-Done' : ''}" onclick="setStatus(${car.id}, 'Done')">Done</div>
+                        <div class="status-btn ${car.status === 'In Progress' ? 'active-In-Progress' : ''}" onclick="setCardWaiting('${car.episodeId}', false)">In Progress</div>
+                        <div class="status-btn ${car.status === 'Waiting Parts' ? 'active-Waiting-Parts' : ''}" onclick="setCardWaiting('${car.episodeId}', true)">Waiting Parts</div>
+                        <div class="status-btn ${car.status === 'Done' ? 'active-Done' : ''}" title="Done is earned task by task; end the job from the Shop menu when it is complete">Done</div>
                     </div>
                     <div class="task-list">${tasksHtml}</div>
                     <div class="add-task-container">
-                        <input type="text" id="input-task-${car.id}" placeholder="Add task...">
-                        <button onclick="addTask(${car.id})">+ Task</button>
+                        <input type="text" id="input-task-${car.episodeId}" placeholder="Add task...">
+                        <button onclick="addTask('${car.episodeId}')">+ Task</button>
                     </div>
                 `;
                 container.appendChild(card);
             });
+            keyLinks();
         }
 
+        // Quick-add over Commit (ruling 4): one creation door.
+        // An existing customer name resolves through the
+        // directory; a new name creates the customer, and the
+        // minted customer link is shown once, to hand over.
         function addCar() {
-            const input = document.getElementById('new-car-name');
-            const title = input.value.trim();
-            if (!title) return;
-
-            projects.push({
-                id: Date.now(),
-                title: title,
-                status: "In Progress",
-                archived: false,
-                tasks: []
+            const custInput = document.getElementById('new-customer-name');
+            const carInput = document.getElementById('new-car-name');
+            const jobInput = document.getElementById('new-job-title');
+            const custName = custInput.value.trim();
+            const carName = carInput.value.trim();
+            const jobTitle = jobInput.value.trim();
+            if (!custName || !carName || !jobTitle) {
+                boardNote('Quick-add needs a customer, a car, and a job title.');
+                return;
+            }
+            const body = {
+                p_actor_id: ooActor(),
+                p_car_name: carName,
+                p_job_title: jobTitle,
+                p_start_state: 'active'
+            };
+            const match = ooDirectory.find(c => (c.name || '').toLowerCase() === custName.toLowerCase());
+            if (match) body.p_customer_id = match.id;
+            else body.p_customer_name = custName;
+            ooRpc('shop_commit', body).then(function (res) {
+                if (!res || !res.episode_id) {
+                    boardNote('The record refused that add. Nothing was created.');
+                    return;
+                }
+                custInput.value = ''; carInput.value = ''; jobInput.value = '';
+                if (res.token) {
+                    boardNote('New customer ' + custName + ' — their page link (shown once, send it to them): customer.html?t=' + res.token);
+                }
+                loadDirectory();
+                refreshBoard();
             });
-            input.value = '';
-            saveState();
         }
 
-        function toggleArchiveCar(id) {
-            const car = projects.find(p => p.id === id);
-            if (car) {
-                car.archived = !car.archived;
-                saveState();
-            }
+        function loadDirectory() {
+            const actor = ooActor();
+            if (!actor) return;
+            ooRpc('shop_directory', { p_actor_id: actor }).then(function (res) {
+                if (!res || !res.customers) return;
+                ooDirectory = res.customers;
+                const dl = document.getElementById('customer-list');
+                if (dl) dl.innerHTML = ooDirectory.map(c => `<option value="${escapeHtml(c.name)}">`).join('');
+            });
         }
 
-        function deleteCar(id) {
-            const car = projects.find(p => p.id === id);
-            const name = car ? car.title : "this car";
-            
-            if (confirm(`Permanently delete "${name}" and all associated tasks?`)) {
-                projects = projects.filter(p => p.id !== id);
-                saveState();
-            }
+        // The card's In Progress / Waiting Parts buttons set or
+        // clear the waiting flag on every open task at once —
+        // the same triage gesture the old card status was.
+        function setCardWaiting(episodeId, waiting) {
+            const car = projects.find(p => p.episodeId === episodeId);
+            if (!car) return;
+            const actor = ooActor();
+            const targets = car.tasks.filter(t => !t.done && t.waiting !== waiting);
+            let chain = Promise.resolve();
+            targets.forEach(t => {
+                chain = chain.then(() => ooRpc('shop_task_update', {
+                    p_actor_id: actor, p_task_id: t.id, p_title: t.text, p_waiting: waiting
+                }));
+            });
+            chain.then(function () { refreshBoard(); });
         }
 
-        function setStatus(id, newStatus) {
-            const project = projects.find(p => p.id === id);
-            if (project) {
-                project.status = newStatus;
-                saveState();
-            }
+        function toggleWait(taskId) {
+            let task = null;
+            projects.forEach(p => p.tasks.forEach(t => { if (t.id === taskId) task = t; }));
+            if (!task) return;
+            ooRpc('shop_task_update', {
+                p_actor_id: ooActor(), p_task_id: taskId, p_title: task.text, p_waiting: !task.waiting
+            }).then(function () { refreshBoard(); });
         }
 
-        function addTask(carId) {
-            const input = document.getElementById(`input-task-${carId}`);
+        function addTask(episodeId) {
+            const input = document.getElementById(`input-task-${episodeId}`);
             const text = input.value.trim();
             if (!text) return;
-
-            const project = projects.find(p => p.id === carId);
-            if (project) {
-                project.tasks.push({ text: text, done: false });
-                saveState();
-            }
+            ooRpc('shop_task_create', {
+                p_actor_id: ooActor(), p_episode_id: episodeId, p_title: text
+            }).then(function () { refreshBoard(); });
         }
 
-        function toggleTask(carId, taskIndex) {
-            const project = projects.find(p => p.id === carId);
-            if (project && project.tasks[taskIndex]) {
-                project.tasks[taskIndex].done = !project.tasks[taskIndex].done;
-                saveState();
-            }
+        function toggleTask(taskId, checked) {
+            ooRpc('shop_task_check', {
+                p_actor_id: ooActor(), p_task_id: taskId, p_checked: !!checked
+            }).then(function () { refreshBoard(); });
         }
 
-        function removeTask(carId, taskIndex) {
-            const project = projects.find(p => p.id === carId);
-            if (project) {
-                project.tasks.splice(taskIndex, 1);
-                saveState();
-            }
+        function removeTask(taskId) {
+            ooRpc('shop_task_remove', {
+                p_actor_id: ooActor(), p_task_id: taskId
+            }).then(function () { refreshBoard(); });
         }
 
-        /* Part Order Modal Logic */
-        function openPartModal(carId, taskIndex) {
-            document.getElementById('modal-car-id').value = carId;
-            document.getElementById('modal-task-index').value = taskIndex;
-            
-            const project = projects.find(p => p.id === carId);
-            if (project && project.tasks[taskIndex]) {
-                const task = project.tasks[taskIndex];
-                if (task.partInfo) {
-                    document.getElementById('vendor-name').value = task.partInfo.vendor || '';
-                    document.getElementById('part-desc').value = task.partInfo.desc || '';
-                    document.getElementById('tracking-num').value = task.partInfo.tracking || '';
-                    document.getElementById('eta-date').value = task.partInfo.eta || '';
-                } else {
-                    document.getElementById('part-form').reset();
-                    document.getElementById('part-desc').value = task.text;
-                }
+        /* Part Order Modal Logic (35C: writes through the doors;
+           the modal edits the task's first part record) */
+        function openPartModal(taskId) {
+            document.getElementById('modal-task-id').value = taskId;
+            let task = null;
+            projects.forEach(p => p.tasks.forEach(t => { if (t.id === taskId) task = t; }));
+            document.getElementById('part-form').reset();
+            if (task && task.partInfo) {
+                document.getElementById('modal-part-id').value = task.partInfo.id || '';
+                document.getElementById('vendor-name').value = task.partInfo.vendor || '';
+                document.getElementById('part-desc').value = task.partInfo.desc || '';
+                document.getElementById('tracking-num').value = task.partInfo.tracking || '';
+                document.getElementById('eta-date').value = task.partInfo.eta || '';
+                document.getElementById('part-arrived').checked = task.partInfo.state === 'arrived';
+            } else {
+                document.getElementById('modal-part-id').value = '';
+                if (task) document.getElementById('part-desc').value = task.text;
             }
             document.getElementById('part-modal').style.display = 'flex';
         }
@@ -1012,22 +1139,38 @@ function toggleCocoMenu() {
 
         function savePartDetails(e) {
             e.preventDefault();
-            const carId = parseInt(document.getElementById('modal-car-id').value);
-            const taskIndex = parseInt(document.getElementById('modal-task-index').value);
-            
-            const partInfo = {
-                vendor: document.getElementById('vendor-name').value,
-                desc: document.getElementById('part-desc').value,
-                tracking: document.getElementById('tracking-num').value,
-                eta: document.getElementById('eta-date').value
+            const taskId = document.getElementById('modal-task-id').value;
+            const partId = document.getElementById('modal-part-id').value;
+            const vendor = document.getElementById('vendor-name').value;
+            const desc = document.getElementById('part-desc').value;
+            const tracking = document.getElementById('tracking-num').value;
+            const eta = document.getElementById('eta-date').value || null;
+            const arrived = document.getElementById('part-arrived').checked;
+            const actor = ooActor();
+            let task = null;
+            projects.forEach(p => p.tasks.forEach(t => { if (t.id === taskId) task = t; }));
+            const priorState = task && task.partInfo ? task.partInfo.state : null;
+            const buyer = task && task.partInfo ? task.partInfo.buyer : null;
+            const state = arrived ? 'arrived'
+                : (priorState && priorState !== 'arrived' ? priorState
+                   : ((tracking || eta) ? 'ordered' : 'needed'));
+            const update = function (pid) {
+                return ooRpc('shop_part_update', {
+                    p_actor_id: actor, p_part_id: pid, p_vendor: vendor,
+                    p_name: desc, p_tracking: tracking, p_eta: eta,
+                    p_state: state, p_buyer: buyer
+                });
             };
-            
-            const project = projects.find(p => p.id === carId);
-            if (project && project.tasks[taskIndex]) {
-                project.tasks[taskIndex].partInfo = partInfo;
-                saveState();
+            const done = function () { closePartModal(); refreshBoard(); };
+            if (partId) {
+                update(partId).then(done);
+            } else {
+                ooRpc('shop_part_create', { p_actor_id: actor, p_task_id: taskId, p_name: desc })
+                    .then(function (row) {
+                        if (row && row.id) return update(row.id);
+                        return null;
+                    }).then(done);
             }
-            closePartModal();
         }
 
         function exportData() {
@@ -1038,27 +1181,6 @@ function toggleCocoMenu() {
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                try {
-                    const importedProjects = JSON.parse(e.target.result);
-                    if (Array.isArray(importedProjects)) {
-                        if (confirm(`Import ${importedProjects.length} builds into your board?`)) {
-                            projects = importedProjects;
-                            saveState();
-                            alert("Shop board updated successfully!");
-                        }
-                    } else {
-                        alert("Invalid backup file format.");
-                    }
-                } catch (err) {
-                    alert("Error reading file: " + err.message);
-                }
-            };
-            fileReader.readAsText(event.target.files[0]);
         }
 
         function escapeHtml(str) {
@@ -1132,7 +1254,17 @@ function toggleCocoMenu() {
             textInput.value = '';
         }
 
-        saveState();
+        (function initBoard() {
+            try {
+                const fromUrl = new URLSearchParams(window.location.search).get('a');
+                if (fromUrl) localStorage.setItem('oo_actor', fromUrl);
+            } catch (e) {}
+            renderFilterBar();
+            renderBoard();
+            keyLinks();
+            loadDirectory();
+            refreshBoard();
+        })();
     </script>
     <script src="publish.js"></script>
 </body>
