@@ -291,7 +291,6 @@ function convoSet(set, customerName) {
   var replies = set.replies || [];
   var shown = 0;
   replies.forEach(function (r) {
-    if (r.source === "coco" && r.endorsed === false) return;
     shown++;
     var rw = el("p", null, "cwho");
     rw.appendChild(el("b", r.name || "The shop"));
