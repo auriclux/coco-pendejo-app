@@ -536,11 +536,11 @@
                 <input type="hidden" id="modal-part-id">
                 <div class="form-group">
                     <label for="vendor-name">Vendor / Supplier</label>
-                    <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend" required>
+                    <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend">
                 </div>
                 <div class="form-group">
                     <label for="part-desc">Part Name / Number</label>
-                    <input type="text" id="part-desc" placeholder="e.g. Holley Terminator X MAX" required>
+                    <input type="text" id="part-desc" placeholder="e.g. Holley Terminator X MAX">
                 </div>
                 <div class="form-group">
                     <label for="tracking-num">Tracking / PO Number</label>
@@ -1162,6 +1162,14 @@ function toggleCocoMenu() {
                 });
             };
             const done = function () { closePartModal(); refreshBoard(); };
+            if (!vendor.trim() && !desc.trim() && !tracking.trim() && !eta) {
+                /* Clearing every field removes the part record (the old
+                   board's rule), or simply closes when there is none. */
+                if (partId) {
+                    ooRpc('shop_part_remove', { p_actor_id: actor, p_part_id: partId }).then(done);
+                } else { done(); }
+                return;
+            }
             if (partId) {
                 update(partId).then(done);
             } else {
