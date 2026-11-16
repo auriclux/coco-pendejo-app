@@ -172,6 +172,15 @@
   .wait { color: var(--danger); font-size: 13px; font-weight: 700; margin: 6px 0 0; }
   .qtext { font-size: 16px; margin: 10px 0 0; }
   .reply textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; margin-top: 12px; }
+  .coco { background: var(--ok-soft); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+  .coco .coco-head { font-weight: 700; margin: 0 0 4px; }
+  .coco .coco-draft { margin: 0 0 6px; }
+  .coco .coco-prov { color: var(--dim); font-size: 13px; margin: 0 0 4px; }
+  .coco button { margin: 6px 8px 0 0; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-accent); font-weight: 600; cursor: pointer; }
+  .coco button.alt { background: var(--card-bg); color: var(--brand); }
+  .coco button:disabled { opacity: 0.5; }
+  .coco button.picked { outline: 3px solid var(--brand); outline-offset: 1px; }
+  .coco .coco-hint { color: var(--dim); font-size: 14px; margin: 8px 0 0; }
   .reply button { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-accent); font-weight: 600; cursor: pointer; }
   .reply button:disabled { opacity: 0.5; }
   .reply button.speak { background: var(--card-bg); color: var(--brand); margin-right: 8px; }
@@ -471,6 +480,80 @@ if (q.kind && q.kind.slice(-9) === "_response") {
   var text = pl.text || pl.question || "";
   card.appendChild(el("p", text || "(message with no text)", "qtext"));
 }
+  var cocoDisp = null;
+  if (q.kind === "question" && q.coco) {
+    var co = q.coco;
+    if (co.outcome === "posted" && co.disposition === "pending" && co.draft) {
+      var panel = el("div", null, "coco");
+      panel.appendChild(el("p", "Coco replied:", "coco-head"));
+      panel.appendChild(el("p", co.draft, "coco-draft"));
+      panel.appendChild(el("p",
+        "via " + (co.provider || "?") + " · " + (co.model || "?"), "coco-prov"));
+      var hint = el("p", "", "coco-hint");
+      var accBtn = el("button", "✓ Accept");
+      var addBtn = el("button", "Add", "alt");
+      var corBtn = el("button", "Correct", "alt");
+      var finishCard = function (doneText) {
+        card.remove();
+        showBanner(doneText);
+        var list = document.getElementById("list");
+        setCount(list.querySelectorAll(".card").length);
+        if (!list.querySelector(".card")) {
+          list.appendChild(el("p", "No unanswered questions.", "note"));
+          setCount(0);
+        }
+      };
+      accBtn.addEventListener("click", function () {
+        accBtn.disabled = true; addBtn.disabled = true; corBtn.disabled = true;
+        hint.textContent = "Saving...";
+        rpc("shop_coco_disposition", {
+          p_actor_id: ACTOR,
+          p_item_id: q.id,
+          p_disposition: "accepted"
+        }).then(function (res) {
+          if (res && res.ok === true) {
+            finishCard("Accepted Coco's answer for " +
+              (q.customer_name || "the customer") + ".");
+          } else {
+            accBtn.disabled = false; addBtn.disabled = false; corBtn.disabled = false;
+            hint.textContent = "That did not go through. Please try again.";
+          }
+        });
+      });
+      var arm = function (which) {
+        if (cocoDisp === which) {
+          cocoDisp = null;
+          addBtn.classList.remove("picked");
+          corBtn.classList.remove("picked");
+          hint.textContent = "";
+          return;
+        }
+        cocoDisp = which;
+        addBtn.classList.toggle("picked", which === "added");
+        corBtn.classList.toggle("picked", which === "corrected");
+        hint.textContent = which === "added"
+          ? "Type what you want to add below, then Send. Your words post after Coco's, under your name."
+          : "Type the corrected answer below, then Send. Yours replaces Coco's on the customer's page.";
+      };
+      addBtn.addEventListener("click", function () { arm("added"); });
+      corBtn.addEventListener("click", function () { arm("corrected"); });
+      panel.appendChild(accBtn);
+      panel.appendChild(addBtn);
+      panel.appendChild(corBtn);
+      panel.appendChild(hint);
+      card.appendChild(panel);
+    } else if (co.outcome && co.outcome !== "posted") {
+      var why = {
+        relayed_uncovered: "Coco passed this one to you: it is outside the signed-off facts.",
+        relayed_stale: "Coco passed: the signed-off status is over 14 days old. She answers again after the next sign-off.",
+        vetoed: "Coco drafted an answer, but it did not pass the fact check, so it was not sent.",
+        throttled: "Coco sent a short 'lots of questions at once' note. This one still needs your answer.",
+        sunset_relay: "Coco sent the 'Omar answers first' note. This one still needs your answer.",
+        fallback_line: "Coco sent the 'out of tokens' note. This one still needs your answer."
+      }[co.outcome];
+      if (why) card.appendChild(el("p", why, "note"));
+    }
+  }
   var reply = el("div", null, "reply");
   var ta = el("textarea");
   ta.rows = 3;
@@ -487,6 +570,26 @@ if (q.kind && q.kind.slice(-9) === "_response") {
   function resolve(replyText, doneText) {
     setBusy(true);
     note.textContent = "Sending...";
+    if (cocoDisp && replyText) {
+      rpc("shop_coco_disposition", {
+        p_actor_id: ACTOR,
+        p_item_id: q.id,
+        p_disposition: cocoDisp
+      }).then(function (res) {
+        if (res && res.ok === true) {
+          resolveNow(replyText, doneText);
+        } else {
+          setBusy(false);
+          note.textContent =
+            "That did not go through. It may already be answered. Try Refresh.";
+        }
+      });
+      return;
+    }
+    resolveNow(replyText, doneText);
+  }
+
+  function resolveNow(replyText, doneText) {
     rpc("shop_inbox_resolve", {
       p_actor_id: ACTOR,
       p_item_id: q.id,
