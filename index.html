@@ -310,6 +310,9 @@
         .shop-meta { flex-basis: 100%; font-size: 0.8rem; color: var(--subtext); background: var(--surface2); border-radius: 6px; padding: 4px 8px; }
         
         .add-task-container { display: flex; gap: 6px; margin-top: 8px; }
+        .signoff-strip { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .signoff-btn { background: #2f855a; color: #fff; border: none; border-radius: 6px; padding: 8px 12px; font-size: 14px; cursor: pointer; }
+        .signoff-status { color: var(--subtext); font-size: 13px; }
         .add-task-container input { font-size: 0.85rem; padding: 6px; }
         .add-task-container button { font-size: 0.85rem; padding: 6px 10px; background: var(--track); color: var(--text); }
 
@@ -708,7 +711,7 @@
         // Drag-to-prioritize (Baby Step 29): press the grip handle
         // and slide; the row follows, and on release the task array
         // takes the new order and saves. Top of the list is first
-        // priority; publish.js already emits tasks in list order,
+        // priority; the sign-off door composes in list order,
         // so the order reaches the worker links at the next
         // Sign Off & Publish. Pointer events only, so the same
         // code serves Omar's phone and a desktop mouse.
@@ -1010,6 +1013,11 @@ function toggleCocoMenu() {
                         <input type="text" id="input-task-${car.episodeId}" placeholder="Add task...">
                         <button onclick="addTask('${car.episodeId}')">+ Task</button>
                     </div>
+                    ${car.episodeId ? `
+                    <div class="signoff-strip">
+                        <button class="signoff-btn" onclick="signOffEpisode('${car.episodeId}')">✅ Sign Off &amp; Publish</button>
+                        <span class="signoff-status" id="signoff-status-${car.episodeId}"></span>
+                    </div>` : ''}
                 `;
                 container.appendChild(card);
             });
@@ -1098,6 +1106,27 @@ function toggleCocoMenu() {
             ooRpc('shop_task_create', {
                 p_actor_id: ooActor(), p_episode_id: episodeId, p_title: text
             }).then(function () { refreshBoard(); });
+        }
+
+        /* Sign Off & Publish (35D): the substrate composes the
+           snapshot now; publish.js is retired. The confirmation
+           lands in the card and holds before the board refreshes,
+           per the house pattern. */
+        function signOffEpisode(episodeId) {
+            const st = document.getElementById('signoff-status-' + episodeId);
+            if (st) st.textContent = 'Publishing...';
+            ooRpc('shop_sign_off', {
+                p_actor_id: ooActor(), p_episode_id: episodeId
+            }).then(function (r) {
+                if (r && r.ok) {
+                    if (st) st.textContent = '✓ Published v' + r.version + ' — the customer\u2019s page now shows this.';
+                    setTimeout(refreshBoard, 2500);
+                } else if (r && r.error) {
+                    if (st) st.textContent = 'Not published: ' + r.error + '.';
+                } else {
+                    if (st) st.textContent = 'Not published. The shop key cannot sign off.';
+                }
+            });
         }
 
         function toggleTask(taskId, checked) {
@@ -1274,6 +1303,6 @@ function toggleCocoMenu() {
             refreshBoard();
         })();
     </script>
-    <script src="publish.js"></script>
+
 </body>
 </html>
