@@ -85,7 +85,13 @@ function cocoCompose(project, link, headline) {
   var waitingOn = [];
   project.tasks.forEach(function (t) {
     if (t.done) { signedOff.push(t.text); return; }
-    if (project.status === "Waiting Parts") {
+    // 35C: waiting is a per-task flag in the record. Older
+    // cached boards have no flag; fall back to the card's
+    // status for those, as before.
+    var waiting = (typeof t.waiting === "boolean")
+      ? t.waiting
+      : (project.status === "Waiting Parts");
+    if (waiting) {
       if (t.partInfo && (t.partInfo.desc || t.partInfo.vendor)) {
         var w = t.partInfo.desc || t.text;
         if (t.partInfo.eta) w += ", due " + t.partInfo.eta;
