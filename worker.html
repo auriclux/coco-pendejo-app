@@ -390,12 +390,124 @@ function renderJobs() {
     card.appendChild(el("div", "Target: " + fmtDate(j.blessedDoneDate), "target"));
   }
   if (j.state !== "staged") {
-    card.appendChild(pulldown("Tasks", j.inProgress, "outstanding",
-      "Nothing outstanding on the last signed-off status."));
-    card.appendChild(pulldown("Parts", j.waitingOn, "waiting",
-      "Nothing on the waiting list."));
+    var live = el("div", null, "livewrap");
+    live.id = "live-sections";
+    live.appendChild(el("div", "Loading the live board…", "tmeta"));
+    card.appendChild(live);
+    loadLive(j.episodeId);
   }
   wrap.appendChild(card);
+}
+
+/* Live board sections (Baby Step 36): the selected job's real
+   tasks and parts, not the signed-off snapshot. A worker's
+   check is a claim stamped with his name; adding a task
+   stamps its creator; landing a part stamps its arrival.
+   Sign Off stays Omar's alone. */
+function loadLive(episodeId) {
+  rpc("shop_worker_job_open", { p_actor_id: ACTOR, p_episode_id: episodeId }).then(function (res) {
+    paintLive(episodeId, res);
+  });
+}
+
+function paintLive(episodeId, job) {
+  var host = document.getElementById("live-sections");
+  if (!host || ctxEpisode() !== episodeId) return;
+  host.textContent = "";
+  if (!job) {
+    host.appendChild(el("div", "The live board did not answer.", "tmeta"));
+    return;
+  }
+  var open = 0;
+  job.tasks.forEach(function (t) { if (!t.checkedBy) open++; });
+  var td = el("details", null, "pd");
+  td.open = true;
+  td.appendChild(el("summary", "Tasks (" + open + " to do)"));
+  if (!job.tasks.length) {
+    td.appendChild(el("div", "No tasks on this job yet.", "tmeta"));
+  }
+  job.tasks.forEach(function (t) {
+    var row = el("div", null, "ltask");
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!t.checkedBy;
+    cb.onchange = function () { wToggleTask(t.id, cb.checked, episodeId); };
+    row.appendChild(cb);
+    var body = el("div");
+    body.appendChild(el("span", t.title, t.checkedBy ? "done" : null));
+    if (t.waiting) body.appendChild(el("span", "⏸ Waiting", "tag staged"));
+    if (t.signedOffAt) body.appendChild(el("span", "Signed", "tag staged"));
+    var meta = [];
+    if (t.checkedByName) meta.push("✓ " + t.checkedByName);
+    if (t.createdByName && t.createdBy !== t.checkedBy) meta.push("added by " + t.createdByName);
+    if (meta.length) body.appendChild(el("div", meta.join(" · "), "lmeta"));
+    row.appendChild(body);
+    td.appendChild(row);
+  });
+  var add = el("div", null, "addrow");
+  var inp = document.createElement("input");
+  inp.type = "text";
+  inp.placeholder = "Add a task…";
+  inp.id = "w-new-task";
+  var btn = el("button", "+ Task", "tbtn");
+  btn.type = "button";
+  btn.onclick = function () { wAddTask(episodeId); };
+  add.appendChild(inp);
+  add.appendChild(btn);
+  td.appendChild(add);
+  host.appendChild(td);
+
+  var allParts = [];
+  job.tasks.forEach(function (t) {
+    (t.parts || []).forEach(function (p) { allParts.push({ p: p, task: t }); });
+  });
+  var notArrived = 0;
+  allParts.forEach(function (x) { if (x.p.state !== "arrived") notArrived++; });
+  var pd2 = el("details", null, "pd");
+  pd2.open = true;
+  pd2.appendChild(el("summary", "Parts (" + notArrived + " waiting)"));
+  if (!allParts.length) {
+    pd2.appendChild(el("div", "No parts on this job.", "tmeta"));
+  }
+  allParts.forEach(function (x) {
+    var p = x.p;
+    var row = el("div", null, "lpart");
+    var label = "📦 " + (p.vendor ? p.vendor + ": " : "") + (p.name || "Part") + " — " + x.task.title;
+    if (p.eta) label += " · ETA " + p.eta;
+    row.appendChild(el("span", label));
+    if (p.state === "arrived") {
+      row.appendChild(el("span", "✓ Arrived", "lmeta"));
+    } else {
+      var b = el("button", "Arrived", "tbtn");
+      b.type = "button";
+      b.onclick = function () { wArrive(p.id, episodeId); };
+      row.appendChild(b);
+    }
+    pd2.appendChild(row);
+  });
+  host.appendChild(pd2);
+  host.appendChild(el("div", "Live from the board. Your check is a claim with your name on it; Omar's sign-off is what the customer sees.", "tmeta"));
+}
+
+function wToggleTask(taskId, checked, episodeId) {
+  rpc("shop_task_check", { p_actor_id: ACTOR, p_task_id: taskId, p_checked: checked }).then(function () {
+    loadLive(episodeId);
+  });
+}
+
+function wAddTask(episodeId) {
+  var inp = document.getElementById("w-new-task");
+  var text = inp ? inp.value.trim() : "";
+  if (!text) return;
+  rpc("shop_task_create", { p_actor_id: ACTOR, p_episode_id: episodeId, p_title: text }).then(function () {
+    loadLive(episodeId);
+  });
+}
+
+function wArrive(partId, episodeId) {
+  rpc("shop_part_arrived", { p_actor_id: ACTOR, p_part_id: partId }).then(function () {
+    loadLive(episodeId);
+  });
 }
 
 function ctxValue() {
