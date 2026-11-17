@@ -209,6 +209,13 @@
   details.pd summary { font-size: 15px; font-weight: 600; color: var(--brand); cursor: pointer; }
   details.pd ul { margin: 6px 0 2px; padding-left: 18px; }
   details.pd li { font-size: 14px; margin: 3px 0; }
+  .ltask { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-size: 14px; }
+  .ltask input[type="checkbox"] { width: 18px; height: 18px; margin-top: 1px; flex: none; }
+  .ltask .done { text-decoration: line-through; color: var(--subtext, #777); }
+  .lmeta { font-size: 12px; color: var(--subtext, #777); }
+  .lpart { display: flex; align-items: center; gap: 8px; margin: 4px 0; font-size: 13px; flex-wrap: wrap; }
+  .addrow { display: flex; gap: 6px; margin-top: 8px; }
+  .addrow input { flex: 1; }
 </style>
 </head>
 <body>
@@ -348,23 +355,6 @@ var SHOP_TASKS = [];
 function jobById(id) {
   for (var i = 0; i < JOBS.length; i++) if (JOBS[i].episodeId === id) return JOBS[i];
   return null;
-}
-
-function pulldown(label, items, word, emptyText) {
-  var d = el("details", null, "pd");
-  var list = items || [];
-  d.appendChild(el("summary", label + " (" + list.length + " " + word + ")"));
-  if (!list.length) {
-    d.appendChild(el("div", emptyText, "tmeta"));
-  } else {
-    var ul = el("ul");
-    list.forEach(function (it) {
-      ul.appendChild(el("li", typeof it === "string" ? it : (it.name || it.text || "")));
-    });
-    d.appendChild(ul);
-  }
-  d.appendChild(el("div", "From Omar's last signed-off status.", "tmeta"));
-  return d;
 }
 
 function renderJobs() {
