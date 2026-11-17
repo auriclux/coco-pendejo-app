@@ -284,6 +284,7 @@ function buildForm() {
       o.value = e.id;
       carSel.appendChild(o);
     });
+    if (fillPartsFn) fillPartsFn();
   }
   custSel.addEventListener("change", fillCars);
   carSel.addEventListener("change", function () {
