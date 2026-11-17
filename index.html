@@ -537,6 +537,15 @@
             <form id="part-form" onsubmit="savePartDetails(event)">
                 <input type="hidden" id="modal-task-id">
                 <input type="hidden" id="modal-part-id">
+                <div id="part-flag" style="display:none; border:1px solid var(--warn); border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+                    <p id="part-flag-note" style="margin:0 0 8px;"></p>
+                    <p style="margin:0 0 8px; font-size:13px;">Which purchase stands? The other one gets returned or cancelled.</p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button type="button" class="btn-modal-send" onclick="clearPartFlag('shop')">Shop's stands</button>
+                        <button type="button" class="btn-modal-cancel" onclick="clearPartFlag('customer')">Customer's stands</button>
+                    </div>
+                    <p id="part-flag-msg" style="margin:8px 0 0; font-size:13px;"></p>
+                </div>
                 <div class="form-group">
                     <label for="vendor-name">Vendor / Supplier</label>
                     <input type="text" id="vendor-name" placeholder="e.g. Summit Racing, SendCutSend">
@@ -655,7 +664,11 @@
                     tracking: t.parts[0].tracking || '',
                     eta: t.parts[0].eta || '',
                     state: t.parts[0].state,
-                    buyer: t.parts[0].buyer || null
+                    buyer: t.parts[0].buyer || null,
+                    flaggedAt: t.parts[0].flaggedAt || null,
+                    flagNote: t.parts[0].flagNote || '',
+                    flagDisposition: t.parts[0].flagDisposition || null,
+                    flagClearedAt: t.parts[0].flagClearedAt || null
                 } : null
             }));
             const open = tasks.filter(t => !t.done);
@@ -978,7 +991,7 @@ function toggleCocoMenu() {
                 let tasksHtml = car.tasks.map((task) => {
                     let partTagHtml = '';
                     if (task.partInfo) {
-                        partTagHtml = `<span class="part-tag" onclick="openPartModal('${task.id}')">📦 <b>${escapeHtml(task.partInfo.vendor || 'Part')}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})${task.partInfo.state === 'arrived' ? ' · Arrived' : ''}</span>`;
+                        partTagHtml = `<span class="part-tag" onclick="openPartModal('${task.id}')">📦 <b>${escapeHtml(task.partInfo.vendor || 'Part')}</b>: ${escapeHtml(task.partInfo.desc)} (ETA: ${task.partInfo.eta || 'TBD'})${task.partInfo.state === 'arrived' ? ' · Arrived' : ''}${(task.partInfo.flaggedAt && !task.partInfo.flagClearedAt) ? ' · ⚠ Possible duplicate' : ''}</span>`;
                     } else if (task.waiting) {
                         partTagHtml = `<span class="part-tag" onclick="openPartModal('${task.id}')" style="color: var(--warn);">+ Add Part / Vendor Tracking</span>`;
                     }
@@ -1159,7 +1172,28 @@ function toggleCocoMenu() {
                 document.getElementById('modal-part-id').value = '';
                 if (task) document.getElementById('part-desc').value = task.text;
             }
+            const flagBox = document.getElementById('part-flag');
+            if (task && task.partInfo && task.partInfo.flaggedAt && !task.partInfo.flagClearedAt) {
+                document.getElementById('part-flag-note').textContent = task.partInfo.flagNote || 'Possible duplicate purchase.';
+                document.getElementById('part-flag-msg').textContent = '';
+                flagBox.style.display = 'block';
+            } else {
+                flagBox.style.display = 'none';
+            }
             document.getElementById('part-modal').style.display = 'flex';
+        }
+
+        function clearPartFlag(disposition) {
+            const partId = document.getElementById('modal-part-id').value;
+            const msg = document.getElementById('part-flag-msg');
+            if (!partId) { msg.textContent = 'No part record to clear.'; return; }
+            msg.textContent = 'Saving...';
+            ooRpc('shop_part_flag_clear', {
+                p_actor_id: ooActor(), p_part_id: partId, p_disposition: disposition
+            }).then(function (res) {
+                if (res && res.ok) { closePartModal(); refreshBoard(); }
+                else { msg.textContent = 'That did not go through. Please try again.'; }
+            });
         }
 
         function closePartModal() {

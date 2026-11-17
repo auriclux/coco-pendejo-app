@@ -274,6 +274,15 @@ function questionCard(q) {
   card.appendChild(el("p", carLine, "car"));
   card.appendChild(el("p", waiting(q.created_at), "wait"));
   var pl = q.payload || {};
+  if (q.kind === "duplicate_flag") {
+    card.appendChild(el("p", "⚠ Possible duplicate purchase", "qtext"));
+    if (pl.text) card.appendChild(el("p", pl.text, "car"));
+    card.appendChild(el("p",
+      "Clear it on the board: open this car's part window and pick " +
+      "which purchase stands. This note clears itself when you do.",
+      "note"));
+    return card;
+  }
   var pid = pl.receiptId || pl.photoId || null;
   if ((q.kind === "receipt" || q.kind === "photo" ||
        q.kind === "worker_photo") && pid) {
