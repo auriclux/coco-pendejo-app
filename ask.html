@@ -216,6 +216,8 @@ function actorId() {
 
 var ACTOR = actorId();
 var DIRECTORY = null;
+var BOARD = null;
+var fillPartsFn = null;
 var KIND = "buy";
 
 function el(tag, text, cls) {
@@ -284,6 +286,9 @@ function buildForm() {
     });
   }
   custSel.addEventListener("change", fillCars);
+  carSel.addEventListener("change", function () {
+    if (fillPartsFn) fillPartsFn();
+  });
 
   card.appendChild(el("label", "Customer"));
   card.appendChild(custSel);
@@ -320,6 +325,38 @@ function buildForm() {
     "The customer pays the seller directly and has it shipped to the shop.",
     "note");
   linkWrap.appendChild(buyNote);
+  var partSel = el("select");
+  linkWrap.appendChild(el("label", "Part on the board (optional)"));
+  linkWrap.appendChild(partSel);
+  var partNote = el("p",
+    "Pick the part and the request carries its name on the record: " +
+    "sending marks it Asked, and a duplicate purchase gets flagged.",
+    "note");
+  linkWrap.appendChild(partNote);
+  var STATE_LABEL = {
+    needed: "Needed", asked: "Asked", ordered: "Ordered", arrived: "Arrived"
+  };
+  fillPartsFn = function () {
+    partSel.innerHTML = "";
+    var none = el("option", "No specific part");
+    none.value = "";
+    partSel.appendChild(none);
+    if (!BOARD || !BOARD.episodes || !carSel.value) return;
+    var ep = null;
+    BOARD.episodes.forEach(function (e) {
+      if (e.episodeId === carSel.value) ep = e;
+    });
+    if (!ep) return;
+    (ep.tasks || []).forEach(function (t) {
+      (t.parts || []).forEach(function (p) {
+        var label = (p.vendor ? p.vendor + ": " : "") + (p.name || "Part") +
+          " · " + t.title + " · " + (STATE_LABEL[p.state] || p.state);
+        var o = el("option", label);
+        o.value = p.id;
+        partSel.appendChild(o);
+      });
+    });
+  };
   card.appendChild(linkWrap);
 
   var msgLabel = el("label", "Comment (optional)");
@@ -380,6 +417,7 @@ function buildForm() {
       }
       payload.link = link;
       if (text) payload.text = text;
+      if (partSel.value) payload.partId = partSel.value;
     } else {
       if (!text) {
         note.textContent = "Write or speak the message first.";
@@ -407,6 +445,12 @@ function buildForm() {
         ta.value = "";
         note.textContent = "";
         loadOpen();
+        rpc("shop_board_open", { p_actor_id: ACTOR }).then(function (b) {
+          if (b && b.episodes) {
+            BOARD = b;
+            if (fillPartsFn) fillPartsFn();
+          }
+        });
       } else {
         note.textContent = "That did not go through. Please try again.";
       }
@@ -482,6 +526,12 @@ function load() {
     DIRECTORY = data;
     buildForm();
     renderOpen();
+    rpc("shop_board_open", { p_actor_id: ACTOR }).then(function (b) {
+      if (b && b.episodes) {
+        BOARD = b;
+        if (fillPartsFn) fillPartsFn();
+      }
+    });
   });
 }
 
