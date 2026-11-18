@@ -217,6 +217,9 @@
   .money-msg.ok { color: var(--accent); }
   .money-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
   .money-row .grow { flex: 1; min-width: 140px; }
+  .show-pass { display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-weight: 400; color: var(--subtext); font-size: 14px; cursor: pointer; }
+  .show-pass input { width: 18px; height: 18px; }
   .transfer-box { word-break: break-all; background: var(--surface2); border: 1px dashed var(--line2);
     border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; margin-top: 10px; }
 </style>
@@ -244,6 +247,7 @@
     <input type="password" id="setup-pass1" autocomplete="new-password">
     <label for="setup-pass2">Passphrase again</label>
     <input type="password" id="setup-pass2" autocomplete="new-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="setup-pass1,setup-pass2"> Show what I typed</label>
     <button class="money-btn" id="setup-go">Create the money key</button>
     <div class="money-msg" id="setup-msg"></div>
     <p style="margin-top:18px">Restoring instead? <a href="#" id="setup-restore-link">Use a backup file</a>.</p>
@@ -255,6 +259,7 @@
     this phone remembers it after that.</p>
     <label for="unlock-pass">Passphrase</label>
     <input type="password" id="unlock-pass" autocomplete="current-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="unlock-pass"> Show what I typed</label>
     <button class="money-btn" id="unlock-go">Unlock</button>
     <div class="money-msg" id="unlock-msg"></div>
     <p style="margin-top:18px">New phone? <a href="#" id="unlock-restore-link">Restore from a backup file</a>.</p>
@@ -273,6 +278,7 @@
     <input type="password" id="imp-pass1" autocomplete="new-password">
     <label for="imp-pass2">Your passphrase again</label>
     <input type="password" id="imp-pass2" autocomplete="new-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="imp-pass1,imp-pass2"> Show what I typed</label>
     <button class="money-btn" id="imp-go">Make me a holder</button>
     <div class="money-msg" id="imp-msg"></div>
   </div>
@@ -298,7 +304,8 @@
       <input type="password" id="chg-pass1" autocomplete="new-password">
       <label for="chg-pass2">New passphrase again</label>
       <input type="password" id="chg-pass2" autocomplete="new-password">
-      <button class="money-btn secondary" id="chg-go">Change passphrase</button>
+      <label class="show-pass"><input type="checkbox" data-showpass="chg-pass1,chg-pass2"> Show what I typed</label>
+    <button class="money-btn secondary" id="chg-go">Change passphrase</button>
       <div class="money-msg" id="chg-msg"></div>
     </div>
 
@@ -719,6 +726,16 @@ document.getElementById("restore-file").addEventListener("change", function () {
     msg(msgId, "That file and passphrase do not open. Check both.");
   });
   this.value = "";
+});
+
+/* ---------- show-what-I-typed toggles ---------- */
+document.querySelectorAll("[data-showpass]").forEach(function (box) {
+  box.addEventListener("change", function () {
+    box.getAttribute("data-showpass").split(",").forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.type = box.checked ? "text" : "password";
+    });
+  });
 });
 
 load();
