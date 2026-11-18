@@ -1,6 +1,6 @@
 {
   "name": "Double-O Garage",
-  "short_name": "Coco",
+  "short_name": "Double-O Garage",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#121212",
