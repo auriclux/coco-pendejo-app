@@ -235,6 +235,7 @@
   .inv-table td { border-bottom: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
   .inv-amt { text-align: right; white-space: nowrap; }
   .inv-tot { margin-top: 10px; text-align: right; line-height: 1.6; }
+  .inv-sec td { font-weight: bold; padding-top: 10px; }
   .money-card select { width: 100%; box-sizing: border-box; padding: 10px;
     border: 1px solid var(--line2); border-radius: 8px; background: var(--surface2);
     color: var(--text); font-size: 16px; }
@@ -1113,7 +1114,11 @@ function renderSettle() {
 /* ---------- the add-entry form ---------- */
 function syncFormEpisodes() {
   var cid = document.getElementById("f-customer").value;
-  fillEpisodeSelect(document.getElementById("f-episode"), cid, true);
+  var sel = document.getElementById("f-episode");
+  var prev = sel.value;
+  fillEpisodeSelect(sel, cid, true);
+  if (prev && Array.prototype.some.call(sel.options,
+      function (o) { return o.value === prev; })) sel.value = prev;
   onEpisodeChange();
   renderSettle();
 }
@@ -1200,10 +1205,6 @@ document.getElementById("l-kind").addEventListener("change", renderLedger);
 ["f-hours-rec", "f-hours-bill", "f-rate", "f-disc"].forEach(function (id) {
   document.getElementById(id).addEventListener("input", laborPreview);
 });
-document.getElementById("f-cost").addEventListener("input", function () {
-  var b = document.getElementById("f-billed");
-  if (!b.value) b.value = this.value;
-});
 
 document.getElementById("f-go").addEventListener("click", function () {
   var cid = document.getElementById("f-customer").value;
@@ -1257,8 +1258,9 @@ document.getElementById("f-go").addEventListener("click", function () {
     var prov = document.getElementById("f-provider").value.trim();
     var cost = parseDollars(document.getElementById("f-cost").value);
     var billed = parseDollars(document.getElementById("f-billed").value);
-    if (!prov || cost == null || billed == null) {
-      msg("f-msg", "Service needs the provider, the cost, and the billed amount.");
+    if (billed == null) billed = cost;
+    if (!prov || cost == null) {
+      msg("f-msg", "Service needs the provider and the cost. Billed defaults to the cost.");
       return;
     }
     addEntry("service", ep, cid, null,
@@ -1320,31 +1322,66 @@ function renderInvoice(episodeId) {
   var sheet = document.getElementById("inv-sheet");
   var rows = LED.entries.filter(function (e) {
     return e.episodeId === episodeId && !e.voidedAt; });
-  if (!rows.length) { sheet.innerHTML = "<p>No entries on that job yet.</p>"; return; }
-  var first = rows[0];
-  var charges = 0, paidIn = 0;
-  var lines = rows.map(function (en) {
+  var custId = null;
+  LED.entries.forEach(function (e) {
+    if (e.episodeId === episodeId) custId = e.customerId; });
+  if (!custId) (LED.customers || []).forEach(function (c) {
+    (c.episodes || []).forEach(function (ep) {
+      if (ep.id === episodeId) custId = c.id; }); });
+  var acct = custId ? LED.entries.filter(function (e) {
+    return e.customerId === custId && e.episodeId !== episodeId &&
+      !e.voidedAt; }) : [];
+  if (!rows.length && !acct.length) {
+    sheet.innerHTML = "<p>No entries on that job yet.</p>"; return; }
+  function lineFor(en, withJob) {
     var d = KIND_DIR[en.kind];
-    if (en.kind === "labor" || en.kind === "part" || en.kind === "service" ||
-        en.kind === "charge") charges += en.amount;
-    else if (en.kind === "discount") charges -= en.amount;
-    else paidIn += en.amount;
     return "<tr><td>" + esc((en.createdAt || "").slice(0, 10)) +
       "</td><td>" +
       esc(KIND_LABEL[en.kind] || en.kind) +
+      (withJob ? " · " + esc(en.episodeId ? (en.episodeTitle || "")
+        : "Account level") : "") +
       (en.partLabel ? " — " + esc(en.partLabel) : "") +
       (en.provider ? " — " + esc(en.provider) : "") +
       (en.memo ? " · " + esc(en.memo) : "") + "</td><td class='inv-amt'>" +
       (d < 0 ? "−" : "") + fmt$(en.amount).replace("-", "") + "</td></tr>";
-  }).join("");
-  sheet.innerHTML =
-    "<div class='inv-head'><b>Double-O Garage</b><br>" +
-    esc(first.customerName || "") + " · " + esc(first.carName || "") +
-    " — " + esc(first.episodeTitle || "") + "</div>" +
-    "<table class='inv-table'>" + lines + "</table>" +
+  }
+  var charges = 0, paidIn = 0;
+  rows.forEach(function (en) {
+    if (en.kind === "labor" || en.kind === "part" || en.kind === "service" ||
+        en.kind === "charge") charges += en.amount;
+    else if (en.kind === "discount") charges -= en.amount;
+    else paidIn += en.amount;
+  });
+  var head;
+  if (rows.length) {
+    var first = rows[0];
+    head = esc(first.customerName || "") + " · " + esc(first.carName || "") +
+      " — " + esc(first.episodeTitle || "");
+  } else {
+    var sel = document.getElementById("inv-episode");
+    head = esc(sel.options[sel.selectedIndex]
+      ? sel.options[sel.selectedIndex].textContent : "");
+  }
+  var html = "<div class='inv-head'><b>Double-O Garage</b><br>" + head +
+    "</div><table class='inv-table'>" +
+    "<tr class='inv-sec'><td colspan='3'>This job</td></tr>" +
+    (rows.length ? rows.map(function (en) { return lineFor(en, false); }).join("")
+      : "<tr><td colspan='3'>No charges on this job yet.</td></tr>") +
+    "</table>" +
     "<div class='inv-tot'>Charges: " + fmt$(charges) + "<br>" +
     "Paid in: " + fmt$(paidIn) + "<br><b>Balance: " +
     fmt$(charges - paidIn) + "</b></div>";
+  if (acct.length) {
+    var bal = balanceFor(custId);
+    var balText = bal > 0 ? fmt$(bal) + " owed"
+      : (bal < 0 ? fmt$(-bal) + " in the customer's favor" : "Settled");
+    html += "<table class='inv-table'>" +
+      "<tr class='inv-sec'><td colspan='3'>On your account</td></tr>" +
+      acct.map(function (en) { return lineFor(en, true); }).join("") +
+      "</table>" +
+      "<div class='inv-tot'><b>Account balance: " + balText + "</b></div>";
+  }
+  sheet.innerHTML = html;
 }
 document.getElementById("i-go").addEventListener("click", function () {
   renderInvoice(document.getElementById("i-episode").value);
