@@ -1142,9 +1142,16 @@ function loadPartOptions() {
   var sel = document.getElementById("f-part");
   sel.innerHTML = "";
   if (!ep) return;
-  rpc("shop_board_open", { p_actor_id: ACTOR, p_episode_id: ep })
+  rpc("shop_board_open", { p_actor_id: ACTOR })
     .then(function (b) {
-      ((b && b.parts) || []).forEach(function (p) {
+      var parts = [];
+      ((b && b.episodes) || []).forEach(function (e) {
+        if (e.episodeId !== ep) return;
+        (e.tasks || []).forEach(function (t) {
+          (t.parts || []).forEach(function (p) { parts.push(p); });
+        });
+      });
+      parts.forEach(function (p) {
         var o = document.createElement("option");
         o.value = p.id;
         o.textContent = p.name + (p.buyer === "customer"
