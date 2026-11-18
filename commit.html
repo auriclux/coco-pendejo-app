@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Double-O Garage">
 <title>Commit a Job</title>
 <script>
 (function () {
@@ -431,11 +438,6 @@ function buildForm() {
   addSpeak(stageWrap, condIn, note);
   card.appendChild(stageWrap);
 
-  card.appendChild(el("label", "Deposit in dollars (shop only, leave blank for none)"));
-  var depIn = el("input"); depIn.type = "text";
-  depIn.inputMode = "decimal";
-  card.appendChild(depIn);
-
   card.appendChild(el("label", "Opening headline (optional)"));
   var headIn = el("input"); headIn.type = "text";
   card.appendChild(headIn);
@@ -468,15 +470,6 @@ function buildForm() {
         return;
       }
       body.p_agreed_condition = condIn.value.trim();
-    }
-    var dep = depIn.value.replace(/[$,]/g, "").trim();
-    if (dep) {
-      var dollars = parseFloat(dep);
-      if (isNaN(dollars) || dollars < 0) {
-        note.textContent = "That deposit does not read as an amount.";
-        return;
-      }
-      body.p_deposit_amount_cents = Math.round(dollars * 100);
     }
     body.p_headline = headIn.value.trim() || null;
 

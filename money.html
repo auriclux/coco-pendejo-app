@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Money — Double-O Garage</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<meta name="theme-color" content="#121212">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Double-O Garage">
+<script>
+(function () {
+  try {
+    var s = localStorage.getItem('oo_skin');
+    if (!s) {
+      var d = new Date();
+      if (d.getMonth() === 11 && d.getDate() >= 23 && d.getDate() <= 26) s = 'navidad';
+    }
+    if (s) document.documentElement.setAttribute('data-skin', s);
+  } catch (e) {}
+})();
+</script>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card-bg: #ffffff;
+    --surface2: #efefec;
+    --text: #1a1a1a;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #8a6d1a;
+    --danger: #c1121f;
+    --subtext: #666666;
+    --archive-color: #0277bd;
+    --line: #999999;
+    --line2: #6f6f6f;
+    --track: #efefec;
+    --accent-ink: #000000;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(26, 26, 26, 0.55);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #4a4a4a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(0, 0, 0, 0.08);
+  }
+  :root[data-skin="taller"] {
+    --bg: #121212;
+    --card-bg: #1c1c1c;
+    --surface2: #262626;
+    --text: #ffffff;
+    --on-accent: #ffffff;
+    --accent: #00e676;
+    --brand: #1f7a3d;
+    --warn: #ff9100;
+    --danger: #ff1744;
+    --subtext: #aaaaaa;
+    --archive-color: #29b6f6;
+    --line: #333333;
+    --line2: #444444;
+    --track: #2a2a2a;
+    --accent-ink: #000000;
+    --archive-soft: rgba(41, 182, 246, 0.15);
+    --archive-line: rgba(41, 182, 246, 0.4);
+    --danger-soft: rgba(255, 23, 68, 0.12);
+    --danger-line: rgba(255, 23, 68, 0.3);
+    --danger-glow: rgba(229, 57, 53, 0.4);
+    --scrim: rgba(0, 0, 0, 0.85);
+    --shadow: rgba(0, 0, 0, 0.5);
+    --dim: #cccccc;
+    --ok-soft: rgba(0, 230, 118, 0.13);
+    --warn-soft: rgba(255, 145, 0, 0.13);
+    --warn-line: rgba(255, 145, 0, 0.5);
+    --card-shadow: rgba(0, 0, 0, 0.5);
+  }
+  :root[data-skin="papel"] {
+    --bg: #f3ecd9;
+    --card-bg: #fffdf4;
+    --surface2: #efe6cf;
+    --text: #2a2118;
+    --on-accent: #ffffff;
+    --accent: #1a7a34;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #6f6152;
+    --archive-color: #0277bd;
+    --line: #ddd0ae;
+    --line2: #cbbd97;
+    --track: #e7dcc0;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(42, 33, 24, 0.55);
+    --shadow: rgba(42, 33, 24, 0.25);
+    --dim: #57493a;
+    --ok-soft: #e6f4ea;
+    --warn-soft: #fdf3e0;
+    --warn-line: #c9a227;
+    --card-shadow: rgba(42, 33, 24, 0.10);
+  }
+  :root[data-skin="primer"] {
+    --bg: #d7dee4;
+    --card-bg: #eef2f5;
+    --surface2: #dde5eb;
+    --text: #1d2a33;
+    --on-accent: #ffffff;
+    --accent: #0e7a3d;
+    --brand: #1f7a3d;
+    --warn: #b25e00;
+    --danger: #c1121f;
+    --subtext: #54666f;
+    --archive-color: #0277bd;
+    --line: #b4c2cc;
+    --line2: #97a9b5;
+    --track: #c3d0d9;
+    --accent-ink: #ffffff;
+    --archive-soft: rgba(2, 119, 189, 0.12);
+    --archive-line: rgba(2, 119, 189, 0.45);
+    --danger-soft: rgba(193, 18, 31, 0.10);
+    --danger-line: rgba(193, 18, 31, 0.35);
+    --danger-glow: rgba(193, 18, 31, 0.35);
+    --scrim: rgba(29, 42, 51, 0.55);
+    --shadow: rgba(29, 42, 51, 0.25);
+    --dim: #3c4c56;
+    --ok-soft: #e2f2e6;
+    --warn-soft: #fdf0d5;
+    --warn-line: #b98a1c;
+    --card-shadow: rgba(29, 42, 51, 0.10);
+  }
+  :root[data-skin="navidad"] {
+    --bg: #12241a;
+    --card-bg: #1a3324;
+    --surface2: #234531;
+    --text: #f5eedd;
+    --on-accent: #ffffff;
+    --accent: #ffd54a;
+    --brand: #a31621;
+    --warn: #ffb74d;
+    --danger: #ff6f60;
+    --subtext: #b9c9a8;
+    --archive-color: #7fd4ff;
+    --line: #2c5238;
+    --line2: #3a6a49;
+    --track: #1f4230;
+    --accent-ink: #201600;
+    --archive-soft: rgba(127, 212, 255, 0.15);
+    --archive-line: rgba(127, 212, 255, 0.4);
+    --danger-soft: rgba(255, 111, 96, 0.14);
+    --danger-line: rgba(255, 111, 96, 0.4);
+    --danger-glow: rgba(255, 111, 96, 0.4);
+    --scrim: rgba(0, 0, 0, 0.8);
+    --shadow: rgba(0, 0, 0, 0.6);
+    --dim: #d8cfb8;
+    --ok-soft: rgba(255, 213, 74, 0.15);
+    --warn-soft: rgba(255, 183, 77, 0.15);
+    --warn-line: rgba(255, 183, 77, 0.55);
+    --card-shadow: rgba(0, 0, 0, 0.45);
+  }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 22px; margin: 8px 0 2px; }
+  .count { color: var(--subtext); font-size: 14px; margin: 0 0 14px; }
+  .card { background: var(--card-bg); border-radius: 14px; padding: 14px 16px; margin: 0 0 14px; box-shadow: 0 1px 3px var(--card-shadow); }
+  .who { font-size: 17px; font-weight: 700; margin: 0; }
+  .car { color: var(--dim); font-size: 14px; margin: 2px 0 0; }
+  .wait { color: var(--danger); font-size: 13px; font-weight: 700; margin: 6px 0 0; }
+  .qtext { font-size: 16px; margin: 10px 0 0; }
+  .reply textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; margin-top: 12px; }
+  .coco { background: var(--ok-soft); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-top: 12px; }
+  .coco .coco-head { font-weight: 700; margin: 0 0 4px; }
+  .coco .coco-draft { margin: 0 0 6px; }
+  .coco .coco-prov { color: var(--dim); font-size: 13px; margin: 0 0 4px; }
+  .coco button { margin: 6px 8px 0 0; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-accent); font-weight: 600; cursor: pointer; }
+  .coco button.alt { background: var(--card-bg); color: var(--brand); }
+  .coco button:disabled { opacity: 0.5; }
+  .coco button.picked { outline: 3px solid var(--brand); outline-offset: 1px; }
+  .coco .coco-hint { color: var(--dim); font-size: 14px; margin: 8px 0 0; }
+  .reply button { margin-top: 8px; font-size: 15px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--brand); background: var(--brand); color: var(--on-accent); font-weight: 600; cursor: pointer; }
+  .reply button:disabled { opacity: 0.5; }
+  .reply button.speak { background: var(--card-bg); color: var(--brand); margin-right: 8px; }
+  .reply button.handled { background: var(--card-bg); color: var(--dim); border-color: var(--line); margin-left: 8px; }
+  .receiptimg { max-width: 170px; border-radius: 8px; margin-top: 10px; cursor: pointer; }
+  .receiptimg.full { max-width: 100%; }
+  .movesel { font: inherit; font-size: 15px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; margin-top: 10px; max-width: 100%; box-sizing: border-box; }
+  .note { color: var(--subtext); font-size: 14px; margin: 8px 0 0; }
+  .banner { background: var(--ok-soft); border-radius: 10px; padding: 10px 12px; font-size: 15px; margin: 0 0 14px; display: none; }
+  .topbar { display: flex; justify-content: space-between; align-items: baseline; }
+  .refresh { font-size: 14px; color: var(--brand); background: none; border: none; cursor: pointer; font-weight: 600; padding: 0; }
+  .backline a { color: var(--brand); font-weight: 600; text-decoration: none; font-size: 15px; }
+
+  .money-wrap { max-width: 560px; margin: 0 auto; padding: 16px; }
+  .money-card { background: var(--card-bg); border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 14px 0; }
+  .money-card h2 { margin: 0 0 8px; font-size: 20px; }
+  .money-card p { color: var(--subtext); line-height: 1.45; }
+  .money-card label { display: block; margin: 12px 0 4px; font-weight: 600; }
+  .money-card input[type="password"], .money-card input[type="text"], .money-card textarea {
+    width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--line2);
+    border-radius: 8px; background: var(--surface2); color: var(--text); font-size: 16px; }
+  .money-btn { display: inline-block; margin-top: 14px; padding: 11px 18px; border: none; border-radius: 9px;
+    background: var(--brand); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .money-btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--line2); }
+  .money-msg { margin-top: 12px; min-height: 20px; font-weight: 600; }
+  .money-msg.err { color: var(--danger); }
+  .money-msg.ok { color: var(--accent); }
+  .money-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .money-row .grow { flex: 1; min-width: 140px; }
+  .show-pass { display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    font-weight: 400; color: var(--subtext); font-size: 14px; cursor: pointer; }
+  .show-pass input { width: 18px; height: 18px; }
+  .transfer-box { word-break: break-all; background: var(--surface2); border: 1px dashed var(--line2);
+    border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; margin-top: 10px; }
+
+  .acct-row { display: flex; justify-content: space-between; padding: 10px 6px;
+    border-bottom: 1px solid var(--line); cursor: pointer; }
+  .acct-row:hover { background: var(--surface2); }
+  .led-row { border-bottom: 1px solid var(--line); padding: 9px 2px; position: relative; }
+  .led-row.voided { opacity: .55; text-decoration: line-through; }
+  .led-sub { color: var(--subtext); font-size: 13px; margin-top: 2px; }
+  .led-amt { float: right; font-weight: 700; }
+  .led-void { margin-top: 6px; padding: 5px 10px; font-size: 13px; }
+  .inv-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .inv-table td { border-bottom: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+  .inv-amt { text-align: right; white-space: nowrap; }
+  .inv-tot { margin-top: 10px; text-align: right; line-height: 1.6; }
+  .inv-sec td { font-weight: bold; padding-top: 10px; }
+  .money-card select { width: 100%; box-sizing: border-box; padding: 10px;
+    border: 1px solid var(--line2); border-radius: 8px; background: var(--surface2);
+    color: var(--text); font-size: 16px; }
+  @media print {
+    body * { visibility: hidden; }
+    #inv-sheet, #inv-sheet * { visibility: visible; }
+    #inv-sheet { position: fixed; inset: 0; padding: 24px; background: #fff; color: #000; }
+  }
+</style>
+</head>
+<body>
+<div class="money-wrap">
+  <p><a href="index.html" id="backlink">&larr; Back to the board</a></p>
+  <h1>💰 Money</h1>
+
+  <div id="st-loading" class="money-card"><p>Opening the money desk…</p></div>
+
+  <div id="st-denied" class="money-card" hidden>
+    <h2>Not your desk</h2>
+    <p>The money pages belong to Omar and Tío Clave. This link cannot open them.</p>
+  </div>
+
+  <div id="st-setup" class="money-card" hidden>
+    <h2>Set up the money key</h2>
+    <p>Every amount in the shop's books is sealed with one key. The key itself is
+    wrapped by a passphrase only you know. The shop's record never sees the
+    passphrase or a single amount.</p>
+    <p>Pick the passphrase now. It can be changed any time, and changing it never
+    touches a single amount.</p>
+    <label for="setup-pass1">Passphrase</label>
+    <input type="password" id="setup-pass1" autocomplete="new-password">
+    <label for="setup-pass2">Passphrase again</label>
+    <input type="password" id="setup-pass2" autocomplete="new-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="setup-pass1,setup-pass2"> Show what I typed</label>
+    <button class="money-btn" id="setup-go">Create the money key</button>
+    <div class="money-msg" id="setup-msg"></div>
+    <p style="margin-top:18px">Restoring instead? <a href="#" id="setup-restore-link">Use a backup file</a>.</p>
+  </div>
+
+  <div id="st-unlock" class="money-card" hidden>
+    <h2>Unlock the money</h2>
+    <p>This phone has not remembered the key yet. Enter the passphrase once and
+    this phone remembers it after that.</p>
+    <label for="unlock-pass">Passphrase</label>
+    <input type="password" id="unlock-pass" autocomplete="current-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="unlock-pass"> Show what I typed</label>
+    <button class="money-btn" id="unlock-go">Unlock</button>
+    <div class="money-msg" id="unlock-msg"></div>
+    <p style="margin-top:18px">New phone? <a href="#" id="unlock-restore-link">Restore from a backup file</a>.</p>
+  </div>
+
+  <div id="st-holder" class="money-card" hidden>
+    <h2>You are not a key holder yet</h2>
+    <p>The money key exists and <span id="holder-names"></span> can open it.
+    To open it as yourself, a holder makes a one-time transfer on their phone,
+    and you finish it here.</p>
+    <label for="imp-code">Transfer code (from the holder)</label>
+    <input type="text" id="imp-code" autocomplete="off">
+    <label for="imp-blob">Transfer text (paste the whole thing)</label>
+    <textarea id="imp-blob" rows="4"></textarea>
+    <label for="imp-pass1">Your own passphrase</label>
+    <input type="password" id="imp-pass1" autocomplete="new-password">
+    <label for="imp-pass2">Your passphrase again</label>
+    <input type="password" id="imp-pass2" autocomplete="new-password">
+    <label class="show-pass"><input type="checkbox" data-showpass="imp-pass1,imp-pass2"> Show what I typed</label>
+    <button class="money-btn" id="imp-go">Make me a holder</button>
+    <div class="money-msg" id="imp-msg"></div>
+  </div>
+
+  <div id="st-open" hidden>
+    <div class="money-card">
+      <h2>The desk is open</h2>
+      <p>Key holders: <b id="open-holders"></b>. Amounts unseal on this phone only.</p>
+      <div class="money-row">
+        <div class="grow">
+          <label for="rate-in">Shop rate, dollars per hour</label>
+          <input type="text" id="rate-in" inputmode="decimal" placeholder="Not set">
+        </div>
+        <button class="money-btn secondary" id="rate-go">Save rate</button>
+      </div>
+      <div class="money-msg" id="rate-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Accounts</h2>
+      <p>What each customer owes, across all their jobs. Tap a name to work
+      on that account. Only amounts you unseal here, on this phone, are
+      counted.</p>
+      <div id="acct-list"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Add an entry</h2>
+      <label for="f-customer">Customer</label>
+      <select id="f-customer"></select>
+      <label for="f-episode">Job</label>
+      <select id="f-episode"></select>
+      <label for="f-kind">Kind</label>
+      <select id="f-kind">
+        <option value="deposit">Deposit</option>
+        <option value="labor">Labor</option>
+        <option value="part">Part charge</option>
+        <option value="service">Outside service</option>
+        <option value="charge">Other charge</option>
+        <option value="payment">Payment</option>
+      </select>
+
+      <div class="subform" id="sub-simple">
+        <label for="f-amount">Amount, dollars</label>
+        <input type="text" id="f-amount" inputmode="decimal">
+      </div>
+
+      <div class="subform" id="sub-labor" hidden>
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-hours-rec">Hours recorded</label>
+            <input type="text" id="f-hours-rec" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-hours-bill">Hours billed</label>
+            <input type="text" id="f-hours-bill" inputmode="decimal">
+          </div>
+        </div>
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-rate">Rate, dollars per hour</label>
+            <input type="text" id="f-rate" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-disc">Discount, percent off</label>
+            <input type="text" id="f-disc" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <p id="labor-preview" style="color:var(--text); font-weight:600"></p>
+      </div>
+
+      <div class="subform" id="sub-part" hidden>
+        <label for="f-part">Part on this job's board</label>
+        <select id="f-part"></select>
+        <label for="f-part-amount">Amount, dollars</label>
+        <input type="text" id="f-part-amount" inputmode="decimal">
+      </div>
+
+      <div class="subform" id="sub-service" hidden>
+        <label for="f-provider">Provider (who did the work)</label>
+        <input type="text" id="f-provider">
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-cost">What it cost the shop</label>
+            <input type="text" id="f-cost" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-billed">What the customer is billed</label>
+            <input type="text" id="f-billed" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <label for="f-memo">Memo (sealed with the amount)</label>
+      <input type="text" id="f-memo">
+      <button class="money-btn" id="f-go">Add entry</button>
+      <div class="money-msg" id="f-msg"></div>
+    </div>
+
+    <div class="money-card" id="settle-card" hidden>
+      <h2>Settle <span id="settle-name"></span></h2>
+      <p id="settle-balance"></p>
+      <label for="s-paid">Amount actually paid, dollars</label>
+      <input type="text" id="s-paid" inputmode="decimal">
+      <button class="money-btn" id="s-go">Settle the account</button>
+      <div class="money-msg" id="s-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>The books</h2>
+      <div class="money-row">
+        <div class="grow">
+          <label for="l-customer">Customer</label>
+          <select id="l-customer"></select>
+        </div>
+        <div class="grow">
+          <label for="l-kind">Kind</label>
+          <select id="l-kind">
+            <option value="">All kinds</option>
+            <option value="deposit">Deposit</option>
+            <option value="labor">Labor</option>
+            <option value="part">Part</option>
+            <option value="service">Service</option>
+            <option value="charge">Charge</option>
+            <option value="discount">Discount</option>
+            <option value="payment">Payment</option>
+            <option value="write_off">Write-off</option>
+            <option value="overage">Overage</option>
+          </select>
+        </div>
+      </div>
+      <div id="ledger-list" style="margin-top:12px"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Invoice for a job</h2>
+      <label for="i-episode">Job</label>
+      <select id="i-episode"></select>
+      <button class="money-btn secondary" id="i-go">Show invoice</button>
+      <button class="money-btn secondary" id="i-print">Print</button>
+      <div id="inv-sheet" style="margin-top:14px"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Change your passphrase</h2>
+      <p>Re-wraps your copy of the key. Amounts and other holders are untouched.</p>
+      <label for="chg-pass1">New passphrase</label>
+      <input type="password" id="chg-pass1" autocomplete="new-password">
+      <label for="chg-pass2">New passphrase again</label>
+      <input type="password" id="chg-pass2" autocomplete="new-password">
+      <label class="show-pass"><input type="checkbox" data-showpass="chg-pass1,chg-pass2"> Show what I typed</label>
+    <button class="money-btn secondary" id="chg-go">Change passphrase</button>
+      <div class="money-msg" id="chg-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Add a holder</h2>
+      <p>Make a one-time transfer here, then the new holder pastes it on their own
+      phone with the code and picks their own passphrase. The code and the text
+      travel separately, the way the shop sends customer links.</p>
+      <button class="money-btn secondary" id="exp-go">Make a transfer</button>
+      <div id="exp-out" hidden>
+        <p>Code: <b id="exp-code" style="font-size:20px; letter-spacing:2px"></b></p>
+        <div class="transfer-box" id="exp-blob"></div>
+      </div>
+      <div class="money-msg" id="exp-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Backup and this phone</h2>
+      <p>The backup file is your wrapped key, sealed by your passphrase. Keep it on
+      the flash drive. Without a holder's passphrase or a backup, the amounts
+      cannot be read back, by design.</p>
+      <button class="money-btn secondary" id="bak-go">Download backup file</button>
+      <button class="money-btn secondary" id="lock-go">Lock now</button>
+      <button class="money-btn secondary" id="forget-go">Forget this phone</button>
+      <div class="money-msg" id="bak-msg"></div>
+    </div>
+  </div>
+
+  <input type="file" id="restore-file" accept=".json,application/json" hidden>
+</div>
+<script>
+var SUPABASE_URL = "https://lnyfpelahepvwlfwppgj.supabase.co";
+var PUBLISHABLE_KEY = "sb_publishable_yEcdzGdtwcZr4XJm5qSdrw_XDgtezjP";
+var KDF_ITERATIONS = 250000;
+
+function actorId() {
+  var fromUrl = new URLSearchParams(location.search).get("a");
+  if (fromUrl) {
+    try { localStorage.setItem("oo_actor", fromUrl); } catch (e) {}
+    return fromUrl;
+  }
+  try { return localStorage.getItem("oo_actor"); } catch (e) { return null; }
+}
+var ACTOR = actorId();
+if (ACTOR) {
+  var bl = document.getElementById("backlink");
+  if (bl) bl.href = "index.html?a=" + ACTOR;
+}
+
+function rpc(name, body) {
+  return fetch(SUPABASE_URL + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      "apikey": PUBLISHABLE_KEY,
+      "Authorization": "Bearer " + PUBLISHABLE_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  }).then(function (r) { return r.json().catch(function () { return null; }); })
+    .catch(function () { return null; });
+}
+
+/* ---------- byte + base64 helpers ---------- */
+function b64(bytes) {
+  var s = "";
+  for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function ub64(str) {
+  var s = atob(str), out = new Uint8Array(s.length);
+  for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+  return out;
+}
+function randBytes(n) {
+  var a = new Uint8Array(n);
+  crypto.getRandomValues(a);
+  return a;
+}
+
+/* ---------- crypto: envelope, battery-compatible layout ----------
+   wrap = base64( iv(12) || AES-256-GCM(kek, raw key) )
+   kek  = PBKDF2-SHA256(passphrase, salt, iterations)            */
+function deriveKek(passphrase, saltBytes, iterations) {
+  return crypto.subtle.importKey("raw", new TextEncoder().encode(passphrase),
+    "PBKDF2", false, ["deriveKey"]).then(function (base) {
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: saltBytes, iterations: iterations, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  });
+}
+function wrapRaw(rawKey, kek) {
+  var iv = randBytes(12);
+  return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, kek, rawKey)
+    .then(function (ct) {
+      var out = new Uint8Array(12 + ct.byteLength);
+      out.set(iv, 0); out.set(new Uint8Array(ct), 12);
+      return b64(out);
+    });
+}
+function unwrapRaw(wrappedB64, kek) {
+  var raw = ub64(wrappedB64);
+  return crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, kek,
+    raw.slice(12)).then(function (pt) { return new Uint8Array(pt); });
+}
+function importRaw(rawKey) {
+  return crypto.subtle.importKey("raw", rawKey, { name: "AES-GCM", length: 256 },
+    true, ["encrypt", "decrypt"]);
+}
+function sealObj(rawKey, obj) {
+  return importRaw(rawKey).then(function (k) {
+    var iv = randBytes(12);
+    return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, k,
+      new TextEncoder().encode(JSON.stringify(obj))).then(function (ct) {
+      var out = new Uint8Array(12 + ct.byteLength);
+      out.set(iv, 0); out.set(new Uint8Array(ct), 12);
+      return b64(out);
+    });
+  });
+}
+function unsealObj(rawKey, blob) {
+  return importRaw(rawKey).then(function (k) {
+    var raw = ub64(blob);
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, k,
+      raw.slice(12)).then(function (pt) {
+      return JSON.parse(new TextDecoder().decode(pt));
+    });
+  });
+}
+
+/* ---------- device remembering: non-extractable device key in
+   IndexedDB wraps the money key into localStorage ---------- */
+function idb() {
+  return new Promise(function (res, rej) {
+    var rq = indexedDB.open("oo-money", 1);
+    rq.onupgradeneeded = function () { rq.result.createObjectStore("keys"); };
+    rq.onsuccess = function () { res(rq.result); };
+    rq.onerror = function () { rej(rq.error); };
+  });
+}
+function idbGet(key) {
+  return idb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var rq = db.transaction("keys").objectStore("keys").get(key);
+      rq.onsuccess = function () { res(rq.result || null); };
+      rq.onerror = function () { rej(rq.error); };
+    });
+  });
+}
+function idbSet(key, val) {
+  return idb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var rq = db.transaction("keys", "readwrite").objectStore("keys").put(val, key);
+      rq.onsuccess = function () { res(); };
+      rq.onerror = function () { rej(rq.error); };
+    });
+  });
+}
+function idbDel(key) {
+  return idb().then(function (db) {
+    return new Promise(function (res, rej) {
+      var rq = db.transaction("keys", "readwrite").objectStore("keys").delete(key);
+      rq.onsuccess = function () { res(); };
+      rq.onerror = function () { rej(rq.error); };
+    });
+  });
+}
+function deviceKey() {
+  return idbGet("device").then(function (k) {
+    if (k) return k;
+    return crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false,
+      ["encrypt", "decrypt"]).then(function (nk) {
+      return idbSet("device", nk).then(function () { return nk; });
+    });
+  });
+}
+function rememberDevice(rawKey) {
+  return deviceKey().then(function (dk) {
+    var iv = randBytes(12);
+    return crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, dk, rawKey)
+      .then(function (ct) {
+        var out = new Uint8Array(12 + ct.byteLength);
+        out.set(iv, 0); out.set(new Uint8Array(ct), 12);
+        try { localStorage.setItem("oo_money_device_wrap", b64(out)); } catch (e) {}
+      });
+  });
+}
+function recallDevice() {
+  var stored = null;
+  try { stored = localStorage.getItem("oo_money_device_wrap"); } catch (e) {}
+  if (!stored) return Promise.resolve(null);
+  return idbGet("device").then(function (dk) {
+    if (!dk) return null;
+    var raw = ub64(stored);
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.slice(0, 12) }, dk,
+      raw.slice(12)).then(function (pt) { return new Uint8Array(pt); })
+      .catch(function () { return null; });
+  }).catch(function () { return null; });
+}
+function forgetDevice() {
+  try { localStorage.removeItem("oo_money_device_wrap"); } catch (e) {}
+  return idbDel("device").catch(function () {});
+}
+
+/* ---------- page state ---------- */
+var MONEY_KEY = null;      // raw bytes while unlocked
+var KEY_GET = null;        // last money_key_get result
+var RESTORE_FOR = null;    // 'setup' | 'unlock'
+
+function show(id) {
+  ["st-loading", "st-denied", "st-setup", "st-unlock", "st-holder", "st-open"]
+    .forEach(function (s) {
+      document.getElementById(s).hidden = (s !== id);
+    });
+}
+function msg(id, text, ok) {
+  var el = document.getElementById(id);
+  el.textContent = text;
+  el.className = "money-msg " + (ok ? "ok" : "err");
+}
+function putWrap(passphrase, rawKey) {
+  var salt = randBytes(16);
+  return deriveKek(passphrase, salt, KDF_ITERATIONS).then(function (kek) {
+    return wrapRaw(rawKey, kek).then(function (wrapped) {
+      return rpc("money_key_put", {
+        p_actor_id: ACTOR, p_wrapped_key: wrapped, p_kdf_salt: b64(salt),
+        p_kdf_params: { kdf: "PBKDF2-SHA256", iterations: KDF_ITERATIONS }
+      });
+    });
+  });
+}
+function openDesk() {
+  return rpc("money_key_get", { p_actor_id: ACTOR }).then(function (g) {
+    KEY_GET = g;
+    loadLedger();
+    document.getElementById("open-holders").textContent =
+      (g.holders || []).join(", ") || "just you";
+    show("st-open");
+    if (g.shopRateSealed) {
+      return unsealObj(MONEY_KEY, g.shopRateSealed).then(function (r) {
+        document.getElementById("rate-in").value =
+          (r.rate_cents / 100).toFixed(2);
+      }).catch(function () {});
+    }
+  });
+}
+function becomeUnlocked(rawKey) {
+  MONEY_KEY = rawKey;
+  return rememberDevice(rawKey).then(openDesk);
+}
+
+/* ---------- load ---------- */
+function load() {
+  if (!ACTOR) { show("st-denied"); return; }
+  rpc("money_key_get", { p_actor_id: ACTOR }).then(function (g) {
+    if (!g) { show("st-denied"); return; }
+    KEY_GET = g;
+    recallDevice().then(function (rawKey) {
+      if (rawKey) { MONEY_KEY = rawKey; openDesk(); return; }
+      if (g.mine) { show("st-unlock"); return; }
+      if ((g.holders || []).length === 0) { show("st-setup"); return; }
+      document.getElementById("holder-names").textContent =
+        g.holders.join(", ");
+      show("st-holder");
+    });
+  });
+}
+
+/* ---------- ceremony ---------- */
+document.getElementById("setup-go").addEventListener("click", function () {
+  var p1 = document.getElementById("setup-pass1").value;
+  var p2 = document.getElementById("setup-pass2").value;
+  if (!p1 || p1 !== p2) { msg("setup-msg", "The two passphrases do not match."); return; }
+  msg("setup-msg", "Making the key…", true);
+  var rawKey = randBytes(32);
+  putWrap(p1, rawKey).then(function (r) {
+    if (r && r.ok) { becomeUnlocked(rawKey); }
+    else msg("setup-msg", "The record refused. Try again.");
+  });
+});
+
+/* ---------- unlock ---------- */
+function tryUnlock(passphrase, mine, msgId) {
+  var iters = (mine.kdfParams && mine.kdfParams.iterations) || KDF_ITERATIONS;
+  return deriveKek(passphrase, ub64(mine.kdfSalt), iters).then(function (kek) {
+    return unwrapRaw(mine.wrappedKey, kek);
+  });
+}
+document.getElementById("unlock-go").addEventListener("click", function () {
+  var p = document.getElementById("unlock-pass").value;
+  if (!p) { msg("unlock-msg", "Enter the passphrase."); return; }
+  msg("unlock-msg", "Unlocking…", true);
+  tryUnlock(p, KEY_GET.mine, "unlock-msg").then(function (rawKey) {
+    becomeUnlocked(rawKey);
+  }).catch(function () {
+    msg("unlock-msg", "That passphrase does not open it. Try again.");
+  });
+});
+
+/* ---------- transfer import (become a holder) ---------- */
+document.getElementById("imp-go").addEventListener("click", function () {
+  var code = document.getElementById("imp-code").value.trim();
+  var blob = document.getElementById("imp-blob").value.trim();
+  var p1 = document.getElementById("imp-pass1").value;
+  var p2 = document.getElementById("imp-pass2").value;
+  if (!code || !blob) { msg("imp-msg", "Paste the code and the transfer text."); return; }
+  if (!p1 || p1 !== p2) { msg("imp-msg", "Your two passphrases do not match."); return; }
+  msg("imp-msg", "Opening the transfer…", true);
+  var parts = blob.split(".");
+  deriveKek(code, ub64(parts[0]), KDF_ITERATIONS).then(function (kek) {
+    return unwrapRaw(parts[1], kek);
+  }).then(function (rawKey) {
+    return putWrap(p1, rawKey).then(function (r) {
+      if (r && r.ok) becomeUnlocked(rawKey);
+      else msg("imp-msg", "The record refused. Try again.");
+    });
+  }).catch(function () {
+    msg("imp-msg", "That code does not open this transfer. Check both and try again.");
+  });
+});
+
+/* ---------- open-desk actions ---------- */
+document.getElementById("rate-go").addEventListener("click", function () {
+  var v = parseFloat(document.getElementById("rate-in").value);
+  if (isNaN(v) || v < 0) { msg("rate-msg", "Enter the rate as dollars, like 125 or 87.50."); return; }
+  sealObj(MONEY_KEY, { rate_cents: Math.round(v * 100) }).then(function (sealed) {
+    return rpc("money_rate_set", { p_actor_id: ACTOR, p_rate_sealed: sealed });
+  }).then(function (r) {
+    if (r && r.ok) msg("rate-msg", "Rate saved, sealed.", true);
+    else msg("rate-msg", "The record refused. Try again.");
+  });
+});
+
+document.getElementById("chg-go").addEventListener("click", function () {
+  var p1 = document.getElementById("chg-pass1").value;
+  var p2 = document.getElementById("chg-pass2").value;
+  if (!p1 || p1 !== p2) { msg("chg-msg", "The two passphrases do not match."); return; }
+  putWrap(p1, MONEY_KEY).then(function (r) {
+    if (r && r.ok) {
+      msg("chg-msg", "Passphrase changed. Your old one no longer opens your copy.", true);
+      document.getElementById("chg-pass1").value = "";
+      document.getElementById("chg-pass2").value = "";
+    } else msg("chg-msg", "The record refused. Try again.");
+  });
+});
+
+document.getElementById("exp-go").addEventListener("click", function () {
+  var code = "";
+  var chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  var rb = randBytes(8);
+  for (var i = 0; i < 8; i++) code += chars[rb[i] % chars.length];
+  var salt = randBytes(16);
+  deriveKek(code, salt, KDF_ITERATIONS).then(function (kek) {
+    return wrapRaw(MONEY_KEY, kek);
+  }).then(function (wrapped) {
+    document.getElementById("exp-code").textContent = code;
+    document.getElementById("exp-blob").textContent = b64(salt) + "." + wrapped;
+    document.getElementById("exp-out").hidden = false;
+    msg("exp-msg", "Give the holder the code and the text, separately.", true);
+  });
+});
+
+document.getElementById("bak-go").addEventListener("click", function () {
+  rpc("money_key_get", { p_actor_id: ACTOR }).then(function (g) {
+    if (!g || !g.mine) { msg("bak-msg", "No wrapped key found for you."); return; }
+    var file = {
+      app: "double-o-garage-money-backup", version: 1,
+      wrappedKey: g.mine.wrappedKey, kdfSalt: g.mine.kdfSalt,
+      kdfParams: g.mine.kdfParams
+    };
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)],
+      { type: "application/json" }));
+    a.download = "double-o-money-backup.json";
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    msg("bak-msg", "Backup downloaded. Put it on the flash drive.", true);
+  });
+});
+
+document.getElementById("lock-go").addEventListener("click", function () {
+  MONEY_KEY = null;
+  load();
+});
+document.getElementById("forget-go").addEventListener("click", function () {
+  forgetDevice().then(function () {
+    MONEY_KEY = null;
+    msg("bak-msg", "This phone no longer remembers the key.", true);
+    load();
+  });
+});
+
+/* ---------- restore from backup ---------- */
+function bindRestore(linkId, which) {
+  document.getElementById(linkId).addEventListener("click", function (ev) {
+    ev.preventDefault();
+    RESTORE_FOR = which;
+    document.getElementById("restore-file").click();
+  });
+}
+bindRestore("setup-restore-link", "setup");
+bindRestore("unlock-restore-link", "unlock");
+document.getElementById("restore-file").addEventListener("change", function () {
+  var f = this.files[0];
+  if (!f) return;
+  var msgId = RESTORE_FOR === "setup" ? "setup-msg" : "unlock-msg";
+  f.text().then(function (t) {
+    var file = JSON.parse(t);
+    var pass = prompt("Passphrase for this backup:");
+    if (!pass) return null;
+    var iters = (file.kdfParams && file.kdfParams.iterations) || KDF_ITERATIONS;
+    return deriveKek(pass, ub64(file.kdfSalt), iters).then(function (kek) {
+      return unwrapRaw(file.wrappedKey, kek);
+    }).then(function (rawKey) {
+      return putWrap(pass, rawKey).then(function () { return rawKey; });
+    });
+  }).then(function (rawKey) {
+    if (rawKey) becomeUnlocked(rawKey);
+  }).catch(function () {
+    msg(msgId, "That file and passphrase do not open. Check both.");
+  });
+  this.value = "";
+});
+
+/* ================= 38C: the ledger ================= */
+var KIND_LABEL = { deposit: "Deposit", labor: "Labor", part: "Part",
+  service: "Service", charge: "Charge", discount: "Discount",
+  payment: "Payment", write_off: "Write-off", overage: "Overage" };
+var KIND_DIR = { deposit: -1, labor: 1, part: 1, service: 1, charge: 1,
+  discount: -1, payment: -1, write_off: -1, overage: -1 };
+var LED = { entries: [], customers: [], hoursByEp: {}, selCustomer: null,
+  rateCents: null };
+
+function fmt$(cents) {
+  var neg = cents < 0;
+  var v = Math.abs(cents) / 100;
+  return (neg ? "-$" : "$") + v.toLocaleString("en-US",
+    { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function parseDollars(v) {
+  var n = parseFloat(String(v).replace(/[$,]/g, ""));
+  return isNaN(n) ? null : Math.round(n * 100);
+}
+function esc(t) {
+  return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+function episodesFor(customerId) {
+  var map = {}, out = [];
+  LED.customers.forEach(function (c) {
+    if (c.id !== customerId) return;
+    (c.episodes || []).forEach(function (e) {
+      if (!map[e.id]) { map[e.id] = 1; out.push({ id: e.id,
+        label: (e.car_name || "") + " — " + (e.job_title || "") }); }
+    });
+  });
+  LED.entries.forEach(function (en) {
+    if (en.customerId !== customerId || map[en.episodeId]) return;
+    map[en.episodeId] = 1;
+    out.push({ id: en.episodeId,
+      label: (en.carName || "") + " — " + (en.episodeTitle || "") });
+  });
+  return out;
+}
+function balanceFor(customerId, episodeId) {
+  var sum = 0;
+  LED.entries.forEach(function (en) {
+    if (en.voidedAt) return;
+    if (en.customerId !== customerId) return;
+    if (episodeId && en.episodeId !== episodeId) return;
+    sum += KIND_DIR[en.kind] * en.amount;
+  });
+  return sum;
+}
+function fillCustomerSelect(sel, includeAll) {
+  sel.innerHTML = "";
+  if (includeAll) {
+    var o = document.createElement("option");
+    o.value = ""; o.textContent = "All customers";
+    sel.appendChild(o);
+  }
+  LED.customers.forEach(function (c) {
+    var o = document.createElement("option");
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+function fillEpisodeSelect(sel, customerId, includeNone) {
+  sel.innerHTML = "";
+  if (includeNone) {
+    var n = document.createElement("option");
+    n.value = ""; n.textContent = "— Account level (no job) —";
+    sel.appendChild(n);
+  }
+  episodesFor(customerId).forEach(function (e) {
+    var o = document.createElement("option");
+    o.value = e.id; o.textContent = e.label;
+    sel.appendChild(o);
+  });
+}
+
+function loadLedger() {
+  return Promise.all([
+    rpc("shop_directory", { p_actor_id: ACTOR }),
+    rpc("money_entries_open", { p_actor_id: ACTOR }),
+    rpc("shop_hours_open", { p_actor_id: ACTOR,
+      p_from: "2020-01-01", p_to: "2030-01-01" })
+  ]).then(function (res) {
+    var dir = res[0], open = res[1], hours = res[2];
+    LED.customers = (dir && dir.customers) || [];
+    LED.hoursByEp = {};
+    ((hours && hours.hours) || []).forEach(function (h) {
+      if (!h.episodeId) return;
+      LED.hoursByEp[h.episodeId] =
+        (LED.hoursByEp[h.episodeId] || 0) + (parseFloat(h.hours) || 0);
+    });
+    var rows = (open && open.entries) || [];
+    return Promise.all(rows.map(function (r) {
+      return unsealObj(MONEY_KEY, r.sealed).then(function (o) {
+        r.amount = o.amount_cents; r.memo = o.memo || "";
+        r.cost = (o.cost_cents != null) ? o.cost_cents : null;
+      }).catch(function () { r.amount = null; r.memo = ""; r.cost = null; });
+    })).then(function () {
+      LED.entries = rows;
+      var g = KEY_GET;
+      if (g && g.shopRateSealed) {
+        return unsealObj(MONEY_KEY, g.shopRateSealed).then(function (r) {
+          LED.rateCents = r.rate_cents;
+          document.getElementById("f-rate").value = (r.rate_cents / 100).toFixed(2);
+        }).catch(function () {});
+      }
+    });
+  }).then(function () {
+    fillCustomerSelect(document.getElementById("f-customer"), false);
+    fillCustomerSelect(document.getElementById("l-customer"), true);
+    if (LED.selCustomer) {
+      document.getElementById("f-customer").value = LED.selCustomer;
+      document.getElementById("l-customer").value = LED.selCustomer;
+    }
+    var isel = document.getElementById("i-episode");
+    isel.innerHTML = "";
+    allEpisodeOptions().forEach(function (e) {
+      var o = document.createElement("option");
+      o.value = e.id; o.textContent = e.label;
+      isel.appendChild(o);
+    });
+    syncFormEpisodes();
+    renderAccounts();
+    renderLedger();
+    renderSettle();
+  }).catch(function () {});
+}
+
+function renderAccounts() {
+  var host = document.getElementById("acct-list");
+  host.innerHTML = "";
+  var any = false;
+  LED.customers.forEach(function (c) {
+    var bal = balanceFor(c.id);
+    var hasEntries = LED.entries.some(function (e) {
+      return e.customerId === c.id && !e.voidedAt; });
+    if (!hasEntries && bal === 0) return;
+    any = true;
+    var row = document.createElement("div");
+    row.className = "acct-row";
+    row.innerHTML = "<span>" + esc(c.name) + "</span><b>" +
+      (bal > 0 ? "owes " + fmt$(bal)
+        : bal < 0 ? "credit " + fmt$(-bal) : "settled") + "</b>";
+    row.addEventListener("click", function () {
+      LED.selCustomer = c.id;
+      document.getElementById("f-customer").value = c.id;
+      document.getElementById("l-customer").value = c.id;
+      syncFormEpisodes();
+      renderLedger();
+      renderSettle();
+      document.getElementById("settle-card").scrollIntoView(
+        { behavior: "smooth", block: "start" });
+    });
+    host.appendChild(row);
+  });
+  if (!any) host.innerHTML =
+    "<p>No accounts yet. The first entry opens one.</p>";
+}
+
+function renderLedger() {
+  var fc = document.getElementById("l-customer").value;
+  var fk = document.getElementById("l-kind").value;
+  var host = document.getElementById("ledger-list");
+  host.innerHTML = "";
+  var shown = 0, net = 0;
+  LED.entries.forEach(function (en) {
+    if (fc && en.customerId !== fc) return;
+    if (fk && en.kind !== fk) return;
+    shown++;
+    var row = document.createElement("div");
+    row.className = "led-row" + (en.voidedAt ? " voided" : "");
+    var amt = en.amount == null ? "(sealed)" :
+      (KIND_DIR[en.kind] < 0 ? "−" : "+") + fmt$(en.amount).replace("-", "");
+    if (!en.voidedAt && en.amount != null) net += KIND_DIR[en.kind] * en.amount;
+    var meta = "";
+    if (en.kind === "service" && en.cost != null)
+      meta = " · cost " + fmt$(en.cost);
+    if (en.provider) meta += " · " + esc(en.provider);
+    if (en.partLabel) meta += " · " + esc(en.partLabel);
+    row.innerHTML =
+      "<div><b>" + esc(KIND_LABEL[en.kind] || en.kind) + "</b> " +
+      "<span class='led-amt'>" + amt + "</span></div>" +
+      "<div class='led-sub'>" + esc(en.customerName || "") + " — " +
+      esc(en.episodeId ? (en.episodeTitle || "") : "Account level") +
+      " · " + esc((en.createdAt || "").slice(0, 10)) +
+      " · by " + esc(en.createdByName || "") + meta + "</div>" +
+      (en.memo ? "<div class='led-sub'>" + esc(en.memo) + "</div>" : "") +
+      (en.voidedAt ? "<div class='led-sub'>Voided: " +
+        esc(en.voidReason || "") + "</div>" : "");
+    if (!en.voidedAt) {
+      var vb = document.createElement("button");
+      vb.className = "money-btn secondary led-void";
+      vb.textContent = "Void";
+      vb.addEventListener("click", function () {
+        var reason = prompt("Why is this entry void? (kept on the record)");
+        if (reason == null) return;
+        rpc("money_entry_void", { p_actor_id: ACTOR, p_entry_id: en.id,
+          p_reason: reason }).then(function (r) {
+          if (r && r.ok) loadLedger();
+          else alert("The record refused the void.");
+        });
+      });
+      row.appendChild(vb);
+    }
+    host.appendChild(row);
+  });
+  var foot = document.createElement("p");
+  foot.style.fontWeight = "700";
+  foot.textContent = shown ? ("Net of what is showing: " +
+    (net >= 0 ? fmt$(net) + " owed to the shop"
+              : fmt$(-net) + " in customer credit"))
+    : "Nothing matches those filters.";
+  host.appendChild(foot);
+}
+
+function renderSettle() {
+  var card = document.getElementById("settle-card");
+  var cid = document.getElementById("f-customer").value;
+  var bal = cid ? balanceFor(cid) : 0;
+  if (!cid || bal === 0) { card.hidden = true; return; }
+  var cust = LED.customers.filter(function (c) { return c.id === cid; })[0];
+  document.getElementById("settle-name").textContent =
+    cust ? cust.name : "";
+  document.getElementById("settle-balance").textContent =
+    bal > 0 ? ("Balance owed: " + fmt$(bal) + ". Settling writes a payment " +
+      "for what was actually paid, plus a write-off or overage line for " +
+      "the difference, and brings the account to zero.")
+    : ("Balance: " + fmt$(-bal) + " in the customer's favor.");
+  document.getElementById("s-paid").value = bal > 0 ? (bal / 100).toFixed(2) : "";
+  document.getElementById("s-go").hidden = bal < 0;
+  card.hidden = false;
+}
+
+/* ---------- the add-entry form ---------- */
+function syncFormEpisodes() {
+  var cid = document.getElementById("f-customer").value;
+  var sel = document.getElementById("f-episode");
+  var prev = sel.value;
+  fillEpisodeSelect(sel, cid, true);
+  if (prev && Array.prototype.some.call(sel.options,
+      function (o) { return o.value === prev; })) sel.value = prev;
+  onEpisodeChange();
+  renderSettle();
+}
+function syncKind() {
+  var k = document.getElementById("f-kind").value;
+  document.getElementById("sub-simple").hidden =
+    !(k === "deposit" || k === "charge" || k === "payment");
+  document.getElementById("sub-labor").hidden = k !== "labor";
+  document.getElementById("sub-part").hidden = k !== "part";
+  document.getElementById("sub-service").hidden = k !== "service";
+  if (k === "part") loadPartOptions();
+  if (k === "labor") laborPreview();
+}
+function onEpisodeChange() {
+  var ep = document.getElementById("f-episode").value;
+  var rec = LED.hoursByEp[ep];
+  if (rec != null) {
+    document.getElementById("f-hours-rec").value = rec;
+    document.getElementById("f-hours-bill").value = rec;
+  }
+  if (document.getElementById("f-kind").value === "part") loadPartOptions();
+  laborPreview();
+}
+function loadPartOptions() {
+  var ep = document.getElementById("f-episode").value;
+  var sel = document.getElementById("f-part");
+  sel.innerHTML = "";
+  if (!ep) return;
+  rpc("shop_board_open", { p_actor_id: ACTOR })
+    .then(function (b) {
+      var parts = [];
+      ((b && b.episodes) || []).forEach(function (e) {
+        if (e.episodeId !== ep) return;
+        (e.tasks || []).forEach(function (t) {
+          (t.parts || []).forEach(function (p) { parts.push(p); });
+        });
+      });
+      parts.forEach(function (p) {
+        var o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.name + (p.buyer === "customer"
+          ? " — customer-supplied, never charged" : " — shop-bought");
+        o.disabled = p.buyer === "customer";
+        sel.appendChild(o);
+      });
+      if (!sel.options.length) {
+        var o2 = document.createElement("option");
+        o2.textContent = "No parts on this job's board";
+        sel.appendChild(o2);
+      }
+    });
+}
+function laborNumbers() {
+  var rec = parseFloat(document.getElementById("f-hours-rec").value) || 0;
+  var bill = parseFloat(document.getElementById("f-hours-bill").value) || 0;
+  var rate = parseDollars(document.getElementById("f-rate").value) || 0;
+  var disc = parseFloat(document.getElementById("f-disc").value) || 0;
+  var gross = Math.round(rec * rate);
+  var target = Math.round(bill * rate * (1 - disc / 100));
+  return { rec: rec, bill: bill, rate: rate, disc: disc,
+    gross: gross, target: target, cut: gross - target };
+}
+function laborPreview() {
+  var n = laborNumbers();
+  var el = document.getElementById("labor-preview");
+  if (!n.gross) { el.textContent = ""; return; }
+  el.textContent = "Labor " + fmt$(n.gross) +
+    (n.cut > 0 ? ", discount " + fmt$(n.cut) + ", billed " + fmt$(n.target)
+               : ", billed " + fmt$(n.target));
+}
+function addEntry(kind, episodeId, customerId, partId, sealedObj, provider) {
+  return sealObj(MONEY_KEY, sealedObj).then(function (sealed) {
+    return rpc("money_entry_add", { p_actor_id: ACTOR,
+      p_customer_id: customerId, p_episode_id: episodeId || null,
+      p_part_id: partId || null, p_kind: kind,
+      p_provider: provider || null, p_sealed: sealed });
+  });
+}
+document.getElementById("f-customer").addEventListener("change", syncFormEpisodes);
+document.getElementById("f-episode").addEventListener("change", onEpisodeChange);
+document.getElementById("f-kind").addEventListener("change", syncKind);
+document.getElementById("l-customer").addEventListener("change", renderLedger);
+document.getElementById("l-kind").addEventListener("change", renderLedger);
+["f-hours-rec", "f-hours-bill", "f-rate", "f-disc"].forEach(function (id) {
+  document.getElementById(id).addEventListener("input", laborPreview);
+});
+
+document.getElementById("f-go").addEventListener("click", function () {
+  var cid = document.getElementById("f-customer").value;
+  var ep = document.getElementById("f-episode").value;
+  var kind = document.getElementById("f-kind").value;
+  var memo = document.getElementById("f-memo").value.trim();
+  if (!cid) { msg("f-msg", "Pick the customer first."); return; }
+  if (!ep && (kind === "labor" || kind === "part")) {
+    msg("f-msg", "Labor and part charges need a job. Pick one above.");
+    return;
+  }
+  msg("f-msg", "Writing it, sealed…", true);
+  var done = function (r) {
+    if (r && r.ok) {
+      msg("f-msg", "In the books.", true);
+      document.getElementById("f-memo").value = "";
+      document.getElementById("f-amount").value = "";
+      loadLedger();
+    } else msg("f-msg", "The record refused. Check the fields and try again.");
+  };
+  if (kind === "labor") {
+    var n = laborNumbers();
+    if (!n.gross) { msg("f-msg", "Labor needs hours and a rate."); return; }
+    var story = n.rec + "h recorded, " + n.bill + "h billed at " +
+      fmt$(n.rate) + (n.disc ? ", " + n.disc + "% off" : "");
+    addEntry("labor", ep, cid, null,
+      { amount_cents: n.gross, memo: memo ? memo + " (" + story + ")" : story },
+      null).then(function (r) {
+      if (!(r && r.ok)) { done(r); return; }
+      if (n.cut > 0) {
+        var lever = (n.bill < n.rec && n.disc > 0) ? "hours and rate"
+          : (n.bill < n.rec ? "hours" : "rate");
+        addEntry("discount", ep, cid, null,
+          { amount_cents: n.cut, memo: "Labor discount (" + lever + ")" },
+          null).then(done);
+      } else done(r);
+    });
+    return;
+  }
+  if (kind === "part") {
+    var pid = document.getElementById("f-part").value;
+    var pamt = parseDollars(document.getElementById("f-part-amount").value);
+    if (!pid || pamt == null) { msg("f-msg", "Pick the part and its amount."); return; }
+    var pname = document.getElementById("f-part")
+      .options[document.getElementById("f-part").selectedIndex].textContent;
+    addEntry("part", ep, cid, pid,
+      { amount_cents: pamt, memo: memo || pname }, null).then(done);
+    return;
+  }
+  if (kind === "service") {
+    var prov = document.getElementById("f-provider").value.trim();
+    var cost = parseDollars(document.getElementById("f-cost").value);
+    var billed = parseDollars(document.getElementById("f-billed").value);
+    if (billed == null) billed = cost;
+    if (!prov || cost == null) {
+      msg("f-msg", "Service needs the provider and the cost. Billed defaults to the cost.");
+      return;
+    }
+    addEntry("service", ep, cid, null,
+      { amount_cents: billed, memo: memo, cost_cents: cost },
+      prov).then(done);
+    return;
+  }
+  var amt = parseDollars(document.getElementById("f-amount").value);
+  if (amt == null || amt < 0) { msg("f-msg", "Enter the amount as dollars."); return; }
+  addEntry(kind, ep, cid, null, { amount_cents: amt, memo: memo }, null).then(done);
+});
+
+document.getElementById("s-go").addEventListener("click", function () {
+  var cid = document.getElementById("f-customer").value;
+  var paid = parseDollars(document.getElementById("s-paid").value);
+  var bal = balanceFor(cid);
+  if (paid == null) { msg("s-msg", "Enter the amount paid."); return; }
+  msg("s-msg", "Settling…", true);
+  addEntry("payment", null, cid, null,
+    { amount_cents: paid, memo: "Settlement payment" },
+    null).then(function (r) {
+    if (!(r && r.ok)) { msg("s-msg", "The record refused the payment."); return; }
+    var diff = bal - paid;
+    if (diff === 0) { msg("s-msg", "Settled, to the penny.", true); loadLedger(); return; }
+    var kind = diff > 0 ? "write_off" : "overage";
+    addEntry(kind, null, cid, null,
+      { amount_cents: Math.abs(diff),
+        memo: diff > 0 ? "Settlement write-off" : "Settlement overage" },
+      null).then(function (r2) {
+      if (r2 && r2.ok) {
+        msg("s-msg", diff > 0
+          ? "Settled. The shortfall is on the record as a write-off."
+          : "Settled. The extra is on the record as an overage.", true);
+        loadLedger();
+      } else msg("s-msg", "Payment is in; the adjustment was refused.");
+    });
+  });
+});
+
+/* ---------- invoice ---------- */
+function allEpisodeOptions() {
+  var map = {}, out = [];
+  LED.customers.forEach(function (c) {
+    (c.episodes || []).forEach(function (e) {
+      if (!map[e.id]) { map[e.id] = 1; out.push({ id: e.id,
+        label: c.name + " · " + (e.car_name || "") + " — " +
+          (e.job_title || "") }); }
+    });
+  });
+  LED.entries.forEach(function (en) {
+    if (map[en.episodeId]) return;
+    map[en.episodeId] = 1;
+    out.push({ id: en.episodeId, label: (en.customerName || "") + " · " +
+      (en.carName || "") + " — " + (en.episodeTitle || "") });
+  });
+  return out;
+}
+function renderInvoice(episodeId) {
+  var sheet = document.getElementById("inv-sheet");
+  var rows = LED.entries.filter(function (e) {
+    return e.episodeId === episodeId && !e.voidedAt; });
+  var custId = null;
+  LED.entries.forEach(function (e) {
+    if (e.episodeId === episodeId) custId = e.customerId; });
+  if (!custId) (LED.customers || []).forEach(function (c) {
+    (c.episodes || []).forEach(function (ep) {
+      if (ep.id === episodeId) custId = c.id; }); });
+  var acct = custId ? LED.entries.filter(function (e) {
+    return e.customerId === custId && e.episodeId !== episodeId &&
+      !e.voidedAt; }) : [];
+  if (!rows.length && !acct.length) {
+    sheet.innerHTML = "<p>No entries on that job yet.</p>"; return; }
+  function lineFor(en, withJob) {
+    var d = KIND_DIR[en.kind];
+    return "<tr><td>" + esc((en.createdAt || "").slice(0, 10)) +
+      "</td><td>" +
+      esc(KIND_LABEL[en.kind] || en.kind) +
+      (withJob ? " · " + esc(en.episodeId ? (en.episodeTitle || "")
+        : "Account level") : "") +
+      (en.partLabel ? " — " + esc(en.partLabel) : "") +
+      (en.provider ? " — " + esc(en.provider) : "") +
+      (en.memo ? " · " + esc(en.memo) : "") + "</td><td class='inv-amt'>" +
+      (d < 0 ? "−" : "") + fmt$(en.amount).replace("-", "") + "</td></tr>";
+  }
+  var charges = 0, paidIn = 0;
+  rows.forEach(function (en) {
+    if (en.kind === "labor" || en.kind === "part" || en.kind === "service" ||
+        en.kind === "charge") charges += en.amount;
+    else if (en.kind === "discount") charges -= en.amount;
+    else paidIn += en.amount;
+  });
+  var head;
+  if (rows.length) {
+    var first = rows[0];
+    head = esc(first.customerName || "") + " · " + esc(first.carName || "") +
+      " — " + esc(first.episodeTitle || "");
+  } else {
+    var sel = document.getElementById("inv-episode");
+    head = esc(sel.options[sel.selectedIndex]
+      ? sel.options[sel.selectedIndex].textContent : "");
+  }
+  var html = "<div class='inv-head'><b>Double-O Garage</b><br>" + head +
+    "</div><table class='inv-table'>" +
+    "<tr class='inv-sec'><td colspan='3'>This job</td></tr>" +
+    (rows.length ? rows.map(function (en) { return lineFor(en, false); }).join("")
+      : "<tr><td colspan='3'>No charges on this job yet.</td></tr>") +
+    "</table>" +
+    "<div class='inv-tot'>Charges: " + fmt$(charges) + "<br>" +
+    "Paid in: " + fmt$(paidIn) + "<br><b>Balance: " +
+    fmt$(charges - paidIn) + "</b></div>";
+  if (acct.length) {
+    var bal = balanceFor(custId);
+    var balText = bal > 0 ? fmt$(bal) + " owed"
+      : (bal < 0 ? fmt$(-bal) + " in the customer's favor" : "Settled");
+    html += "<table class='inv-table'>" +
+      "<tr class='inv-sec'><td colspan='3'>On your account</td></tr>" +
+      acct.map(function (en) { return lineFor(en, true); }).join("") +
+      "</table>" +
+      "<div class='inv-tot'><b>Account balance: " + balText + "</b></div>";
+  }
+  sheet.innerHTML = html;
+}
+document.getElementById("i-go").addEventListener("click", function () {
+  renderInvoice(document.getElementById("i-episode").value);
+});
+document.getElementById("i-print").addEventListener("click", function () {
+  window.print();
+});
+
+/* ---------- show-what-I-typed toggles ---------- */
+document.querySelectorAll("[data-showpass]").forEach(function (box) {
+  box.addEventListener("change", function () {
+    box.getAttribute("data-showpass").split(",").forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.type = box.checked ? "text" : "password";
+    });
+  });
+});
+
+load();
+</script>
+</body>
+</html>

@@ -20,6 +20,12 @@
     
 </script>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <meta name="theme-color" content="#121212">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Double-O Garage">
     <style>
 :root {
     --bg: #121212;
@@ -481,6 +487,7 @@
         <a href="close.html"><img src="checkered-flag.png" alt="" class="menu-flag"> End a Job</a>
         <a href="dates.html">📅 Dates</a>
         <a href="worker.html">👷 Jobs &amp; Hours</a>
+        <a href="money.html">💰 Money</a>
         <a href="manual.html">📖 Manual</a>
         <a href="#" onclick="toggleArchiveView(); toggleMenu(); return false;">📁 View Archive</a>
         <a href="#" onclick="exportData(); toggleMenu(); return false;">💾 Backup Export (.json)</a>
@@ -714,7 +721,7 @@
         function keyLinks() {
             const actor = ooActor();
             if (!actor) return;
-            const pages = ['commit.html','inbox.html','ask.html','close.html','dates.html','worker.html','manual.html','shoptasks.html'];
+            const pages = ['commit.html','inbox.html','ask.html','close.html','dates.html','worker.html','manual.html','shoptasks.html','money.html'];
             document.querySelectorAll('a[href]').forEach(function (a) {
                 const href = a.getAttribute('href');
                 if (pages.indexOf(href) !== -1) a.setAttribute('href', href + '?a=' + actor);
