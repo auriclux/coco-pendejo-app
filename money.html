@@ -402,8 +402,6 @@
     <div class="money-card" id="settle-card" hidden>
       <h2>Settle <span id="settle-name"></span></h2>
       <p id="settle-balance"></p>
-      <label for="s-episode">Put the closing entries on this job</label>
-      <select id="s-episode"></select>
       <label for="s-paid">Amount actually paid, dollars</label>
       <input type="text" id="s-paid" inputmode="decimal">
       <button class="money-btn" id="s-go">Settle the account</button>
@@ -941,8 +939,13 @@ function fillCustomerSelect(sel, includeAll) {
     sel.appendChild(o);
   });
 }
-function fillEpisodeSelect(sel, customerId) {
+function fillEpisodeSelect(sel, customerId, includeNone) {
   sel.innerHTML = "";
+  if (includeNone) {
+    var n = document.createElement("option");
+    n.value = ""; n.textContent = "— Account level (no job) —";
+    sel.appendChild(n);
+  }
   episodesFor(customerId).forEach(function (e) {
     var o = document.createElement("option");
     o.value = e.id; o.textContent = e.label;
@@ -1051,13 +1054,15 @@ function renderLedger() {
     var meta = "";
     if (en.kind === "service" && en.cost != null)
       meta = " · cost " + fmt$(en.cost);
-    if (en.partName) meta += " · " + esc(en.partName);
+    if (en.provider) meta += " · " + esc(en.provider);
+    if (en.partLabel) meta += " · " + esc(en.partLabel);
     row.innerHTML =
       "<div><b>" + esc(KIND_LABEL[en.kind] || en.kind) + "</b> " +
       "<span class='led-amt'>" + amt + "</span></div>" +
       "<div class='led-sub'>" + esc(en.customerName || "") + " — " +
-      esc(en.episodeTitle || "") + " · " + esc(en.occurredOn || "") +
-      " · by " + esc(en.enteredByName || "") + meta + "</div>" +
+      esc(en.episodeId ? (en.episodeTitle || "") : "Account level") +
+      " · " + esc((en.createdAt || "").slice(0, 10)) +
+      " · by " + esc(en.createdByName || "") + meta + "</div>" +
       (en.memo ? "<div class='led-sub'>" + esc(en.memo) + "</div>" : "") +
       (en.voidedAt ? "<div class='led-sub'>Voided: " +
         esc(en.voidReason || "") + "</div>" : "");
@@ -1100,15 +1105,15 @@ function renderSettle() {
       "for what was actually paid, plus a write-off or overage line for " +
       "the difference, and brings the account to zero.")
     : ("Balance: " + fmt$(-bal) + " in the customer's favor.");
-  fillEpisodeSelect(document.getElementById("s-episode"), cid);
   document.getElementById("s-paid").value = bal > 0 ? (bal / 100).toFixed(2) : "";
+  document.getElementById("s-go").hidden = bal < 0;
   card.hidden = false;
 }
 
 /* ---------- the add-entry form ---------- */
 function syncFormEpisodes() {
   var cid = document.getElementById("f-customer").value;
-  fillEpisodeSelect(document.getElementById("f-episode"), cid);
+  fillEpisodeSelect(document.getElementById("f-episode"), cid, true);
   onEpisodeChange();
   renderSettle();
 }
@@ -1172,12 +1177,12 @@ function laborPreview() {
     (n.cut > 0 ? ", discount " + fmt$(n.cut) + ", billed " + fmt$(n.target)
                : ", billed " + fmt$(n.target));
 }
-function addEntry(kind, episodeId, customerId, partId, sealedObj, meta) {
+function addEntry(kind, episodeId, customerId, partId, sealedObj, provider) {
   return sealObj(MONEY_KEY, sealedObj).then(function (sealed) {
     return rpc("money_entry_add", { p_actor_id: ACTOR,
-      p_customer_id: customerId, p_episode_id: episodeId,
-      p_part_id: partId || null, p_kind: kind, p_sealed: sealed,
-      p_meta: meta || {} });
+      p_customer_id: customerId, p_episode_id: episodeId || null,
+      p_part_id: partId || null, p_kind: kind,
+      p_provider: provider || null, p_sealed: sealed });
   });
 }
 document.getElementById("f-customer").addEventListener("change", syncFormEpisodes);
@@ -1198,7 +1203,11 @@ document.getElementById("f-go").addEventListener("click", function () {
   var ep = document.getElementById("f-episode").value;
   var kind = document.getElementById("f-kind").value;
   var memo = document.getElementById("f-memo").value.trim();
-  if (!cid || !ep) { msg("f-msg", "Pick the customer and the job first."); return; }
+  if (!cid) { msg("f-msg", "Pick the customer first."); return; }
+  if (!ep && (kind === "labor" || kind === "part")) {
+    msg("f-msg", "Labor and part charges need a job. Pick one above.");
+    return;
+  }
   msg("f-msg", "Writing it, sealed…", true);
   var done = function (r) {
     if (r && r.ok) {
@@ -1211,17 +1220,18 @@ document.getElementById("f-go").addEventListener("click", function () {
   if (kind === "labor") {
     var n = laborNumbers();
     if (!n.gross) { msg("f-msg", "Labor needs hours and a rate."); return; }
+    var story = n.rec + "h recorded, " + n.bill + "h billed at " +
+      fmt$(n.rate) + (n.disc ? ", " + n.disc + "% off" : "");
     addEntry("labor", ep, cid, null,
-      { amount_cents: n.gross, memo: memo },
-      { hours_recorded: n.rec, hours_billed: n.bill, rate_cents: n.rate,
-        discount_pct: n.disc }).then(function (r) {
+      { amount_cents: n.gross, memo: memo ? memo + " (" + story + ")" : story },
+      null).then(function (r) {
       if (!(r && r.ok)) { done(r); return; }
       if (n.cut > 0) {
-        var lever = (n.bill < n.rec && n.disc > 0) ? "hours+rate"
+        var lever = (n.bill < n.rec && n.disc > 0) ? "hours and rate"
           : (n.bill < n.rec ? "hours" : "rate");
         addEntry("discount", ep, cid, null,
-          { amount_cents: n.cut, memo: "Labor discount" },
-          { lever: lever }).then(done);
+          { amount_cents: n.cut, memo: "Labor discount (" + lever + ")" },
+          null).then(done);
       } else done(r);
     });
     return;
@@ -1233,7 +1243,7 @@ document.getElementById("f-go").addEventListener("click", function () {
     var pname = document.getElementById("f-part")
       .options[document.getElementById("f-part").selectedIndex].textContent;
     addEntry("part", ep, cid, pid,
-      { amount_cents: pamt, memo: memo || pname }, {}).then(done);
+      { amount_cents: pamt, memo: memo || pname }, null).then(done);
     return;
   }
   if (kind === "service") {
@@ -1246,32 +1256,31 @@ document.getElementById("f-go").addEventListener("click", function () {
     }
     addEntry("service", ep, cid, null,
       { amount_cents: billed, memo: memo, cost_cents: cost },
-      { provider: prov }).then(done);
+      prov).then(done);
     return;
   }
   var amt = parseDollars(document.getElementById("f-amount").value);
   if (amt == null || amt < 0) { msg("f-msg", "Enter the amount as dollars."); return; }
-  addEntry(kind, ep, cid, null, { amount_cents: amt, memo: memo }, {}).then(done);
+  addEntry(kind, ep, cid, null, { amount_cents: amt, memo: memo }, null).then(done);
 });
 
 document.getElementById("s-go").addEventListener("click", function () {
   var cid = document.getElementById("f-customer").value;
-  var ep = document.getElementById("s-episode").value;
   var paid = parseDollars(document.getElementById("s-paid").value);
   var bal = balanceFor(cid);
-  if (!ep || paid == null) { msg("s-msg", "Pick the job and the amount paid."); return; }
+  if (paid == null) { msg("s-msg", "Enter the amount paid."); return; }
   msg("s-msg", "Settling…", true);
-  addEntry("payment", ep, cid, null,
+  addEntry("payment", null, cid, null,
     { amount_cents: paid, memo: "Settlement payment" },
-    { settlement: true }).then(function (r) {
+    null).then(function (r) {
     if (!(r && r.ok)) { msg("s-msg", "The record refused the payment."); return; }
     var diff = bal - paid;
     if (diff === 0) { msg("s-msg", "Settled, to the penny.", true); loadLedger(); return; }
     var kind = diff > 0 ? "write_off" : "overage";
-    addEntry(kind, ep, cid, null,
+    addEntry(kind, null, cid, null,
       { amount_cents: Math.abs(diff),
         memo: diff > 0 ? "Settlement write-off" : "Settlement overage" },
-      { settlement: true }).then(function (r2) {
+      null).then(function (r2) {
       if (r2 && r2.ok) {
         msg("s-msg", diff > 0
           ? "Settled. The shortfall is on the record as a write-off."
@@ -1313,9 +1322,11 @@ function renderInvoice(episodeId) {
         en.kind === "charge") charges += en.amount;
     else if (en.kind === "discount") charges -= en.amount;
     else paidIn += en.amount;
-    return "<tr><td>" + esc(en.occurredOn || "") + "</td><td>" +
+    return "<tr><td>" + esc((en.createdAt || "").slice(0, 10)) +
+      "</td><td>" +
       esc(KIND_LABEL[en.kind] || en.kind) +
-      (en.partName ? " — " + esc(en.partName) : "") +
+      (en.partLabel ? " — " + esc(en.partLabel) : "") +
+      (en.provider ? " — " + esc(en.provider) : "") +
       (en.memo ? " · " + esc(en.memo) : "") + "</td><td class='inv-amt'>" +
       (d < 0 ? "−" : "") + fmt$(en.amount).replace("-", "") + "</td></tr>";
   }).join("");
