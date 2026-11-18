@@ -222,6 +222,27 @@
   .show-pass input { width: 18px; height: 18px; }
   .transfer-box { word-break: break-all; background: var(--surface2); border: 1px dashed var(--line2);
     border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; margin-top: 10px; }
+
+  .acct-row { display: flex; justify-content: space-between; padding: 10px 6px;
+    border-bottom: 1px solid var(--line); cursor: pointer; }
+  .acct-row:hover { background: var(--surface2); }
+  .led-row { border-bottom: 1px solid var(--line); padding: 9px 2px; position: relative; }
+  .led-row.voided { opacity: .55; text-decoration: line-through; }
+  .led-sub { color: var(--subtext); font-size: 13px; margin-top: 2px; }
+  .led-amt { float: right; font-weight: 700; }
+  .led-void { margin-top: 6px; padding: 5px 10px; font-size: 13px; }
+  .inv-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .inv-table td { border-bottom: 1px solid var(--line); padding: 6px 4px; vertical-align: top; }
+  .inv-amt { text-align: right; white-space: nowrap; }
+  .inv-tot { margin-top: 10px; text-align: right; line-height: 1.6; }
+  .money-card select { width: 100%; box-sizing: border-box; padding: 10px;
+    border: 1px solid var(--line2); border-radius: 8px; background: var(--surface2);
+    color: var(--text); font-size: 16px; }
+  @media print {
+    body * { visibility: hidden; }
+    #inv-sheet, #inv-sheet * { visibility: visible; }
+    #inv-sheet { position: fixed; inset: 0; padding: 24px; background: #fff; color: #000; }
+  }
 </style>
 </head>
 <body>
@@ -295,6 +316,133 @@
         <button class="money-btn secondary" id="rate-go">Save rate</button>
       </div>
       <div class="money-msg" id="rate-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Accounts</h2>
+      <p>What each customer owes, across all their jobs. Tap a name to work
+      on that account. Only amounts you unseal here, on this phone, are
+      counted.</p>
+      <div id="acct-list"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Add an entry</h2>
+      <label for="f-customer">Customer</label>
+      <select id="f-customer"></select>
+      <label for="f-episode">Job</label>
+      <select id="f-episode"></select>
+      <label for="f-kind">Kind</label>
+      <select id="f-kind">
+        <option value="deposit">Deposit</option>
+        <option value="labor">Labor</option>
+        <option value="part">Part charge</option>
+        <option value="service">Outside service</option>
+        <option value="charge">Other charge</option>
+        <option value="payment">Payment</option>
+      </select>
+
+      <div class="subform" id="sub-simple">
+        <label for="f-amount">Amount, dollars</label>
+        <input type="text" id="f-amount" inputmode="decimal">
+      </div>
+
+      <div class="subform" id="sub-labor" hidden>
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-hours-rec">Hours recorded</label>
+            <input type="text" id="f-hours-rec" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-hours-bill">Hours billed</label>
+            <input type="text" id="f-hours-bill" inputmode="decimal">
+          </div>
+        </div>
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-rate">Rate, dollars per hour</label>
+            <input type="text" id="f-rate" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-disc">Discount, percent off</label>
+            <input type="text" id="f-disc" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <p id="labor-preview" style="color:var(--text); font-weight:600"></p>
+      </div>
+
+      <div class="subform" id="sub-part" hidden>
+        <label for="f-part">Part on this job's board</label>
+        <select id="f-part"></select>
+        <label for="f-part-amount">Amount, dollars</label>
+        <input type="text" id="f-part-amount" inputmode="decimal">
+      </div>
+
+      <div class="subform" id="sub-service" hidden>
+        <label for="f-provider">Provider (who did the work)</label>
+        <input type="text" id="f-provider">
+        <div class="money-row">
+          <div class="grow">
+            <label for="f-cost">What it cost the shop</label>
+            <input type="text" id="f-cost" inputmode="decimal">
+          </div>
+          <div class="grow">
+            <label for="f-billed">What the customer is billed</label>
+            <input type="text" id="f-billed" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+
+      <label for="f-memo">Memo (sealed with the amount)</label>
+      <input type="text" id="f-memo">
+      <button class="money-btn" id="f-go">Add entry</button>
+      <div class="money-msg" id="f-msg"></div>
+    </div>
+
+    <div class="money-card" id="settle-card" hidden>
+      <h2>Settle <span id="settle-name"></span></h2>
+      <p id="settle-balance"></p>
+      <label for="s-episode">Put the closing entries on this job</label>
+      <select id="s-episode"></select>
+      <label for="s-paid">Amount actually paid, dollars</label>
+      <input type="text" id="s-paid" inputmode="decimal">
+      <button class="money-btn" id="s-go">Settle the account</button>
+      <div class="money-msg" id="s-msg"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>The books</h2>
+      <div class="money-row">
+        <div class="grow">
+          <label for="l-customer">Customer</label>
+          <select id="l-customer"></select>
+        </div>
+        <div class="grow">
+          <label for="l-kind">Kind</label>
+          <select id="l-kind">
+            <option value="">All kinds</option>
+            <option value="deposit">Deposit</option>
+            <option value="labor">Labor</option>
+            <option value="part">Part</option>
+            <option value="service">Service</option>
+            <option value="charge">Charge</option>
+            <option value="discount">Discount</option>
+            <option value="payment">Payment</option>
+            <option value="write_off">Write-off</option>
+            <option value="overage">Overage</option>
+          </select>
+        </div>
+      </div>
+      <div id="ledger-list" style="margin-top:12px"></div>
+    </div>
+
+    <div class="money-card">
+      <h2>Invoice for a job</h2>
+      <label for="i-episode">Job</label>
+      <select id="i-episode"></select>
+      <button class="money-btn secondary" id="i-go">Show invoice</button>
+      <button class="money-btn secondary" id="i-print">Print</button>
+      <div id="inv-sheet" style="margin-top:14px"></div>
     </div>
 
     <div class="money-card">
@@ -539,6 +687,7 @@ function putWrap(passphrase, rawKey) {
 function openDesk() {
   return rpc("money_key_get", { p_actor_id: ACTOR }).then(function (g) {
     KEY_GET = g;
+    loadLedger();
     document.getElementById("open-holders").textContent =
       (g.holders || []).join(", ") || "just you";
     show("st-open");
@@ -726,6 +875,464 @@ document.getElementById("restore-file").addEventListener("change", function () {
     msg(msgId, "That file and passphrase do not open. Check both.");
   });
   this.value = "";
+});
+
+/* ================= 38C: the ledger ================= */
+var KIND_LABEL = { deposit: "Deposit", labor: "Labor", part: "Part",
+  service: "Service", charge: "Charge", discount: "Discount",
+  payment: "Payment", write_off: "Write-off", overage: "Overage" };
+var KIND_DIR = { deposit: -1, labor: 1, part: 1, service: 1, charge: 1,
+  discount: -1, payment: -1, write_off: -1, overage: -1 };
+var LED = { entries: [], customers: [], hoursByEp: {}, selCustomer: null,
+  rateCents: null };
+
+function fmt$(cents) {
+  var neg = cents < 0;
+  var v = Math.abs(cents) / 100;
+  return (neg ? "-$" : "$") + v.toLocaleString("en-US",
+    { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function parseDollars(v) {
+  var n = parseFloat(String(v).replace(/[$,]/g, ""));
+  return isNaN(n) ? null : Math.round(n * 100);
+}
+function esc(t) {
+  return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+function episodesFor(customerId) {
+  var map = {}, out = [];
+  LED.customers.forEach(function (c) {
+    if (c.id !== customerId) return;
+    (c.episodes || []).forEach(function (e) {
+      if (!map[e.id]) { map[e.id] = 1; out.push({ id: e.id,
+        label: (e.car_name || "") + " — " + (e.job_title || "") }); }
+    });
+  });
+  LED.entries.forEach(function (en) {
+    if (en.customerId !== customerId || map[en.episodeId]) return;
+    map[en.episodeId] = 1;
+    out.push({ id: en.episodeId,
+      label: (en.carName || "") + " — " + (en.episodeTitle || "") });
+  });
+  return out;
+}
+function balanceFor(customerId, episodeId) {
+  var sum = 0;
+  LED.entries.forEach(function (en) {
+    if (en.voidedAt) return;
+    if (en.customerId !== customerId) return;
+    if (episodeId && en.episodeId !== episodeId) return;
+    sum += KIND_DIR[en.kind] * en.amount;
+  });
+  return sum;
+}
+function fillCustomerSelect(sel, includeAll) {
+  sel.innerHTML = "";
+  if (includeAll) {
+    var o = document.createElement("option");
+    o.value = ""; o.textContent = "All customers";
+    sel.appendChild(o);
+  }
+  LED.customers.forEach(function (c) {
+    var o = document.createElement("option");
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+function fillEpisodeSelect(sel, customerId) {
+  sel.innerHTML = "";
+  episodesFor(customerId).forEach(function (e) {
+    var o = document.createElement("option");
+    o.value = e.id; o.textContent = e.label;
+    sel.appendChild(o);
+  });
+}
+
+function loadLedger() {
+  return Promise.all([
+    rpc("shop_directory", { p_actor_id: ACTOR }),
+    rpc("money_entries_open", { p_actor_id: ACTOR }),
+    rpc("shop_hours_open", { p_actor_id: ACTOR,
+      p_from: "2020-01-01", p_to: "2030-01-01" })
+  ]).then(function (res) {
+    var dir = res[0], open = res[1], hours = res[2];
+    LED.customers = (dir && dir.customers) || [];
+    LED.hoursByEp = {};
+    ((hours && hours.hours) || []).forEach(function (h) {
+      if (!h.episodeId) return;
+      LED.hoursByEp[h.episodeId] =
+        (LED.hoursByEp[h.episodeId] || 0) + (parseFloat(h.hours) || 0);
+    });
+    var rows = (open && open.entries) || [];
+    return Promise.all(rows.map(function (r) {
+      return unsealObj(MONEY_KEY, r.sealed).then(function (o) {
+        r.amount = o.amount_cents; r.memo = o.memo || "";
+        r.cost = (o.cost_cents != null) ? o.cost_cents : null;
+      }).catch(function () { r.amount = null; r.memo = ""; r.cost = null; });
+    })).then(function () {
+      LED.entries = rows;
+      var g = KEY_GET;
+      if (g && g.shopRateSealed) {
+        return unsealObj(MONEY_KEY, g.shopRateSealed).then(function (r) {
+          LED.rateCents = r.rate_cents;
+          document.getElementById("f-rate").value = (r.rate_cents / 100).toFixed(2);
+        }).catch(function () {});
+      }
+    });
+  }).then(function () {
+    fillCustomerSelect(document.getElementById("f-customer"), false);
+    fillCustomerSelect(document.getElementById("l-customer"), true);
+    if (LED.selCustomer) {
+      document.getElementById("f-customer").value = LED.selCustomer;
+      document.getElementById("l-customer").value = LED.selCustomer;
+    }
+    var isel = document.getElementById("i-episode");
+    isel.innerHTML = "";
+    allEpisodeOptions().forEach(function (e) {
+      var o = document.createElement("option");
+      o.value = e.id; o.textContent = e.label;
+      isel.appendChild(o);
+    });
+    syncFormEpisodes();
+    renderAccounts();
+    renderLedger();
+    renderSettle();
+  }).catch(function () {});
+}
+
+function renderAccounts() {
+  var host = document.getElementById("acct-list");
+  host.innerHTML = "";
+  var any = false;
+  LED.customers.forEach(function (c) {
+    var bal = balanceFor(c.id);
+    var hasEntries = LED.entries.some(function (e) {
+      return e.customerId === c.id && !e.voidedAt; });
+    if (!hasEntries && bal === 0) return;
+    any = true;
+    var row = document.createElement("div");
+    row.className = "acct-row";
+    row.innerHTML = "<span>" + esc(c.name) + "</span><b>" +
+      (bal > 0 ? "owes " + fmt$(bal)
+        : bal < 0 ? "credit " + fmt$(-bal) : "settled") + "</b>";
+    row.addEventListener("click", function () {
+      LED.selCustomer = c.id;
+      document.getElementById("f-customer").value = c.id;
+      document.getElementById("l-customer").value = c.id;
+      syncFormEpisodes();
+      renderLedger();
+      renderSettle();
+      document.getElementById("settle-card").scrollIntoView(
+        { behavior: "smooth", block: "start" });
+    });
+    host.appendChild(row);
+  });
+  if (!any) host.innerHTML =
+    "<p>No accounts yet. The first entry opens one.</p>";
+}
+
+function renderLedger() {
+  var fc = document.getElementById("l-customer").value;
+  var fk = document.getElementById("l-kind").value;
+  var host = document.getElementById("ledger-list");
+  host.innerHTML = "";
+  var shown = 0, net = 0;
+  LED.entries.forEach(function (en) {
+    if (fc && en.customerId !== fc) return;
+    if (fk && en.kind !== fk) return;
+    shown++;
+    var row = document.createElement("div");
+    row.className = "led-row" + (en.voidedAt ? " voided" : "");
+    var amt = en.amount == null ? "(sealed)" :
+      (KIND_DIR[en.kind] < 0 ? "−" : "+") + fmt$(en.amount).replace("-", "");
+    if (!en.voidedAt && en.amount != null) net += KIND_DIR[en.kind] * en.amount;
+    var meta = "";
+    if (en.kind === "service" && en.cost != null)
+      meta = " · cost " + fmt$(en.cost);
+    if (en.partName) meta += " · " + esc(en.partName);
+    row.innerHTML =
+      "<div><b>" + esc(KIND_LABEL[en.kind] || en.kind) + "</b> " +
+      "<span class='led-amt'>" + amt + "</span></div>" +
+      "<div class='led-sub'>" + esc(en.customerName || "") + " — " +
+      esc(en.episodeTitle || "") + " · " + esc(en.occurredOn || "") +
+      " · by " + esc(en.enteredByName || "") + meta + "</div>" +
+      (en.memo ? "<div class='led-sub'>" + esc(en.memo) + "</div>" : "") +
+      (en.voidedAt ? "<div class='led-sub'>Voided: " +
+        esc(en.voidReason || "") + "</div>" : "");
+    if (!en.voidedAt) {
+      var vb = document.createElement("button");
+      vb.className = "money-btn secondary led-void";
+      vb.textContent = "Void";
+      vb.addEventListener("click", function () {
+        var reason = prompt("Why is this entry void? (kept on the record)");
+        if (reason == null) return;
+        rpc("money_entry_void", { p_actor_id: ACTOR, p_entry_id: en.id,
+          p_reason: reason }).then(function (r) {
+          if (r && r.ok) loadLedger();
+          else alert("The record refused the void.");
+        });
+      });
+      row.appendChild(vb);
+    }
+    host.appendChild(row);
+  });
+  var foot = document.createElement("p");
+  foot.style.fontWeight = "700";
+  foot.textContent = shown ? ("Net of what is showing: " +
+    (net >= 0 ? fmt$(net) + " owed to the shop"
+              : fmt$(-net) + " in customer credit"))
+    : "Nothing matches those filters.";
+  host.appendChild(foot);
+}
+
+function renderSettle() {
+  var card = document.getElementById("settle-card");
+  var cid = document.getElementById("f-customer").value;
+  var bal = cid ? balanceFor(cid) : 0;
+  if (!cid || bal === 0) { card.hidden = true; return; }
+  var cust = LED.customers.filter(function (c) { return c.id === cid; })[0];
+  document.getElementById("settle-name").textContent =
+    cust ? cust.name : "";
+  document.getElementById("settle-balance").textContent =
+    bal > 0 ? ("Balance owed: " + fmt$(bal) + ". Settling writes a payment " +
+      "for what was actually paid, plus a write-off or overage line for " +
+      "the difference, and brings the account to zero.")
+    : ("Balance: " + fmt$(-bal) + " in the customer's favor.");
+  fillEpisodeSelect(document.getElementById("s-episode"), cid);
+  document.getElementById("s-paid").value = bal > 0 ? (bal / 100).toFixed(2) : "";
+  card.hidden = false;
+}
+
+/* ---------- the add-entry form ---------- */
+function syncFormEpisodes() {
+  var cid = document.getElementById("f-customer").value;
+  fillEpisodeSelect(document.getElementById("f-episode"), cid);
+  onEpisodeChange();
+  renderSettle();
+}
+function syncKind() {
+  var k = document.getElementById("f-kind").value;
+  document.getElementById("sub-simple").hidden =
+    !(k === "deposit" || k === "charge" || k === "payment");
+  document.getElementById("sub-labor").hidden = k !== "labor";
+  document.getElementById("sub-part").hidden = k !== "part";
+  document.getElementById("sub-service").hidden = k !== "service";
+  if (k === "part") loadPartOptions();
+  if (k === "labor") laborPreview();
+}
+function onEpisodeChange() {
+  var ep = document.getElementById("f-episode").value;
+  var rec = LED.hoursByEp[ep];
+  if (rec != null) {
+    document.getElementById("f-hours-rec").value = rec;
+    document.getElementById("f-hours-bill").value = rec;
+  }
+  if (document.getElementById("f-kind").value === "part") loadPartOptions();
+  laborPreview();
+}
+function loadPartOptions() {
+  var ep = document.getElementById("f-episode").value;
+  var sel = document.getElementById("f-part");
+  sel.innerHTML = "";
+  if (!ep) return;
+  rpc("shop_board_open", { p_actor_id: ACTOR, p_episode_id: ep })
+    .then(function (b) {
+      ((b && b.parts) || []).forEach(function (p) {
+        var o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.name + (p.buyer === "customer"
+          ? " — customer-supplied, never charged" : " — shop-bought");
+        o.disabled = p.buyer === "customer";
+        sel.appendChild(o);
+      });
+      if (!sel.options.length) {
+        var o2 = document.createElement("option");
+        o2.textContent = "No parts on this job's board";
+        sel.appendChild(o2);
+      }
+    });
+}
+function laborNumbers() {
+  var rec = parseFloat(document.getElementById("f-hours-rec").value) || 0;
+  var bill = parseFloat(document.getElementById("f-hours-bill").value) || 0;
+  var rate = parseDollars(document.getElementById("f-rate").value) || 0;
+  var disc = parseFloat(document.getElementById("f-disc").value) || 0;
+  var gross = Math.round(rec * rate);
+  var target = Math.round(bill * rate * (1 - disc / 100));
+  return { rec: rec, bill: bill, rate: rate, disc: disc,
+    gross: gross, target: target, cut: gross - target };
+}
+function laborPreview() {
+  var n = laborNumbers();
+  var el = document.getElementById("labor-preview");
+  if (!n.gross) { el.textContent = ""; return; }
+  el.textContent = "Labor " + fmt$(n.gross) +
+    (n.cut > 0 ? ", discount " + fmt$(n.cut) + ", billed " + fmt$(n.target)
+               : ", billed " + fmt$(n.target));
+}
+function addEntry(kind, episodeId, customerId, partId, sealedObj, meta) {
+  return sealObj(MONEY_KEY, sealedObj).then(function (sealed) {
+    return rpc("money_entry_add", { p_actor_id: ACTOR,
+      p_customer_id: customerId, p_episode_id: episodeId,
+      p_part_id: partId || null, p_kind: kind, p_sealed: sealed,
+      p_meta: meta || {} });
+  });
+}
+document.getElementById("f-customer").addEventListener("change", syncFormEpisodes);
+document.getElementById("f-episode").addEventListener("change", onEpisodeChange);
+document.getElementById("f-kind").addEventListener("change", syncKind);
+document.getElementById("l-customer").addEventListener("change", renderLedger);
+document.getElementById("l-kind").addEventListener("change", renderLedger);
+["f-hours-rec", "f-hours-bill", "f-rate", "f-disc"].forEach(function (id) {
+  document.getElementById(id).addEventListener("input", laborPreview);
+});
+document.getElementById("f-cost").addEventListener("input", function () {
+  var b = document.getElementById("f-billed");
+  if (!b.value) b.value = this.value;
+});
+
+document.getElementById("f-go").addEventListener("click", function () {
+  var cid = document.getElementById("f-customer").value;
+  var ep = document.getElementById("f-episode").value;
+  var kind = document.getElementById("f-kind").value;
+  var memo = document.getElementById("f-memo").value.trim();
+  if (!cid || !ep) { msg("f-msg", "Pick the customer and the job first."); return; }
+  msg("f-msg", "Writing it, sealed…", true);
+  var done = function (r) {
+    if (r && r.ok) {
+      msg("f-msg", "In the books.", true);
+      document.getElementById("f-memo").value = "";
+      document.getElementById("f-amount").value = "";
+      loadLedger();
+    } else msg("f-msg", "The record refused. Check the fields and try again.");
+  };
+  if (kind === "labor") {
+    var n = laborNumbers();
+    if (!n.gross) { msg("f-msg", "Labor needs hours and a rate."); return; }
+    addEntry("labor", ep, cid, null,
+      { amount_cents: n.gross, memo: memo },
+      { hours_recorded: n.rec, hours_billed: n.bill, rate_cents: n.rate,
+        discount_pct: n.disc }).then(function (r) {
+      if (!(r && r.ok)) { done(r); return; }
+      if (n.cut > 0) {
+        var lever = (n.bill < n.rec && n.disc > 0) ? "hours+rate"
+          : (n.bill < n.rec ? "hours" : "rate");
+        addEntry("discount", ep, cid, null,
+          { amount_cents: n.cut, memo: "Labor discount" },
+          { lever: lever }).then(done);
+      } else done(r);
+    });
+    return;
+  }
+  if (kind === "part") {
+    var pid = document.getElementById("f-part").value;
+    var pamt = parseDollars(document.getElementById("f-part-amount").value);
+    if (!pid || pamt == null) { msg("f-msg", "Pick the part and its amount."); return; }
+    var pname = document.getElementById("f-part")
+      .options[document.getElementById("f-part").selectedIndex].textContent;
+    addEntry("part", ep, cid, pid,
+      { amount_cents: pamt, memo: memo || pname }, {}).then(done);
+    return;
+  }
+  if (kind === "service") {
+    var prov = document.getElementById("f-provider").value.trim();
+    var cost = parseDollars(document.getElementById("f-cost").value);
+    var billed = parseDollars(document.getElementById("f-billed").value);
+    if (!prov || cost == null || billed == null) {
+      msg("f-msg", "Service needs the provider, the cost, and the billed amount.");
+      return;
+    }
+    addEntry("service", ep, cid, null,
+      { amount_cents: billed, memo: memo, cost_cents: cost },
+      { provider: prov }).then(done);
+    return;
+  }
+  var amt = parseDollars(document.getElementById("f-amount").value);
+  if (amt == null || amt < 0) { msg("f-msg", "Enter the amount as dollars."); return; }
+  addEntry(kind, ep, cid, null, { amount_cents: amt, memo: memo }, {}).then(done);
+});
+
+document.getElementById("s-go").addEventListener("click", function () {
+  var cid = document.getElementById("f-customer").value;
+  var ep = document.getElementById("s-episode").value;
+  var paid = parseDollars(document.getElementById("s-paid").value);
+  var bal = balanceFor(cid);
+  if (!ep || paid == null) { msg("s-msg", "Pick the job and the amount paid."); return; }
+  msg("s-msg", "Settling…", true);
+  addEntry("payment", ep, cid, null,
+    { amount_cents: paid, memo: "Settlement payment" },
+    { settlement: true }).then(function (r) {
+    if (!(r && r.ok)) { msg("s-msg", "The record refused the payment."); return; }
+    var diff = bal - paid;
+    if (diff === 0) { msg("s-msg", "Settled, to the penny.", true); loadLedger(); return; }
+    var kind = diff > 0 ? "write_off" : "overage";
+    addEntry(kind, ep, cid, null,
+      { amount_cents: Math.abs(diff),
+        memo: diff > 0 ? "Settlement write-off" : "Settlement overage" },
+      { settlement: true }).then(function (r2) {
+      if (r2 && r2.ok) {
+        msg("s-msg", diff > 0
+          ? "Settled. The shortfall is on the record as a write-off."
+          : "Settled. The extra is on the record as an overage.", true);
+        loadLedger();
+      } else msg("s-msg", "Payment is in; the adjustment was refused.");
+    });
+  });
+});
+
+/* ---------- invoice ---------- */
+function allEpisodeOptions() {
+  var map = {}, out = [];
+  LED.customers.forEach(function (c) {
+    (c.episodes || []).forEach(function (e) {
+      if (!map[e.id]) { map[e.id] = 1; out.push({ id: e.id,
+        label: c.name + " · " + (e.car_name || "") + " — " +
+          (e.job_title || "") }); }
+    });
+  });
+  LED.entries.forEach(function (en) {
+    if (map[en.episodeId]) return;
+    map[en.episodeId] = 1;
+    out.push({ id: en.episodeId, label: (en.customerName || "") + " · " +
+      (en.carName || "") + " — " + (en.episodeTitle || "") });
+  });
+  return out;
+}
+function renderInvoice(episodeId) {
+  var sheet = document.getElementById("inv-sheet");
+  var rows = LED.entries.filter(function (e) {
+    return e.episodeId === episodeId && !e.voidedAt; });
+  if (!rows.length) { sheet.innerHTML = "<p>No entries on that job yet.</p>"; return; }
+  var first = rows[0];
+  var charges = 0, paidIn = 0;
+  var lines = rows.map(function (en) {
+    var d = KIND_DIR[en.kind];
+    if (en.kind === "labor" || en.kind === "part" || en.kind === "service" ||
+        en.kind === "charge") charges += en.amount;
+    else if (en.kind === "discount") charges -= en.amount;
+    else paidIn += en.amount;
+    return "<tr><td>" + esc(en.occurredOn || "") + "</td><td>" +
+      esc(KIND_LABEL[en.kind] || en.kind) +
+      (en.partName ? " — " + esc(en.partName) : "") +
+      (en.memo ? " · " + esc(en.memo) : "") + "</td><td class='inv-amt'>" +
+      (d < 0 ? "−" : "") + fmt$(en.amount).replace("-", "") + "</td></tr>";
+  }).join("");
+  sheet.innerHTML =
+    "<div class='inv-head'><b>Double-O Garage</b><br>" +
+    esc(first.customerName || "") + " · " + esc(first.carName || "") +
+    " — " + esc(first.episodeTitle || "") + "</div>" +
+    "<table class='inv-table'>" + lines + "</table>" +
+    "<div class='inv-tot'>Charges: " + fmt$(charges) + "<br>" +
+    "Paid in: " + fmt$(paidIn) + "<br><b>Balance: " +
+    fmt$(charges - paidIn) + "</b></div>";
+}
+document.getElementById("i-go").addEventListener("click", function () {
+  renderInvoice(document.getElementById("i-episode").value);
+});
+document.getElementById("i-print").addEventListener("click", function () {
+  window.print();
 });
 
 /* ---------- show-what-I-typed toggles ---------- */
